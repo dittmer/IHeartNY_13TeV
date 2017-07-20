@@ -234,6 +234,7 @@ genElPt         = ROOT.vector('float')()
 genElEta        = ROOT.vector('float')()
 genElPhi        = ROOT.vector('float')()
 genTTbarMass    = ROOT.vector('float')()
+hardTTbarMass   = ROOT.vector('float')()
 
 # particle level
 #genAK4jetPt     = ROOT.vector('float')()
@@ -364,7 +365,8 @@ if options.semilep == 1:
     recoTree.Branch('genElEta'               , genElEta               )
     recoTree.Branch('genElPhi'               , genElPhi               )
     recoTree.Branch('genTTbarMass'           , genTTbarMass           )
-    
+    recoTree.Branch('hardTTbarMass'          , hardTTbarMass          )
+
     #recoTree.Branch('genAK4jetPt'            , genAK4jetPt            )
     #recoTree.Branch('genAK4jetEta'           , genAK4jetEta           )
     #recoTree.Branch('genAK4jetPhi'           , genAK4jetPhi           )
@@ -494,6 +496,7 @@ if options.fullTruth:
     trueTree.Branch('genTopEta'              , genTopEta              )
     trueTree.Branch('genTopPhi'              , genTopPhi              )
     trueTree.Branch('genTTbarMass'           , genTTbarMass           )
+    trueTree.Branch('hardTTbarMass'          , hardTTbarMass          )
     trueTree.Branch('truthChannel'           , truthChannel           )
     trueTree.Branch('eventWeight_nom'        , eventWeight_nom        )
     trueTree.Branch('eventWeight_puUp'       , eventWeight_puUp       )
@@ -962,6 +965,7 @@ for event in events :
         genElEta.clear()
         genElPhi.clear()
         genTTbarMass.clear()
+        hardTTbarMass.clear()
         genAK8jetPt.clear()
         genAK8jetEta.clear()
         genAK8jetPhi.clear()
@@ -1142,6 +1146,8 @@ for event in events :
         
         p4Top = ROOT.TLorentzVector()
         p4Antitop = ROOT.TLorentzVector()
+        p4HardTop = ROOT.TLorentzVector()
+        p4HardAntitop = ROOT.TLorentzVector()
         p4Lepton = ROOT.TLorentzVector()
         p4HadTop = ROOT.TLorentzVector()
         p4LepTop = ROOT.TLorentzVector()
@@ -1152,7 +1158,11 @@ for event in events :
 
         # loop over gen particles
         for genParticle in genParticles :
-            
+
+            if genParticle.isHardProcess() and genParticle.pdgId() == 6:
+                p4HardTop.SetPtEtaPhiM(genParticle.pt(), genParticle.eta(), genParticle.phi(), genParticle.mass())
+            if genParticle.isHardProcess() and genParticle.pdgId() == -6:
+                p4HardAntitop.SetPtEtaPhiM(genParticle.pt(), genParticle.eta(), genParticle.phi(), genParticle.mass())
             if options.debug and genParticle.isHardProcess():
                 print 'Gen particle with ID ' + str(genParticle.pdgId()) + ' and status ' + str(genParticle.status())
             # Find tops -- |pdgID| = 6, isLastCopy
@@ -1241,6 +1251,7 @@ for event in events :
                 truthChannel.push_back(2)
 
             ttbarGen = p4Top + p4Antitop
+            ttbarHard = p4HardTop + p4HardAntitop
 
             # Get hadronic top
             if not leptonicTop + leptonicAntitop == 1 :
@@ -1271,6 +1282,7 @@ for event in events :
             genTopEta.push_back(p4HadTop.Eta())
             genTopPhi.push_back(p4HadTop.Phi())
             genTTbarMass.push_back(ttbarGen.M())
+            hardTTbarMass.push_back(ttbarHard.M())
         
             if len(genMuons) != 0:
                 genMuPt.push_back(genMuons[0].Perp())
