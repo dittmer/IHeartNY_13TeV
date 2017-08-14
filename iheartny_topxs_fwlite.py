@@ -25,6 +25,8 @@ TOP_PT_CUT = 350.0
 
 MIN_TOP_MASS = 105.0
 MAX_TOP_MASS = 220.0
+
+
 # -------------------------------------------------------------------------------------
 # define input options
 # -------------------------------------------------------------------------------------
@@ -237,14 +239,14 @@ genTTbarMass    = ROOT.vector('float')()
 hardTTbarMass   = ROOT.vector('float')()
 
 # particle level
-#genAK4jetPt     = ROOT.vector('float')()
-#genAK4jetEta    = ROOT.vector('float')()
-#genAK4jetPhi    = ROOT.vector('float')()
-#genAK4jetMass   = ROOT.vector('float')()
-genAK8jetPt     = ROOT.vector('float')()
-genAK8jetEta    = ROOT.vector('float')()
-genAK8jetPhi    = ROOT.vector('float')()
-genAK8jetMass   = ROOT.vector('float')()
+partAK4jetPt    = ROOT.vector('float')()
+partAK4jetEta   = ROOT.vector('float')()
+partAK4jetPhi   = ROOT.vector('float')()
+partAK4jetMass  = ROOT.vector('float')()
+partAK8jetPt    = ROOT.vector('float')()
+partAK8jetEta   = ROOT.vector('float')()
+partAK8jetPhi   = ROOT.vector('float')()
+partAK8jetMass  = ROOT.vector('float')()
 partMuPt        = ROOT.vector('float')()
 partMuEta       = ROOT.vector('float')()
 partMuPhi       = ROOT.vector('float')()
@@ -367,14 +369,14 @@ if options.semilep == 1:
     recoTree.Branch('genTTbarMass'           , genTTbarMass           )
     recoTree.Branch('hardTTbarMass'          , hardTTbarMass          )
 
-    #recoTree.Branch('genAK4jetPt'            , genAK4jetPt            )
-    #recoTree.Branch('genAK4jetEta'           , genAK4jetEta           )
-    #recoTree.Branch('genAK4jetPhi'           , genAK4jetPhi           )
-    #recoTree.Branch('genAK4jetMass'          , genAK4jetMass          )
-    recoTree.Branch('genAK8jetPt'            , genAK8jetPt            )
-    recoTree.Branch('genAK8jetEta'           , genAK8jetEta           )
-    recoTree.Branch('genAK8jetPhi'           , genAK8jetPhi           )
-    recoTree.Branch('genAK8jetMass'          , genAK8jetMass          )
+    recoTree.Branch('partAK4jetPt'           , partAK4jetPt           )
+    recoTree.Branch('partAK4jetEta'          , partAK4jetEta          )
+    recoTree.Branch('partAK4jetPhi'          , partAK4jetPhi          )
+    recoTree.Branch('partAK4jetMass'         , partAK4jetMass         )
+    recoTree.Branch('partAK8jetPt'           , partAK8jetPt           )
+    recoTree.Branch('partAK8jetEta'          , partAK8jetEta          )
+    recoTree.Branch('partAK8jetPhi'          , partAK8jetPhi          )
+    recoTree.Branch('partAK8jetMass'         , partAK8jetMass         )
     recoTree.Branch('partMuPt'               , partMuPt               )
     recoTree.Branch('partMuEta'              , partMuEta              )
     recoTree.Branch('partMuPhi'              , partMuPhi              )
@@ -498,6 +500,10 @@ if options.fullTruth:
     trueTree.Branch('genTTbarMass'           , genTTbarMass           )
     trueTree.Branch('hardTTbarMass'          , hardTTbarMass          )
     trueTree.Branch('truthChannel'           , truthChannel           )
+    recoTree.Branch('partAK8jetPt'           , partAK8jetPt           )
+    recoTree.Branch('partAK8jetEta'          , partAK8jetEta          )
+    recoTree.Branch('partAK8jetPhi'          , partAK8jetPhi          )
+    recoTree.Branch('partAK8jetMass'         , partAK8jetMass         )
     trueTree.Branch('eventWeight_nom'        , eventWeight_nom        )
     trueTree.Branch('eventWeight_puUp'       , eventWeight_puUp       )
     trueTree.Branch('eventWeight_puDown'     , eventWeight_puDown     )
@@ -554,16 +560,20 @@ LHELabel = ("externalLHEProducer","")
 if options.isMC and (options.semilep is not None):
     genParticlesHandle     = Handle("std::vector<reco::GenParticle>")
     genParticlesLabel      = ("filteredPrunedGenParticles", "")
-    
-    ## only have AK8 gen jets currently (in addition to gen jets matched to AK4/AK8 reco jets)
-    ak8GenJetPtHandle   = Handle("std::vector<float>")
-    ak8GenJetPtLabel    = ("genJetsAK8", "genJetsAK8Pt")
-    ak8GenJetEtaHandle  = Handle("std::vector<float>")
-    ak8GenJetEtaLabel   = ("genJetsAK8", "genJetsAK8Eta")
-    ak8GenJetPhiHandle  = Handle("std::vector<float>")
-    ak8GenJetPhiLabel   = ("genJetsAK8", "genJetsAK8Phi")
-    ak8GenJetEHandle    = Handle("std::vector<float>")
-    ak8GenJetELabel     = ("genJetsAK8", "genJetsAK8E")
+
+    # particle-level info
+    partAK8Handle     = Handle("std::vector<reco::GenJet>")
+    partAK8Label      = ("particleLevel", "fatjets")
+    partAK4Handle     = Handle("std::vector<reco::GenJet>")
+    partAK4Label      = ("particleLevel", "jets")
+    partAK4TagHandle  = Handle("std::vector<reco::GenParticle>")
+    partAK4TagLabel   = ("particleLevel", "tags")
+    partLeptonHandle  = Handle("std::vector<reco::GenJet>")
+    partLeptonLabel   = ("particleLevel", "leptons")
+    partMETHandle     = Handle("std::vector<reco::MET>")
+    partMETLabel      = ("particleLevel", "mets")
+
+
     
 metHandle    = Handle("std::vector<float>")
 metLabel     = ("metFull", "metFullPt")
@@ -966,10 +976,14 @@ for event in events :
         genElPhi.clear()
         genTTbarMass.clear()
         hardTTbarMass.clear()
-        genAK8jetPt.clear()
-        genAK8jetEta.clear()
-        genAK8jetPhi.clear()
-        genAK8jetMass.clear()
+        partAK4jetPt.clear()
+        partAK4jetEta.clear()
+        partAK4jetPhi.clear()
+        partAK4jetMass.clear()
+        partAK8jetPt.clear()
+        partAK8jetEta.clear()
+        partAK8jetPhi.clear()
+        partAK8jetMass.clear()
         partMuPt.clear()
         partMuEta.clear()
         partMuPhi.clear()
@@ -1294,57 +1308,92 @@ for event in events :
                 genElEta.push_back(genElectrons[0].Eta())
                 genElPhi.push_back(genElectrons[0].Phi())   
 
+                
             # -------------------------------------------------------------------------------------
-            # read gen jets
+            # read particle-level objects!
             # -------------------------------------------------------------------------------------
+                    
+            ###################################################
+            # Get AK8 particle-level jets
+            partTopJets = []
+
+            event.getByLabel( partAK8Label, partAK8Handle )
+            if partAK8Handle.isValid() == False: 
+                continue
+            if options.debug:
+                print 'Got AK8 particle-level jets!'
+
+            partAK8s = partAK8Handle.product()
         
-            # Get AK8 gen jet information
-            genTops = []
-            event.getByLabel( ak8GenJetPtLabel, ak8GenJetPtHandle )
-            if ak8GenJetPtHandle.isValid() :
-                event.getByLabel( ak8GenJetEtaLabel, ak8GenJetEtaHandle )
-                event.getByLabel( ak8GenJetPhiLabel, ak8GenJetPhiHandle )
-                event.getByLabel( ak8GenJetELabel, ak8GenJetEHandle )
+            for partAK8 in partAK8s :
+                p4 = ROOT.TLorentzVector()
+                p4.SetPtEtaPhiE( partAK8.pt(), partAK8.eta(), partAK8.phi(), partAK8.energy() )
+                if abs(partAK8.eta()) < MAX_JET_ETA and p4.M() > MIN_TOP_MASS and p4.M() < MAX_TOP_MASS: # no pt cut                              
+                    partTopJets.append(p4)
+
+                    
+            ###################################################
+            # Get AK4 particle-level jets
+            partBJets = []
+
+            event.getByLabel( partAK4Label, partAK4Handle )
+            if partAK4Handle.isValid() == False: 
+                continue
+            if options.debug:
+                print 'Got AK4 particle-level jets!'
+
+            partAK4s = partAK4Handle.product()
+        
+            for partAK4 in partAK4s :
+                p4 = ROOT.TLorentzVector()
+                p4.SetPtEtaPhiE( partAK4.pt(), partAK4.eta(), partAK4.phi(), partAK4.energy() )
+                if abs(partAK4.eta()) < MAX_JET_ETA and partAK4.pt() > MIN_JET_PT and partAK4.pdgId()==5:
+                    partBJets.append(p4)
             
-                ak8GenJetPt   = ak8GenJetPtHandle.product()
-                ak8GenJetEta  = ak8GenJetEtaHandle.product()
-                ak8GenJetPhi  = ak8GenJetPhiHandle.product()
-                ak8GenJetE    = ak8GenJetEHandle.product()
-                
-                # loop over AK8 gen jets
-                if len(ak8GenJetPt) != 0:
-                    for iak8 in xrange( len(ak8GenJetPt) ) :
-                        p4 = ROOT.TLorentzVector()
-                        p4.SetPtEtaPhiE( ak8GenJetPt[iak8], ak8GenJetEta[iak8], ak8GenJetPhi[iak8], ak8GenJetE[iak8] )
-                        if abs(ak8GenJetEta[iak8]) < MAX_JET_ETA and p4.M() > MIN_TOP_MASS and p4.M() < MAX_TOP_MASS: # no pt cut                              
-                            genTops.append(p4)
-
-            # -------------------------------------------------------------------------------------
+            
+            ###################################################
             # Get particle-level leptons
-            # -------------------------------------------------------------------------------------
-
             partMu = []
-            for iMuon in genMuons:
-                if iMuon.Perp() > MIN_MU_PT and abs(iMuon.Eta()) < MAX_MU_ETA:  ## pt>50, |eta|<2.1
-                    partMu.append(iMuon)
-                
             partEl = []
-            for iEle in genElectrons:
-                if iEle.Perp() > MIN_MU_PT and abs(iEle.Eta()) < MAX_MU_ETA:  ## pt>50, |eta|<2.1  (same selection as for muons here!)
-                    partEl.append(iEle)
+
+            event.getByLabel( partLeptonLabel, partLeptonHandle )
+            if partLeptonHandle.isValid() == False: 
+                continue
+            if options.debug:
+                print 'Got particle-level leptons!'
+
+            partLeptons = partLeptonHandle.product()
+        
+            for partLepton in partLeptons :
+                p4 = ROOT.TLorentzVector()
+                p4.SetPtEtaPhiM( partLepton.pt(), partLepton.eta(), partLepton.phi(), partLepton.mass() )
+
+                # muons
+                if abs(partLepton.eta()) < MAX_MU_ETA and partLepton.pt() > MIN_MU_PT and abs(partLepton.pdgId()) == 13:
+                    partMu.append(p4)
+                # electrons
+                if abs(partLepton.eta()) < MAX_EL_ETA and partLepton.pt() > MIN_EL_PT and abs(partLepton.pdgId()) == 11:
+                    partMu.append(p4)
+
 
             # -------------------------------------------------------------------------------
             # Store particle-level info if event good at particle level
             # -------------------------------------------------------------------------------
 
-            if len(genTops) >= 1 and (len(partMu) + len(partEl)) >= 1:
+            if len(partTopJets) >= 1 and len(partBJets) >= 1 and (len(partMu) + len(partEl)) >= 1:
                 nPassParticle += 1
 
-                for itjet in genTops :
-                    genAK8jetPt.push_back(itjet.Perp())
-                    genAK8jetEta.push_back(itjet.Eta())
-                    genAK8jetPhi.push_back(itjet.Phi())
-                    genAK8jetMass.push_back(itjet.M())
+                for itjet in partTopJets :
+                    partAK8jetPt.push_back(itjet.Perp())
+                    partAK8jetEta.push_back(itjet.Eta())
+                    partAK8jetPhi.push_back(itjet.Phi())
+                    partAK8jetMass.push_back(itjet.M())
+
+                for ibjet in partBJets :
+                    partAK4jetPt.push_back(ibjet.Perp())
+                    partAK4jetEta.push_back(ibjet.Eta())
+                    partAK4jetPhi.push_back(ibjet.Phi())
+                    partAK4jetMass.push_back(ibjet.M())
                 
                 for imu in partMu :
                     partMuPt.push_back(imu.Perp())
@@ -1356,6 +1405,8 @@ for event in events :
                     partElEta.push_back(iel.Eta())
                     partElPhi.push_back(iel.Phi())
 
+
+                    
     # -------------------
     #
     # R E C O   L E V E L
