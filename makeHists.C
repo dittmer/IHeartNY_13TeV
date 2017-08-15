@@ -2619,6 +2619,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   // -------------------------------------------------------------------------------------------
 
   TString outname = sample + "_" + channel;
+  if ((sample == "PowhegPythia8_fullTruth" || sample == "PowhegPythia8_fullTruth_p2") && !MttCut && usePost && !isQCD) outname = sample + "_mInc_" + channel;
   if (sample.Contains("Data")) outname = sample;
   if (!isData) outname = outname + "_" + systematic;
   if (isQCD) outname = outname + "_qcd";
