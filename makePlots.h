@@ -202,10 +202,10 @@ SummedHist * getWJets( TString DIR, TString histname, TString region, TString ch
 }
 
 // -------------------------------------------------------------------------------------
-// Miscellaneous other -- WW, WZ, ZZ, Z+jets (will split into diboson and Z+jets if significant...)
+// Diboson (WW, WZ, ZZ)
 // -------------------------------------------------------------------------------------
 
-SummedHist * getBoson( TString DIR, TString histname, TString region, TString channel, bool isQCD, TString syst, bool usePost, TString split = "") {
+SummedHist * getDiboson( TString DIR, TString histname, TString region, TString channel, bool isQCD, TString syst, bool usePost, TString split = "") {
 
   TString append = "";
   if (isQCD) append = "_qcd";
@@ -214,33 +214,57 @@ SummedHist * getBoson( TString DIR, TString histname, TString region, TString ch
   int ich = 0;
   if (channel == "el") ich = 1;
   
-  const int nboson = 4;
+  const int ndiboson = 3;
   
-  TString boson_names[nboson] = {
+  TString diboson_names[ndiboson] = {
     "WW",
     "WZ",
     "ZZ",
-    "ZJets",
   };
   
-  double boson_norms[nboson] = {
+  double diboson_norms[ndiboson] = {
     118.7 * LUM[ich] / 6987124., //Xsec / Nevents from Louise -- source?
     44.9 * LUM[ich] / 2995828.,
     15.4 * LUM[ich] / 990064.,
-    5765 * LUM[ich] / 42923575., //Nevents from Louise, xsec from AN-17-003
   };
 
   int plotcolor = kViolet-6;
   
-  SummedHist* boson = new SummedHist( histname, plotcolor );
+  SummedHist* diboson = new SummedHist( histname, plotcolor );
   
-  for (int i=0 ; i<nboson; i++) {
-    TString iname = DIR + "hists_" + boson_names[i] + "_" + channel + "_" + syst + append + ".root";
+  for (int i=0 ; i<ndiboson; i++) {
+    TString iname = DIR + "hists_" + diboson_names[i] + "_" + channel + "_" + syst + append + ".root";
     TH1* hist = (TH1*) getHist(iname,histname,region,split);
-    boson->push_back( hist, boson_norms[i] );
+    diboson->push_back( hist, diboson_norms[i] );
   }
   
-  return boson;
+  return diboson;
+  
+}
+
+// -------------------------------------------------------------------------------------
+// ZJets
+// -------------------------------------------------------------------------------------
+
+SummedHist * getZJets( TString DIR, TString histname, TString region, TString channel, bool isQCD, TString syst, bool usePost, TString split = "") {
+
+  TString append = "";
+  if (isQCD) append = "_qcd";
+  if (usePost) append += "_post";
+
+  int ich = 0;
+  if (channel == "el") ich = 1;
+  
+  double zjets_norm = 5765 * LUM[ich] / 42923575.; //Nevents from Louise, xsec from AN-17-003
+
+  int plotcolor = kAzure-9;
+  
+  SummedHist* zjets = new SummedHist( histname, plotcolor );
+  TString iname = DIR + "hists_ZJets_" + channel + "_" + syst + append + ".root";
+  TH1* hist = (TH1*) getHist(iname,histname,region,split);
+  zjets->push_back( hist, zjets_norm);
+  
+  return zjets;
   
 }
 
@@ -259,7 +283,7 @@ SummedHist * getSingleTop( TString DIR, TString histname, TString region, TStrin
 
   const int nsingletop = 5;
   
-  TString singletop_names[nsingletop] = {
+  TString singletop_names[nsingletop] = { 
     "SingleTop_t_t",
     "SingleTop_tbar_t",
     "SingleTop_t_tW",
@@ -268,11 +292,11 @@ SummedHist * getSingleTop( TString DIR, TString histname, TString region, TStrin
   };
   
   double singletop_norms[nsingletop] = {
-    136.02 * LUM[ich] / 5993676., // xsec from https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SingleTopRefXsec
-    80.95 * LUM[ich] / 3928063.,  // BR from https://twiki.cern.ch/twiki/bin/view/Main/EdbrBackup (second-hand, but can't find original source)
-    35.9 * LUM[ich] / 992024.,    // BR is needed because s-channel sample is leptonic final state only
-    35.9 * LUM[ich] / 998276.,
-    10.32 * 0.322 * LUM[ich] / 1000000., //AN-17-012 has 7.26 for this (xsec * BR)... which is correct?
+    136.02 * LUM[ich] / 67240808., //Event counts from Louise, xsec from https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SingleTopRefXsec
+    80.95 * LUM[ich] / 38811017.,  
+    19.3 * LUM[ich] / 8629641.,    // Xsec from AN-16-020 -- NoFullyHadronicDecays
+    19.3 * LUM[ich] / 8681541.,
+    10.32 * 0.322 * LUM[ich] / 9651642. // BR is needed because s-channel sample is leptonic final state only
   };
   
   SummedHist* singletop = new SummedHist( histname, 6 );
@@ -327,7 +351,7 @@ SummedHist * getTTbar( TString DIR, TString histname, TString region, TString ch
   int ich = 0;
   if (channel == "el") ich = 1;
 
-  TString ttbar_name = "PowhegPythia8_fullTruth";
+  TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_fullTruth_mInc" : "PowhegPythia8_fullTruth";
   double ttbar_norm = 831.76 * LUM[ich] / 77229341.;
   
   SummedHist* ttbar = new SummedHist( histname, kRed+1);
@@ -408,14 +432,16 @@ TH1 * getQCDData(TString sigDIR, TString sideDIR, TString histname, TString regi
   }
 
   else {
-    //SummedHist* boson = getBoson( sideDIR, histname, region, channel, true, syst, usePost,split);
+    SummedHist* diboson = getDiboson( sideDIR, histname, region, channel, true, syst, usePost,split);
+    SummedHist* zjets = getZJets( sideDIR, histname, region, channel, true, syst, usePost,split);
     SummedHist* wjets = getWJets( sideDIR, histname, region, channel, true, syst, usePost,split);
     SummedHist* singletop = getSingleTop( sideDIR, histname, region, channel, true, syst, usePost,split );
     SummedHist* ttbar = getTTbar( sideDIR, histname, region, channel, true, syst, usePost,split );
     SummedHist* ttbar_nonSemiLep = getTTbarNonSemiLep( sideDIR, histname, region, channel, true, syst, usePost,split );
     SummedHist* data = getData( sideDIR, histname, region, channel, true,split);
     
-    //TH1* h_boson = (TH1*) boson->hist();
+    TH1* h_diboson = (TH1*) diboson->hist();
+    TH1* h_zjets = (TH1*) zjets->hist();
     TH1* h_wjets = (TH1*) wjets->hist();
     TH1* h_singletop = (TH1*) singletop->hist();
     TH1* h_ttbar = (TH1*) ttbar->hist();
@@ -423,7 +449,8 @@ TH1 * getQCDData(TString sigDIR, TString sideDIR, TString histname, TString regi
     TH1* h_data = (TH1*) data->hist();
     
     TH1* h_qcd = (TH1*) h_data->Clone("QCD");
-    //h_qcd->Add(h_boson,-1.0);
+    h_qcd->Add(h_diboson,-1.0);
+    h_qcd->Add(h_zjets,-1.0);
     h_qcd->Add(h_wjets,-1.0);
     h_qcd->Add(h_singletop,-1.0);
     h_qcd->Add(h_ttbar,-1.0);
@@ -487,11 +514,11 @@ TObject * getBackground( TString DIR, TString histname, TString region, TString 
   
   double bkg_norms[nbkg] = {
     831.76 * LUM[ich] / 77229341.,       //TTbar nonsignal
-    136.02 * LUM[ich] / 5993676.,        //Single top
-    80.95 * LUM[ich] / 3928063.,  
-    35.9 * LUM[ich] / 992024.,    
-    35.9 * LUM[ich] / 998276.,
-    10.32 * 0.322 * LUM[ich] / 1000000.,
+    136.02 * LUM[ich] / 67240808., //SingleTop
+    80.95 * LUM[ich] / 38811017.,  
+    19.3 * LUM[ich] / 8629641.,    
+    19.3 * LUM[ich] / 8681541.,
+    10.32 * 0.322 * LUM[ich] / 9651642.,
     1345.0 * 1.21 * LUM[ich] / 39617787., // WJets
     359.7 * 1.21 * LUM[ich] / 19914590.,  
     48.91 * 1.21 * LUM[ich] / 5796237.,  
@@ -544,8 +571,8 @@ TH1F* adjustRange(TH1F* h_input, float xlow, float xhigh){
   TString ylabel = h_input->GetYaxis()->GetTitle();
   TH1F* h_output = new TH1F(h_input->GetName(),";"+xlabel+";"+ylabel,xbins_new,edges[lowbin-1],edges[highbin-1]+h_input->GetBinWidth(1));
   for (int ii = 0; ii < xbins_new; ii++){
-    h_output->SetBinContent(ii+1,h_input->GetBinContent(lowbin+ii));
-    h_output->SetBinError(ii+1,h_input->GetBinError(lowbin+ii));
+    h_output->SetBinContent(ii+1,max(0.0001,h_input->GetBinContent(lowbin+ii)));
+    h_output->SetBinError(ii+1,max(0.0001,h_input->GetBinError(lowbin+ii)));
   }
   return h_output;
 }

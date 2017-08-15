@@ -2,32 +2,10 @@
 
 import math
 
-# -------------------------------------------------------------------------------------
-# Script for doing RooUnfold on the ttbar differential cross secion
-# -------------------------------------------------------------------------------------
-
-from optparse import OptionParser
-parser = OptionParser()
-
-# -------------------------------------------------------------------------------------
-# input options
-# -------------------------------------------------------------------------------------
-
-parser.add_option('--lepType', metavar='F', type='string', action='store',
-                  default='muon',
-                  dest='lepType',
-                  help='Lepton type (ele or muon)')
-
-# -------------------------------------------------------------------------------------
-# load options & set plot style
-# -------------------------------------------------------------------------------------
-
-(options, args) = parser.parse_args()
-argv = []
-
 import sys
 
-from ROOT import gRandom, TH1, TH1D, TH1F, TH2F, cout, TFile, gSystem, TCanvas, TPad, gPad, gROOT, gStyle, THStack, TLegend, TLatex, TColor, TMath, TVectorD, TGraph, TUnfold, Double, TSpline, TSpline3, TUnfoldDensity, TUnfoldSys, TUnfold, TAttLine, TStyle
+from ROOT import gRandom, TH1, TH1D, TH1F, TH2F, cout, TFile, gSystem, TCanvas, TPad, gPad, gROOT, gStyle, THStack, TLegend, TLatex, TColor, TMath, TVectorD, TGraph, TUnfold, Double, TSpline, TSpline3, TUnfoldDensity, TUnfoldSys, TUnfold, TAttLine, TStyle, THStack, TMatrixT, TMatrixD
+
 from array import array
 import string
 
@@ -48,51 +26,53 @@ gStyle.SetPadRightMargin(0.05);
 gStyle.SetPadBottomMargin(0.16);
 gStyle.SetPadLeftMargin(0.18);
   
-gSystem.Load("RooUnfold/libRooUnfold.so")
-
-from ROOT import RooUnfoldResponse
-from ROOT import RooUnfold
-from ROOT import RooUnfoldBayes
-from ROOT import RooUnfoldSvd
-from ROOT import RooUnfoldTUnfold
-
 print "TUnfold version is " + str(TUnfold.GetTUnfoldVersion())
+TH1.AddDirectory(0)
+
 
 # -------------------------------------------------------------------------------------
 # Define helper functions
 # -------------------------------------------------------------------------------------
-
-#def makeResponse( response ) :
-#    Hres = response.HresponseNoOverflow()
-#    vtru = response.Vtruth()
-#    etru = response.Etruth()
-#        
-#    for j in xrange(1,response.GetNbinsTruth()+1) :
-#        ntru = 0.0
-#        errtru = 0.0
-#        for i in xrange(1,response.GetNbinsMeasured()+1) :
-#            ntru += Hres.GetBinContent(i,j)
-#            errtru += pow(Hres.GetBinError(i,j),2)
-#        Hres.SetBinContent(0, j, vtru[j-1]-ntru)
-#        Hres.SetBinError(0, j, math.sqrt(etru[j-1]-errtru)) #Normally would add, but we want underflow + normal bin errors to sum to total error
-#        
-#    return Hres
-
-#def removeFakes( hMeas, response ):
-#    if response.FakeEntries() :
-#        fakes = response.Vfakes()
-#        fac = response.Vmeasured().Sum() # Measured, from response matrix
-#        if fac != 0.0 :
-#            measVec = RooUnfoldResponse.H2V(hMeas,response.GetNbinsMeasured(),0) #Actual measured input
-#            fac = measVec.Sum() / fac 
-#            for i in xrange(1,response.GetNbinsMeasured()+1) :
-#                hMeas.SetBinContent(i,hMeas.GetBinContent(i) - fac * fakes[i-1])
 
 def noNegBins( hist ):
     for i in xrange(1,hist.GetNbinsX()+1):
         if hist.GetBinContent(i) < 0.0 :
             hist.SetBinContent(i,0.0)
 
+def drawCMS( x1, y1, size = 0.056, status = "Work In Progress") :
+    cmsTextSize = size
+    extraTextSize = 0.76 * size
+    
+    l = TLatex()
+    l.SetTextSize(cmsTextSize)
+    l.SetTextFont(61)
+    l.SetTextAngle(0)
+    l.SetNDC()
+    l.SetTextColor(1)
+
+    lp = TLatex()
+    lp.SetTextSize(extraTextSize) 
+    lp.SetTextFont(52)
+    lp.SetNDC()
+    lp.SetTextColor(1)
+
+    l.DrawLatex(x1,y1,"CMS")
+    if status is not None:
+        lp.DrawLatex(x1+0.1,y1,status)
+
+class Background :
+    def __init__(self, name, norm, err):
+        self.name = name
+        self.hist = None
+        self.norm = norm
+        self.err  = err
+    def addHist(self, hist):
+        if self.hist is None:
+            self.hist = hist.Clone()
+        else:
+            self.hist.Add(hist)
+    
+    
 # -------------------------------------------------------------------------------------
 # Define normalization constants
 # -------------------------------------------------------------------------------------
@@ -100,11 +80,11 @@ def noNegBins( hist ):
 lum = 35867.0
 
 PowhegPythia8_norm         = 831.76         * lum / 77229341.
-SingleTop_t_t_norm         = 136.02         * lum / 5993676.
-SingleTop_tbar_t_norm      = 80.95          * lum / 3928063.
-SingleTop_t_tW_norm        = 35.9           * lum / 992024.
-SingleTop_tbar_tW_norm     = 35.9           * lum / 998276.
-SingleTop_s_norm           = 10.32          * lum / 1000000.
+SingleTop_t_t_norm         = 136.02         * lum / 67240808.
+SingleTop_tbar_t_norm      = 80.95          * lum / 38811017.
+SingleTop_t_tW_norm        = 19.3           * lum / 8629641.
+SingleTop_tbar_tW_norm     = 19.3           * lum / 8681541.
+SingleTop_s_norm           = 10.32 * 0.322  * lum / 9651642.
 WJets_HT100to200_norm      = 1345.0 * 1.21  * lum / 39617787.
 WJets_HT200to400_norm      = 359.7 * 1.21   * lum / 19914590.
 WJets_HT400to600_norm      = 48.91 * 1.21   * lum / 5796237.
@@ -112,6 +92,10 @@ WJets_HT600to800_norm      = 12.05 * 1.21   * lum / 14822888.
 WJets_HT800to1200_norm     = 5.501 * 1.21   * lum / 6200954.
 WJets_HT1200to2500_norm    = 1.329 * 1.21   * lum / 6324934.
 WJets_HT2500toInf_norm     = 0.03216 * 1.21 * lum / 2384260.
+ZJets_norm                 = 5765           * lum / 42923575.
+WW_norm                    = 118.7          * lum / 6987124.
+WZ_norm                    = 44.9           * lum / 2995828.
+ZZ_norm                    = 15.4           * lum / 990064.
 QCD_HT500to700_norm        = 32100.         * lum / 18929951.
 QCD_HT700to1000_norm       = 6831.          * lum / 15629253.  
 QCD_HT1000to1500_norm      = 1207.          * lum / 4767100. 
@@ -126,592 +110,1090 @@ hTrue_name = "ptGenTop"
 #  read histogram files
 # -------------------------------------------------------------------------------------
 
-muOrEl = "mu"
-if options.lepType=="ele":
-    muOrEl = "el"
-
-f_data = TFile("histfiles_full2016/hists_Data_"+muOrEl+".root")
-f_QCD  = TFile("histfiles_full2016/hists_Data_"+muOrEl+"_qcd.root")
-
-f_ttbar        = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_post.root")
-f_ttbar_2      = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_post.root")
-
-f_ttbar_nonsemilep   = TFile("histfiles_full2016/hists_PowhegPythia8_nonsemilep_"+muOrEl+"_nom_post.root")
-f_T_t                = TFile("histfiles_full2016/hists_SingleTop_t_t_"+muOrEl+"_nom_post.root")
-f_Tbar_t             = TFile("histfiles_full2016/hists_SingleTop_tbar_t_"+muOrEl+"_nom_post.root")
-f_T_tW               = TFile("histfiles_full2016/hists_SingleTop_t_tW_"+muOrEl+"_nom_post.root")
-f_Tbar_tW            = TFile("histfiles_full2016/hists_SingleTop_tbar_tW_"+muOrEl+"_nom_post.root")
-f_T_s                = TFile("histfiles_full2016/hists_SingleTop_s_"+muOrEl+"_nom_post.root")    
-f_WJets_HT100to200   = TFile("histfiles_full2016/hists_WJets_HT100to200_"+muOrEl+"_nom_post.root")
-f_WJets_HT200to400   = TFile("histfiles_full2016/hists_WJets_HT200to400_"+muOrEl+"_nom_post.root")
-f_WJets_HT400to600   = TFile("histfiles_full2016/hists_WJets_HT400to600_"+muOrEl+"_nom_post.root")
-f_WJets_HT600to800   = TFile("histfiles_full2016/hists_WJets_HT600to800_"+muOrEl+"_nom_post.root")
-f_WJets_HT800to1200  = TFile("histfiles_full2016/hists_WJets_HT800to1200_"+muOrEl+"_nom_post.root")
-f_WJets_HT1200to2500 = TFile("histfiles_full2016/hists_WJets_HT1200to2500_"+muOrEl+"_nom_post.root")
-f_WJets_HT2500toInf  = TFile("histfiles_full2016/hists_WJets_HT2500toInf_"+muOrEl+"_nom_post.root")
-    
-f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_ttbar_nonsemilep   = TFile("histfiles_full2016/hists_PowhegPythia8_nonsemilep_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_T_t                = TFile("histfiles_full2016/hists_SingleTop_t_t_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_Tbar_t             = TFile("histfiles_full2016/hists_SingleTop_tbar_t_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_T_tW               = TFile("histfiles_full2016/hists_SingleTop_t_tW_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_Tbar_tW            = TFile("histfiles_full2016/hists_SingleTop_tbar_tW_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_T_s                = TFile("histfiles_full2016/hists_SingleTop_s_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_WJets_HT100to200   = TFile("histfiles_full2016/hists_WJets_HT100to200_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_WJets_HT200to400   = TFile("histfiles_full2016/hists_WJets_HT200to400_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_WJets_HT400to600   = TFile("histfiles_full2016/hists_WJets_HT400to600_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_WJets_HT600to800   = TFile("histfiles_full2016/hists_WJets_HT600to800_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_WJets_HT800to1200  = TFile("histfiles_full2016/hists_WJets_HT800to1200_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_WJets_HT1200to2500 = TFile("histfiles_full2016/hists_WJets_HT1200to2500_"+muOrEl+"_nom_qcd_post.root")
-f_qcd_WJets_HT2500toInf  = TFile("histfiles_full2016/hists_WJets_HT2500toInf_"+muOrEl+"_nom_qcd_post.root")
-
-# -------------------------------------------------------------------------------------
-# Get response matrix
-# -------------------------------------------------------------------------------------
-
-response = f_ttbar.Get(response_name)
-response.Sumw2()
-response2 = f_ttbar_2.Get(response_name)
-response2.Sumw2()
-Hres.Scale(77229341. / (77229341. + 78006311. * 1191. / 1192.))
-Hres_2.Scale(78006311. * 1191. / 1192. / (77229341. + 78006311. * 1191. / 1192.))
-Hres.Add(Hres_2)
-
-TH1.AddDirectory(0)
-
-# -------------------------------------------------------------------------------------
-# Get systematic variations
-# -------------------------------------------------------------------------------------
-
+response = {}
+thisMeas = {}
+thisTrue = {}
 Hres_sys = {}
-sysnames = ['JECUp','JECDown','JERUp','JERDown','BTagUp','BTagDown','TopTagUp','TopTagDown','lepUp','lepDown','PDFUp','PDFDown','Q2Up','Q2Down','ASUp','ASDown']
+backgrounds = {}
 
-for sysname in sysnames:
-    f_ttbar_sys        = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_"+sysname+"_post.root")
-    f_ttbar_sys_2      = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_"+sysname+"_post.root")
+channels = ["mu","el"]
+sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
+thsysnames = ["ISR","FSR"]
+allsysnames = sysnames+thsysnames
+longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR"]
+variants = ["Up","Down"]
 
-    response_sys = f_ttbar_sys.Get(response_name)
-    response_sys.Sumw2()
-    response2_sys = f_ttbar_sys_2.Get(response_name)
-    response_sys.Sumw2()
-    Hres_tmp.Scale(77229341. / (77229341. + 78006311. * 1191. / 1192.))
-    Hres_tmp_2.Scale(78006311. * 1191. / 1192. / (77229341. + 78006311. * 1191. / 1192.))
-    Hres_tmp.Add(Hres_tmp_2)
+for channel in channels:
+    f_data = TFile("histfiles_full2016/hists_Data_"+channel+".root")
+    f_QCD  = TFile("histfiles_full2016/hists_Data_"+channel+"_qcd.root")
+
+    f_ttbar_m0to700_p1 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+channel+"_nom_post.root")
+    f_ttbar_m0to700_p2 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+channel+"_nom_post.root")
+    f_ttbar_m700to1000 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+channel+"_nom_post.root")
+    f_ttbar_m1000toInf = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+channel+"_nom_post.root")    
+    
+    f_ttbar_nonsemilep   = TFile("histfiles_full2016/hists_PowhegPythia8_nonsemilep_"+channel+"_nom_post.root")
+    f_T_t                = TFile("histfiles_full2016/hists_SingleTop_t_t_"+channel+"_nom_post.root")
+    f_Tbar_t             = TFile("histfiles_full2016/hists_SingleTop_tbar_t_"+channel+"_nom_post.root")
+    f_T_tW               = TFile("histfiles_full2016/hists_SingleTop_t_tW_"+channel+"_nom_post.root")
+    f_Tbar_tW            = TFile("histfiles_full2016/hists_SingleTop_tbar_tW_"+channel+"_nom_post.root")
+    f_T_s                = TFile("histfiles_full2016/hists_SingleTop_s_"+channel+"_nom_post.root")    
+    f_WJets_HT100to200   = TFile("histfiles_full2016/hists_WJets_HT100to200_"+channel+"_nom_post.root")
+    f_WJets_HT200to400   = TFile("histfiles_full2016/hists_WJets_HT200to400_"+channel+"_nom_post.root")
+    f_WJets_HT400to600   = TFile("histfiles_full2016/hists_WJets_HT400to600_"+channel+"_nom_post.root")
+    f_WJets_HT600to800   = TFile("histfiles_full2016/hists_WJets_HT600to800_"+channel+"_nom_post.root")
+    f_WJets_HT800to1200  = TFile("histfiles_full2016/hists_WJets_HT800to1200_"+channel+"_nom_post.root")
+    f_WJets_HT1200to2500 = TFile("histfiles_full2016/hists_WJets_HT1200to2500_"+channel+"_nom_post.root")
+    f_WJets_HT2500toInf  = TFile("histfiles_full2016/hists_WJets_HT2500toInf_"+channel+"_nom_post.root")
+    f_ZJets              = TFile("histfiles_full2016/hists_ZJets_"+channel+"_nom_post.root")
+    f_WW                 = TFile("histfiles_full2016/hists_WW_"+channel+"_nom_post.root")
+    f_WZ                 = TFile("histfiles_full2016/hists_WZ_"+channel+"_nom_post.root")
+    f_ZZ                 = TFile("histfiles_full2016/hists_ZZ_"+channel+"_nom_post.root")
+    
+    f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+channel+"_nom_qcd_post.root")
+    f_qcd_ttbar_nonsemilep   = TFile("histfiles_full2016/hists_PowhegPythia8_nonsemilep_"+channel+"_nom_qcd_post.root")
+    f_qcd_T_t                = TFile("histfiles_full2016/hists_SingleTop_t_t_"+channel+"_nom_qcd_post.root")
+    f_qcd_Tbar_t             = TFile("histfiles_full2016/hists_SingleTop_tbar_t_"+channel+"_nom_qcd_post.root")
+    f_qcd_T_tW               = TFile("histfiles_full2016/hists_SingleTop_t_tW_"+channel+"_nom_qcd_post.root")
+    f_qcd_Tbar_tW            = TFile("histfiles_full2016/hists_SingleTop_tbar_tW_"+channel+"_nom_qcd_post.root")
+    f_qcd_T_s                = TFile("histfiles_full2016/hists_SingleTop_s_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT100to200   = TFile("histfiles_full2016/hists_WJets_HT100to200_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT200to400   = TFile("histfiles_full2016/hists_WJets_HT200to400_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT400to600   = TFile("histfiles_full2016/hists_WJets_HT400to600_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT600to800   = TFile("histfiles_full2016/hists_WJets_HT600to800_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT800to1200  = TFile("histfiles_full2016/hists_WJets_HT800to1200_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT1200to2500 = TFile("histfiles_full2016/hists_WJets_HT1200to2500_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT2500toInf  = TFile("histfiles_full2016/hists_WJets_HT2500toInf_"+channel+"_nom_qcd_post.root")
+    f_qcd_ZJets              = TFile("histfiles_full2016/hists_ZJets_"+channel+"_nom_qcd_post.root")
+    f_qcd_WW                 = TFile("histfiles_full2016/hists_WW_"+channel+"_nom_qcd_post.root")
+    f_qcd_WZ                 = TFile("histfiles_full2016/hists_WZ_"+channel+"_nom_qcd_post.root")
+    f_qcd_ZZ                 = TFile("histfiles_full2016/hists_ZZ_"+channel+"_nom_qcd_post.root")
+    
+    # -------------------------------------------------------------------------------------
+    # Get response matrix
+    # -------------------------------------------------------------------------------------
+    response_m0to700_p1 = f_ttbar_m0to700_p1.Get(response_name)
+    response_m0to700_p2 = f_ttbar_m0to700_p2.Get(response_name)
+    response_m700to1000 = f_ttbar_m700to1000.Get(response_name)
+    response_m1000toInf = f_ttbar_m1000toInf.Get(response_name)
+    response_m0to700_p1.Sumw2()
+    response_m0to700_p2.Sumw2()
+    response_m700to1000.Sumw2()
+    response_m1000toInf.Sumw2()
+    response_m0to700 = response_m0to700_p1.Clone()
+    response_m0to700.Add(response_m0to700_p2)
+    response_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+    response_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+    response_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+    response[channel] = response_m0to700.Clone()
+    response[channel].Add(response_m700to1000);
+    response[channel].Add(response_m1000toInf);
+
+    # -------------------------------------------------------------------------------------
+    # Get systematic variations
+    # -------------------------------------------------------------------------------------
+    for sysname in sysnames:
+        for var in variants:
+            f_ttbar_sys_m0to700_p1 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+channel+"_"+sysname+var+"_post.root")
+            f_ttbar_sys_m0to700_p2 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+channel+"_"+sysname+var+"_post.root")
+            f_ttbar_sys_m700to1000 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+channel+"_"+sysname+var+"_post.root")
+            f_ttbar_sys_m1000toInf = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+channel+"_"+sysname+var+"_post.root")    
+
+            response_sys_m0to700_p1 = f_ttbar_sys_m0to700_p1.Get(response_name)
+            response_sys_m0to700_p2 = f_ttbar_sys_m0to700_p2.Get(response_name)
+            response_sys_m700to1000 = f_ttbar_sys_m700to1000.Get(response_name)
+            response_sys_m1000toInf = f_ttbar_sys_m1000toInf.Get(response_name)
+            response_sys_m0to700_p1.Sumw2()
+            response_sys_m0to700_p2.Sumw2()
+            response_sys_m700to1000.Sumw2()
+            response_sys_m1000toInf.Sumw2()
+            response_sys_m0to700 = response_sys_m0to700_p1.Clone()
+            response_sys_m0to700.Add(response_sys_m0to700_p2)
+            response_sys_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+            response_sys_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+            response_sys_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+            response_sys = response_sys_m0to700.Clone()
+            response_sys.Add(response_sys_m700to1000);
+            response_sys.Add(response_sys_m1000toInf);
+
+            for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
+                response_sys.SetBinContent(ibin,0,0)
+                response_sys.SetBinError(ibin,0,0)
+                
+            Hres_sys[sysname+var+"_"+channel] = response_sys
+            
+    for thsysname in thsysnames:
+        for var in variants:
+            f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+channel+"_"+thsysname+var+"_post.root")
+            response_sys = f_ttbar_sys.Get(response_name)
+            response_sys.Sumw2()
+            
+            for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
+                response_sys.SetBinContent(ibin,0,0)
+                response_sys.SetBinContent(ibin,0,0)
+
+            Hres_sys[thsysname+var+"_"+channel] = response_sys
+
+
+    # -------------------------------------------------------------------------------------
+    # read & normalize histograms
+    # -------------------------------------------------------------------------------------
+
+    thisMeas[channel] = f_data.Get(hMeas_name).Clone()
+    thisMeas[channel].Sumw2()
+
+    thisTrue_m0to700_p1 = f_ttbar_m0to700_p1.Get(hTrue_name)
+    thisTrue_m0to700_p2 = f_ttbar_m0to700_p2.Get(hTrue_name)
+    thisTrue_m700to1000 = f_ttbar_m700to1000.Get(hTrue_name)
+    thisTrue_m1000toInf = f_ttbar_m1000toInf.Get(hTrue_name)
+    thisTrue_m0to700_p1.Sumw2()
+    thisTrue_m0to700_p2.Sumw2()
+    thisTrue_m700to1000.Sumw2()
+    thisTrue_m1000toInf.Sumw2()
+    thisTrue_m0to700 = thisTrue_m0to700_p1.Clone()
+    thisTrue_m0to700.Add(thisTrue_m0to700_p2)
+    thisTrue_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+    thisTrue_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+    thisTrue_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+    thisTrue[channel] = thisTrue_m0to700.Clone()
+    thisTrue[channel].Add(thisTrue_m700to1000);
+    thisTrue[channel].Add(thisTrue_m1000toInf);
+
+    noNegBins(thisMeas[channel])
+    noNegBins(thisTrue[channel])
+    
+    thisMeas[channel].SetName("recolevel") 
+    thisTrue[channel].SetName("truthlevel")
+    
+    nbinsTrue = thisTrue[channel].GetNbinsX()
+    nbinsMeas = thisMeas[channel].GetNbinsX()
+
+    hMeas_tt_nonsemi          = f_ttbar_nonsemilep.Get(hMeas_name)
+    hMeas_T_t                 = f_T_t.Get(hMeas_name)
+    hMeas_Tbar_t              = f_Tbar_t.Get(hMeas_name)
+    hMeas_T_tW                = f_T_tW.Get(hMeas_name)
+    hMeas_Tbar_tW             = f_Tbar_tW.Get(hMeas_name)
+    hMeas_T_s                 = f_T_s.Get(hMeas_name)
+    hMeas_WJets_HT100to200    = f_WJets_HT100to200.Get(hMeas_name)
+    hMeas_WJets_HT200to400    = f_WJets_HT200to400.Get(hMeas_name)
+    hMeas_WJets_HT400to600    = f_WJets_HT400to600.Get(hMeas_name)
+    hMeas_WJets_HT600to800    = f_WJets_HT600to800.Get(hMeas_name)
+    hMeas_WJets_HT800to1200   = f_WJets_HT800to1200.Get(hMeas_name)
+    hMeas_WJets_HT1200to2500  = f_WJets_HT1200to2500.Get(hMeas_name)
+    hMeas_WJets_HT2500toInf   = f_WJets_HT2500toInf.Get(hMeas_name)
+    hMeas_WJetsL_HT100to200   = f_WJets_HT100to200.Get(hMeas_name+'_l')
+    hMeas_WJetsL_HT200to400   = f_WJets_HT200to400.Get(hMeas_name+'_l')
+    hMeas_WJetsL_HT400to600   = f_WJets_HT400to600.Get(hMeas_name+'_l')
+    hMeas_WJetsL_HT600to800   = f_WJets_HT600to800.Get(hMeas_name+'_l')
+    hMeas_WJetsL_HT800to1200  = f_WJets_HT800to1200.Get(hMeas_name+'_l')
+    hMeas_WJetsL_HT1200to2500 = f_WJets_HT1200to2500.Get(hMeas_name+'_l')
+    hMeas_WJetsL_HT2500toInf  = f_WJets_HT2500toInf.Get(hMeas_name+'_l')
+    hMeas_ZJets               = f_ZJets.Get(hMeas_name)
+    hMeas_WW                  = f_WW.Get(hMeas_name)
+    hMeas_WZ                  = f_WZ.Get(hMeas_name)
+    hMeas_ZZ                  = f_ZZ.Get(hMeas_name)
+    
+    hMeas_tt_nonsemi         .Sumw2()
+    hMeas_T_t                .Sumw2()
+    hMeas_Tbar_t             .Sumw2()
+    hMeas_T_tW               .Sumw2()
+    hMeas_Tbar_tW            .Sumw2()
+    hMeas_T_s                .Sumw2()
+    hMeas_WJets_HT100to200   .Sumw2()
+    hMeas_WJets_HT200to400   .Sumw2()
+    hMeas_WJets_HT400to600   .Sumw2()
+    hMeas_WJets_HT600to800   .Sumw2()
+    hMeas_WJets_HT800to1200  .Sumw2()
+    hMeas_WJets_HT1200to2500 .Sumw2()
+    hMeas_WJets_HT2500toInf  .Sumw2()
+    hMeas_WJetsL_HT100to200  .Sumw2()
+    hMeas_WJetsL_HT200to400  .Sumw2()
+    hMeas_WJetsL_HT400to600  .Sumw2()
+    hMeas_WJetsL_HT600to800  .Sumw2()
+    hMeas_WJetsL_HT800to1200 .Sumw2()
+    hMeas_WJetsL_HT1200to2500.Sumw2()
+    hMeas_WJetsL_HT2500toInf .Sumw2()
+    hMeas_ZJets              .Sumw2()
+    hMeas_WW                 .Sumw2()
+    hMeas_WZ                 .Sumw2()
+    hMeas_ZZ                 .Sumw2()
+    
+    hMeas_tt_nonsemi.Scale(PowhegPythia8_norm)
+    hMeas_T_t.Scale( SingleTop_t_t_norm)
+    hMeas_Tbar_t.Scale( SingleTop_tbar_t_norm)
+    hMeas_T_tW.Scale(SingleTop_t_tW_norm)
+    hMeas_Tbar_tW.Scale(SingleTop_tbar_tW_norm)
+    hMeas_T_s.Scale(SingleTop_s_norm)
+    hMeas_WJets_HT100to200.Scale(WJets_HT100to200_norm)
+    hMeas_WJets_HT200to400.Scale(WJets_HT200to400_norm)
+    hMeas_WJets_HT400to600.Scale(WJets_HT400to600_norm)
+    hMeas_WJets_HT600to800.Scale(WJets_HT600to800_norm)
+    hMeas_WJets_HT800to1200.Scale(WJets_HT800to1200_norm)
+    hMeas_WJets_HT1200to2500.Scale(WJets_HT1200to2500_norm)
+    hMeas_WJets_HT2500toInf.Scale(WJets_HT2500toInf_norm)
+    hMeas_WJetsL_HT100to200.Scale(WJets_HT100to200_norm)
+    hMeas_WJetsL_HT200to400.Scale(WJets_HT200to400_norm)
+    hMeas_WJetsL_HT400to600.Scale(WJets_HT400to600_norm)
+    hMeas_WJetsL_HT600to800.Scale(WJets_HT600to800_norm)
+    hMeas_WJetsL_HT800to1200.Scale(WJets_HT800to1200_norm)
+    hMeas_WJetsL_HT1200to2500.Scale(WJets_HT1200to2500_norm)
+    hMeas_WJetsL_HT2500toInf.Scale(WJets_HT2500toInf_norm)
+    hMeas_ZJets.Scale(ZJets_norm)
+    hMeas_WW.Scale(WW_norm)
+    hMeas_WZ.Scale(WZ_norm)
+    hMeas_ZZ.Scale(ZZ_norm)
+    
+    hMeas_qcd                    = f_QCD.Get(hMeas_name)
+    hMeas_qcd_tt                 = f_qcd_ttbar.Get(hMeas_name)
+    hMeas_qcd_tt_nonsemi         = f_qcd_ttbar_nonsemilep.Get(hMeas_name)
+    hMeas_qcd_T_t                = f_qcd_T_t.Get(hMeas_name)
+    hMeas_qcd_Tbar_t             = f_qcd_Tbar_t.Get(hMeas_name)
+    hMeas_qcd_T_tW               = f_qcd_T_tW.Get(hMeas_name)
+    hMeas_qcd_Tbar_tW            = f_qcd_Tbar_tW.Get(hMeas_name)
+    hMeas_qcd_T_s                = f_qcd_T_s.Get(hMeas_name)
+    hMeas_qcd_WJets_HT100to200   = f_qcd_WJets_HT100to200.Get(hMeas_name)
+    hMeas_qcd_WJets_HT200to400   = f_qcd_WJets_HT200to400.Get(hMeas_name)
+    hMeas_qcd_WJets_HT400to600   = f_qcd_WJets_HT400to600.Get(hMeas_name)
+    hMeas_qcd_WJets_HT600to800   = f_qcd_WJets_HT600to800.Get(hMeas_name)
+    hMeas_qcd_WJets_HT800to1200  = f_qcd_WJets_HT800to1200.Get(hMeas_name)
+    hMeas_qcd_WJets_HT1200to2500 = f_qcd_WJets_HT1200to2500.Get(hMeas_name)
+    hMeas_qcd_WJets_HT2500toInf  = f_qcd_WJets_HT2500toInf.Get(hMeas_name)
+    hMeas_qcd_ZJets              = f_qcd_ZJets.Get(hMeas_name)
+    hMeas_qcd_WW                 = f_qcd_WW.Get(hMeas_name)
+    hMeas_qcd_WZ                 = f_qcd_WZ.Get(hMeas_name)
+    hMeas_qcd_ZZ                 = f_qcd_ZZ.Get(hMeas_name)
+    
+    hMeas_qcd_tt_nonsemi         .Sumw2()
+    hMeas_qcd_T_t                .Sumw2()
+    hMeas_qcd_Tbar_t             .Sumw2()
+    hMeas_qcd_T_tW               .Sumw2()
+    hMeas_qcd_Tbar_tW            .Sumw2()
+    hMeas_qcd_T_s                .Sumw2()
+    hMeas_qcd_WJets_HT100to200   .Sumw2()
+    hMeas_qcd_WJets_HT200to400   .Sumw2()
+    hMeas_qcd_WJets_HT400to600   .Sumw2()
+    hMeas_qcd_WJets_HT600to800   .Sumw2()
+    hMeas_qcd_WJets_HT800to1200  .Sumw2()
+    hMeas_qcd_WJets_HT1200to2500 .Sumw2()
+    hMeas_qcd_WJets_HT2500toInf  .Sumw2()
+    hMeas_qcd_ZJets              .Sumw2()
+    hMeas_qcd_WW                 .Sumw2()
+    hMeas_qcd_WZ                 .Sumw2()
+    hMeas_qcd_ZZ                 .Sumw2()
+    
+    hMeas_qcd_tt.Scale(PowhegPythia8_norm)
+    hMeas_qcd_tt_nonsemi.Scale(PowhegPythia8_norm)
+    hMeas_qcd_T_t.Scale( SingleTop_t_t_norm)
+    hMeas_qcd_Tbar_t.Scale( SingleTop_tbar_t_norm)
+    hMeas_qcd_T_tW.Scale(SingleTop_t_tW_norm)
+    hMeas_qcd_Tbar_tW.Scale(SingleTop_tbar_tW_norm)
+    hMeas_qcd_T_s.Scale(SingleTop_s_norm)
+    hMeas_qcd_WJets_HT100to200.Scale(WJets_HT100to200_norm)
+    hMeas_qcd_WJets_HT200to400.Scale(WJets_HT200to400_norm)
+    hMeas_qcd_WJets_HT400to600.Scale(WJets_HT400to600_norm)
+    hMeas_qcd_WJets_HT600to800.Scale(WJets_HT600to800_norm)
+    hMeas_qcd_WJets_HT800to1200.Scale(WJets_HT800to1200_norm)
+    hMeas_qcd_WJets_HT1200to2500.Scale(WJets_HT1200to2500_norm)
+    hMeas_qcd_WJets_HT2500toInf.Scale(WJets_HT2500toInf_norm)
+    hMeas_qcd_ZJets.Scale(ZJets_norm)
+    hMeas_qcd_WW.Scale(WW_norm)
+    hMeas_qcd_WZ.Scale(WZ_norm)
+    hMeas_qcd_ZZ.Scale(ZZ_norm)
+
+    backgrounds[channel] = []
+    bkg_TT_nonsemi = Background("TT_nonsemi",0.80,0.08)
+    bkg_TT_nonsemi.addHist(hMeas_tt_nonsemi)
+    backgrounds[channel].append(bkg_TT_nonsemi)
+    
+    bkg_SingleTop = Background("SingleTop",1.32,0.57)
+    for hist in [hMeas_T_t,hMeas_Tbar_t, hMeas_T_tW, hMeas_Tbar_tW, hMeas_T_s] :
+        bkg_SingleTop.addHist(hist)
+    backgrounds[channel].append(bkg_SingleTop)
+
+    bkg_WJetsL = Background("WJetsL",0.78,0.18)
+    bkg_WJetsHF = Background("WJetsHF",1.05,0.30)
+    for hist in [hMeas_WJets_HT100to200,hMeas_WJets_HT200to400,hMeas_WJets_HT400to600,hMeas_WJets_HT600to800,hMeas_WJets_HT800to1200,hMeas_WJets_HT1200to2500,hMeas_WJets_HT2500toInf] :
+        bkg_WJetsHF.addHist( hist )
+    for hist in [hMeas_WJetsL_HT100to200,hMeas_WJetsL_HT200to400,hMeas_WJetsL_HT400to600,hMeas_WJetsL_HT600to800,hMeas_WJetsL_HT800to1200,hMeas_WJetsL_HT1200to2500,hMeas_WJetsL_HT2500toInf] :
+        bkg_WJetsL.addHist( hist )
+        hist.Scale(-1.0)
+        bkg_WJetsHF.addHist( hist )
+    backgrounds[channel].append(bkg_WJetsL)
+    backgrounds[channel].append(bkg_WJetsHF)
+
+    bkg_ZJets = Background("ZJets",0.67,0.24)
+    bkg_ZJets.addHist(hMeas_ZJets)
+    backgrounds[channel].append(bkg_ZJets)
+
+    bkg_Diboson = Background("Diboson",0.99,0.31)
+    for hist in [hMeas_WW, hMeas_WZ, hMeas_ZZ]:
+        bkg_Diboson.addHist(hist)
+    backgrounds[channel].append(bkg_Diboson)
+
+    hMeas_QCD = hMeas_qcd.Clone()
+    for hist in [hMeas_qcd_tt, hMeas_qcd_tt_nonsemi, hMeas_qcd_T_t,hMeas_qcd_Tbar_t,hMeas_qcd_T_tW,hMeas_qcd_Tbar_tW, hMeas_qcd_T_s, hMeas_qcd_WJets_HT100to200,hMeas_qcd_WJets_HT200to400,hMeas_qcd_WJets_HT400to600, hMeas_qcd_WJets_HT600to800,hMeas_qcd_WJets_HT800to1200,hMeas_qcd_WJets_HT1200to2500,hMeas_qcd_WJets_HT2500toInf, hMeas_qcd_ZJets, hMeas_qcd_WW, hMeas_qcd_WZ, hMeas_qcd_ZZ] :
+        hMeas_QCD.Add(hist,-1.0)
+    noNegBins(hMeas_QCD)
+    
+    # -------------------------------
+    # Normalize QCD to MC prediction
+    # -------------------------------
+
+    f_QCD_HT500to700   = TFile("histfiles_full2016/hists_QCD_HT500to700_"+channel+"_nom_post.root")
+    f_QCD_HT700to1000  = TFile("histfiles_full2016/hists_QCD_HT700to1000_"+channel+"_nom_post.root")
+    f_QCD_HT1000to1500 = TFile("histfiles_full2016/hists_QCD_HT1000to1500_"+channel+"_nom_post.root")
+    f_QCD_HT1500to2000 = TFile("histfiles_full2016/hists_QCD_HT1500to2000_"+channel+"_nom_post.root")
+    f_QCD_HT2000toInf  = TFile("histfiles_full2016/hists_QCD_HT2000toInf_"+channel+"_nom_post.root")
+
+    hNorm_QCD_HT500to700   = f_QCD_HT500to700.Get(hMeas_name)
+    hNorm_QCD_HT700to1000  = f_QCD_HT700to1000.Get(hMeas_name)
+    hNorm_QCD_HT1000to1500 = f_QCD_HT1000to1500.Get(hMeas_name)
+    hNorm_QCD_HT1500to2000 = f_QCD_HT1500to2000.Get(hMeas_name)
+    hNorm_QCD_HT2000toInf  = f_QCD_HT2000toInf.Get(hMeas_name)
+    
+    hNorm_QCD_HT500to700   .Sumw2()
+    hNorm_QCD_HT700to1000  .Sumw2()
+    hNorm_QCD_HT1000to1500 .Sumw2()
+    hNorm_QCD_HT1500to2000 .Sumw2()
+    hNorm_QCD_HT2000toInf  .Sumw2()
+    
+    hNorm_QCD_HT500to700.Scale(QCD_HT500to700_norm)
+    hNorm_QCD_HT700to1000.Scale(QCD_HT700to1000_norm)
+    hNorm_QCD_HT1000to1500.Scale(QCD_HT1000to1500_norm)
+    hNorm_QCD_HT1500to2000.Scale(QCD_HT1500to2000_norm)
+    hNorm_QCD_HT2000toInf.Scale(QCD_HT2000toInf_norm)
+    
+    QCD_norm = 0.0
+    for hist in [hNorm_QCD_HT500to700,hNorm_QCD_HT700to1000,hNorm_QCD_HT1000to1500,hNorm_QCD_HT1500to2000,hNorm_QCD_HT2000toInf]:
+        QCD_norm += hist.Integral()
+    
+    hMeas_QCD.Scale(QCD_norm / hMeas_QCD.Integral())
+
+    if channel is "mu":
+        bkg_QCD = Background("muQCD",0.71,0.75)
+    else:
+        bkg_QCD = Background("elQCD",0.90,0.65)
+    bkg_QCD.addHist(hMeas_QCD)
+    backgrounds[channel].append(bkg_QCD)
+
+    # -------------------------------
+    # Troubleshoot
+    # -------------------------------
+
+    print "Bin             & Data             & $tt nonsemi     & SingleTop      & WJetsL         & WJetsHF        & ZJets          & Diboson        & QCD           & Fake fraction "
+    #print "Bin             & Data             & $tt nonsemi     & SingleTop      & WJets          & QCD           & Fake fraction "
+    for ibin in xrange(1,nbinsMeas+1):
+        print string.ljust("$[{:.0f},{:.0f}]$".format(thisMeas[channel].GetXaxis().GetBinLowEdge(ibin), thisMeas[channel].GetXaxis().GetBinUpEdge(ibin)),16) + "&" + string.rjust("{:.1f}".format(thisMeas[channel].GetBinContent(ibin)),6) + " $\pm$ " + string.rjust("{:.1f}".format(thisMeas[channel].GetBinError(ibin)),4) + " & " + " & ".join(" $\pm$ ".join([string.rjust("{:.1f}".format(background.hist.GetBinContent(ibin)*background.norm),4),string.rjust("{:.1f}".format(background.hist.GetBinError(ibin)*background.norm),3)]) for background in backgrounds[channel]) + " & " + "{:.3f}".format(response[channel].GetBinContent(ibin,0) / response[channel].Integral(ibin,ibin,0,response[channel].GetYaxis().GetNbins()+1))
+
+    # -------------------------------
+    # Construct total background hist, with posterior normalizations
+    # -------------------------------
+    
+    hBkg = thisMeas[channel].Clone()
+    hBkg.Reset()
+
+    for background in backgrounds[channel]:
+        hBkg.Add(background.hist,background.norm)
+
+    # -------------------------------
+    # Convert for TUnfold
+    # -------------------------------
+    
+    # Get 'ttbar' part of thisMeas 
+    thisMeas[channel].Add(hBkg,-1.0)
+    
+    for ibin in xrange(1,nbinsMeas+1):
+        # Remove fake part in each bin, using fake fractions from response matrix
+        fakefraction = response[channel].GetBinContent(ibin,0) / response[channel].Integral(ibin,ibin,0,response[channel].GetYaxis().GetNbins()+1)
+        thisMeas[channel].SetBinContent(ibin,thisMeas[channel].GetBinContent(ibin)*(1.0-fakefraction))
+        thisMeas[channel].SetBinError(ibin,thisMeas[channel].GetBinError(ibin)*(1.0-fakefraction))
+        # And then clear underflow bins, since TUnfold does not expect them
+        response[channel].SetBinContent(ibin,0,0)
+        response[channel].SetBinError(ibin,0,0)
         
-    Hres_sys[sysname] = Hres_tmp
+    # Now add back background contribution to thisMeas
+    thisMeas[channel].Add(hBkg)
 
 # -------------------------------------------------------------------------------------
-# read & normalize histograms
+# Construct combined response matrices / inputs
 # -------------------------------------------------------------------------------------
 
-thisMeas = f_data.Get(hMeas_name).Clone()
-thisMeas.Sumw2()
+thisMeas["comb"] = thisMeas["mu"].Clone()
+thisMeas["comb"].Add(thisMeas["el"])
 
-thisTrue = f_ttbar.Get(hTrue_name).Clone()
-thisTrue.Sumw2()
-thisTrue2 = f_ttbar_2.Get(hTrue_name).Clone()
-thisTrue2.Sumw2()
-thisTrue.Add(thisTrue2)
-thisTrue.Scale(lum * 831.76 / (77229341. + 78006311. * 1191. / 1192.));
+thisTrue["comb"] = thisTrue["mu"].Clone()
+thisTrue["comb"].Add(thisTrue["el"])
 
-noNegBins(thisMeas)
-noNegBins(thisTrue)
-    
-thisMeas.SetName("recolevel") 
-thisTrue.SetName("truthlevel")
+backgrounds["comb"] = []
+for ibkg in xrange(0,len(backgrounds["mu"])-1):
+    bkg_comb = Background(backgrounds["mu"][ibkg].name, backgrounds["mu"][ibkg].norm, backgrounds["mu"][ibkg].err)
+    bkg_comb.addHist(backgrounds["mu"][ibkg].hist)
+    bkg_comb.addHist(backgrounds["el"][ibkg].hist)
+    backgrounds["comb"].append(bkg_comb)
+backgrounds["comb"].append(backgrounds["mu"][len(backgrounds["mu"])-1])
+backgrounds["comb"].append(backgrounds["el"][len(backgrounds["el"])-1])
 
-nbinsTrue = thisTrue.GetNbinsX()
-nbinsMeas = thisMeas.GetNbinsX()
+response["comb"] = response["mu"].Clone()
+response["comb"].Add(response["el"])
 
-hMeas_tt_nonsemi         = f_ttbar_nonsemilep.Get(hMeas_name)
-hMeas_T_t                = f_T_t.Get(hMeas_name)
-hMeas_Tbar_t             = f_Tbar_t.Get(hMeas_name)
-hMeas_T_tW               = f_T_tW.Get(hMeas_name)
-hMeas_Tbar_tW            = f_Tbar_tW.Get(hMeas_name)
-hMeas_T_s                = f_T_s.Get(hMeas_name)
-hMeas_WJets_HT100to200   = f_WJets_HT100to200.Get(hMeas_name)
-hMeas_WJets_HT200to400   = f_WJets_HT200to400.Get(hMeas_name)
-hMeas_WJets_HT400to600   = f_WJets_HT400to600.Get(hMeas_name)
-hMeas_WJets_HT600to800   = f_WJets_HT600to800.Get(hMeas_name)
-hMeas_WJets_HT800to1200  = f_WJets_HT800to1200.Get(hMeas_name)
-hMeas_WJets_HT1200to2500 = f_WJets_HT1200to2500.Get(hMeas_name)
-hMeas_WJets_HT2500toInf  = f_WJets_HT2500toInf.Get(hMeas_name)
-
-hMeas_tt_nonsemi         .Sumw2()
-hMeas_T_t                .Sumw2()
-hMeas_Tbar_t             .Sumw2()
-hMeas_T_tW               .Sumw2()
-hMeas_Tbar_tW            .Sumw2()
-hMeas_T_s                .Sumw2()
-hMeas_WJets_HT100to200   .Sumw2()
-hMeas_WJets_HT200to400   .Sumw2()
-hMeas_WJets_HT400to600   .Sumw2()
-hMeas_WJets_HT600to800   .Sumw2()
-hMeas_WJets_HT800to1200  .Sumw2()
-hMeas_WJets_HT1200to2500 .Sumw2()
-hMeas_WJets_HT2500toInf  .Sumw2()
-
-hMeas_tt_nonsemi.Scale(PowhegPythia8_norm)
-hMeas_T_t.Scale( SingleTop_t_t_norm)
-hMeas_Tbar_t.Scale( SingleTop_tbar_t_norm)
-hMeas_T_tW.Scale(SingleTop_t_tW_norm)
-hMeas_Tbar_tW.Scale(SingleTop_tbar_tW_norm)
-hMeas_T_s.Scale(SingleTop_s_norm)
-hMeas_WJets_HT100to200.Scale(WJets_HT100to200_norm)
-hMeas_WJets_HT200to400.Scale(WJets_HT200to400_norm)
-hMeas_WJets_HT400to600.Scale(WJets_HT400to600_norm)
-hMeas_WJets_HT600to800.Scale(WJets_HT600to800_norm)
-hMeas_WJets_HT800to1200.Scale(WJets_HT800to1200_norm)
-hMeas_WJets_HT1200to2500.Scale(WJets_HT1200to2500_norm)
-hMeas_WJets_HT2500toInf.Scale(WJets_HT2500toInf_norm)
-
-hMeas_qcd                    = f_QCD.Get(hMeas_name)
-hMeas_qcd_tt                 = f_qcd_ttbar.Get(hMeas_name)
-hMeas_qcd_tt_nonsemi         = f_qcd_ttbar_nonsemilep.Get(hMeas_name)
-hMeas_qcd_T_t                = f_qcd_T_t.Get(hMeas_name)
-hMeas_qcd_Tbar_t             = f_qcd_Tbar_t.Get(hMeas_name)
-hMeas_qcd_T_tW               = f_qcd_T_tW.Get(hMeas_name)
-hMeas_qcd_Tbar_tW            = f_qcd_Tbar_tW.Get(hMeas_name)
-hMeas_qcd_T_s                = f_qcd_T_s.Get(hMeas_name)
-hMeas_qcd_WJets_HT100to200   = f_qcd_WJets_HT100to200.Get(hMeas_name)
-hMeas_qcd_WJets_HT200to400   = f_qcd_WJets_HT200to400.Get(hMeas_name)
-hMeas_qcd_WJets_HT400to600   = f_qcd_WJets_HT400to600.Get(hMeas_name)
-hMeas_qcd_WJets_HT600to800   = f_qcd_WJets_HT600to800.Get(hMeas_name)
-hMeas_qcd_WJets_HT800to1200  = f_qcd_WJets_HT800to1200.Get(hMeas_name)
-hMeas_qcd_WJets_HT1200to2500 = f_qcd_WJets_HT1200to2500.Get(hMeas_name)
-hMeas_qcd_WJets_HT2500toInf  = f_qcd_WJets_HT2500toInf.Get(hMeas_name)
-
-hMeas_qcd_tt_nonsemi         .Sumw2()
-hMeas_qcd_T_t                .Sumw2()
-hMeas_qcd_Tbar_t             .Sumw2()
-hMeas_qcd_T_tW               .Sumw2()
-hMeas_qcd_Tbar_tW            .Sumw2()
-hMeas_qcd_T_s                .Sumw2()
-hMeas_qcd_WJets_HT100to200   .Sumw2()
-hMeas_qcd_WJets_HT200to400   .Sumw2()
-hMeas_qcd_WJets_HT400to600   .Sumw2()
-hMeas_qcd_WJets_HT600to800   .Sumw2()
-hMeas_qcd_WJets_HT800to1200  .Sumw2()
-hMeas_qcd_WJets_HT1200to2500 .Sumw2()
-hMeas_qcd_WJets_HT2500toInf  .Sumw2()
-
-hMeas_qcd_tt.Scale(PowhegPythia8_norm)
-hMeas_qcd_tt_nonsemi.Scale(PowhegPythia8_norm)
-hMeas_qcd_T_t.Scale( SingleTop_t_t_norm)
-hMeas_qcd_Tbar_t.Scale( SingleTop_tbar_t_norm)
-hMeas_qcd_T_tW.Scale(SingleTop_t_tW_norm)
-hMeas_qcd_Tbar_tW.Scale(SingleTop_tbar_tW_norm)
-hMeas_qcd_T_s.Scale(SingleTop_s_norm)
-hMeas_qcd_WJets_HT100to200.Scale(WJets_HT100to200_norm)
-hMeas_qcd_WJets_HT200to400.Scale(WJets_HT200to400_norm)
-hMeas_qcd_WJets_HT400to600.Scale(WJets_HT400to600_norm)
-hMeas_qcd_WJets_HT600to800.Scale(WJets_HT600to800_norm)
-hMeas_qcd_WJets_HT800to1200.Scale(WJets_HT800to1200_norm)
-hMeas_qcd_WJets_HT1200to2500.Scale(WJets_HT1200to2500_norm)
-hMeas_qcd_WJets_HT2500toInf.Scale(WJets_HT2500toInf_norm)
-
-hMeas_SingleTop = hMeas_T_t.Clone()
-for hist in [hMeas_Tbar_t, hMeas_T_tW, hMeas_Tbar_tW, hMeas_T_s] :
-    hMeas_SingleTop.Add( hist )
-    
-hMeas_WJets = hMeas_WJets_HT100to200.Clone()
-for hist in [hMeas_WJets_HT200to400,hMeas_WJets_HT400to600,hMeas_WJets_HT600to800,hMeas_WJets_HT800to1200,hMeas_WJets_HT1200to2500,hMeas_WJets_HT2500toInf] :
-    hMeas_WJets.Add( hist )
-    
-hMeas_QCD = hMeas_qcd.Clone()
-for hist in [hMeas_qcd_tt, hMeas_qcd_tt_nonsemi,
-             hMeas_qcd_T_t,hMeas_qcd_Tbar_t,hMeas_qcd_T_tW,hMeas_qcd_Tbar_tW, hMeas_qcd_T_s,
-             hMeas_qcd_WJets_HT100to200,hMeas_qcd_WJets_HT200to400,hMeas_qcd_WJets_HT400to600,
-             hMeas_qcd_WJets_HT600to800,hMeas_qcd_WJets_HT800to1200,hMeas_qcd_WJets_HT1200to2500,hMeas_qcd_WJets_HT2500toInf] :
-    hMeas_QCD.Add(hist,-1.0)
-noNegBins(hMeas_QCD)
-    
-# -------------------------------
-# Normalize QCD to MC prediction
-# -------------------------------
-
-f_QCD_HT500to700   = TFile("histfiles_full2016/hists_QCD_HT500to700_"+muOrEl+"_nom_post.root")
-f_QCD_HT700to1000  = TFile("histfiles_full2016/hists_QCD_HT700to1000_"+muOrEl+"_nom_post.root")
-f_QCD_HT1000to1500 = TFile("histfiles_full2016/hists_QCD_HT1000to1500_"+muOrEl+"_nom_post.root")
-f_QCD_HT1500to2000 = TFile("histfiles_full2016/hists_QCD_HT1500to2000_"+muOrEl+"_nom_post.root")
-f_QCD_HT2000toInf  = TFile("histfiles_full2016/hists_QCD_HT2000toInf_"+muOrEl+"_nom_post.root")
-
-hNorm_QCD_HT500to700   = f_QCD_HT500to700.Get(hMeas_name)
-hNorm_QCD_HT700to1000  = f_QCD_HT700to1000.Get(hMeas_name)
-hNorm_QCD_HT1000to1500 = f_QCD_HT1000to1500.Get(hMeas_name)
-hNorm_QCD_HT1500to2000 = f_QCD_HT1500to2000.Get(hMeas_name)
-hNorm_QCD_HT2000toInf  = f_QCD_HT2000toInf.Get(hMeas_name)
-
-hNorm_QCD_HT500to700   .Sumw2()
-hNorm_QCD_HT700to1000  .Sumw2()
-hNorm_QCD_HT1000to1500 .Sumw2()
-hNorm_QCD_HT1500to2000 .Sumw2()
-hNorm_QCD_HT2000toInf  .Sumw2()
-
-hNorm_QCD_HT500to700.Scale(QCD_HT500to700_norm)
-hNorm_QCD_HT700to1000.Scale(QCD_HT700to1000_norm)
-hNorm_QCD_HT1000to1500.Scale(QCD_HT1000to1500_norm)
-hNorm_QCD_HT1500to2000.Scale(QCD_HT1500to2000_norm)
-hNorm_QCD_HT2000toInf.Scale(QCD_HT2000toInf_norm)
-
-QCD_norm = 0.0
-for hist in [hNorm_QCD_HT500to700,hNorm_QCD_HT700to1000,hNorm_QCD_HT1000to1500,hNorm_QCD_HT1500to2000,hNorm_QCD_HT2000toInf]:
-    QCD_norm += hist.Integral()
-    
-hMeas_QCD.Scale(QCD_norm / hMeas_QCD.Integral())
-
-# -------------------------------
-# Troubleshoot
-# -------------------------------
-
-print 'Bin             & Data             & $tt nonsemi     & SingleTop      & WJets          & QCD           & Fake fraction '
-for ibin in xrange(1,nbinsMeas+1):
-    print string.ljust('$[{:.0f},{:.0f}]$'.format(thisMeas.GetXaxis().GetBinLowEdge(ibin), thisMeas.GetXaxis().GetBinUpEdge(ibin)),16) + '&' + string.rjust('{:.1f}'.format(thisMeas.GetBinContent(ibin)),6)        + ' $\pm$ ' + string.rjust('{:.1f}'.format(thisMeas.GetBinError(ibin)),4) + ' & ' + string.rjust('{:.1f}'.format(hMeas_tt_nonsemi.GetBinContent(ibin)*0.78),4) + ' $\pm$ ' + string.rjust('{:.1f}'.format(hMeas_tt_nonsemi.GetBinError(ibin)*0.78),3) + ' & ' + string.rjust('{:.1f}'.format(hMeas_SingleTop.GetBinContent(ibin)*1.34),4)  + ' $\pm$ ' + string.rjust('{:.1f}'.format(hMeas_SingleTop.GetBinError(ibin)*1.34),3) + ' & ' + string.rjust('{:.1f}'.format(hMeas_WJets.GetBinContent(ibin)*0.96),4) + ' $\pm$ ' + string.rjust('{:.1f}'.format(hMeas_WJets.GetBinError(ibin)*0.96),3) + ' & ' + string.rjust('{:.1f}'.format(hMeas_QCD.GetBinContent(ibin)*0.77),4) + ' $\pm$ ' + string.rjust('{:.1f}'.format(hMeas_QCD.GetBinError(ibin)*0.77),3) + ' & ' + '{:.3f}'.format(response.Vfakes()[ibin-1] / response.Vmeasured()[ibin-1])
-
-print 'Troubleshoot 1: bin 2 has content ' + str(thisMeas.GetBinContent(2)) + '+-' + str(thisMeas.GetBinError(2))
-
-# -------------------------------
-# Construct total background hist, with posterior normalizations
-# -------------------------------
-
-hBkg = hMeas_tt_nonsemi.Clone()
-hBkg.Scale(0.78)
-hBkg.Add(hMeas_SingleTop,1.34)
-hBkg.Add(hMeas_WJets,0.96)
-if options.lepType is "mu":
-    hBkg.Add(hMeas_QCD,0.77)
-else:
-    hBkg.Add(hMeas_QCD,0.74)
-
-# -------------------------------
-# Convert for TUnfold
-# -------------------------------
-
-# Get 'ttbar' part of thisMeas 
-thisMeas.Add(hBkg,-1.0)
-
-for ibin in xrange(1,nbinsMeas+1):
-    # Remove fake part in each bin, using fake fractions from response matrix
-    fakefraction = response.GetBinContent(ibin,0) / response.Integral(ibin,ibin,0,response.GetYaxis().GetNbins()+1)
-    thisMeas.SetBinContent(ibin,thisMeas.GetBinContent(ibin)*(1.0-fakefraction))
-    thisMeas.SetBinError(ibin,thisMeas.GetBinError(ibin)*(1.0-fakefraction))
-    # And then clear underflow bins, since TUnfold does not expect them
-    response.SetBinContent(ibin,0,0)
-    response.SetBinError(ibin,0,0)
-
-# Now add back background contribution to thisMeas
-thisMeas.Add(hBkg)
+for sysname in allsysnames:
+    for var in variants:
+        Hres_sys[sysname+var+"_comb"] = Hres_sys[sysname+var+"_mu"].Clone()
+        Hres_sys[sysname+var+"_comb"].Add(Hres_sys[sysname+var+"_el"])
 
 # -------------------------------------------------------------------------------------
 # Do unfolding
 # -------------------------------------------------------------------------------------
 
-unfold = TUnfoldDensity(Hres,TUnfold.kHistMapOutputVert, TUnfold.kRegModeCurvature, TUnfold.kEConstraintArea, TUnfoldDensity.kDensityModeBinWidth)
-unfold.SetInput(thisMeas)
+channels = ["mu","el","comb"]
 
-# Add systematic uncertainties
-for sysname in sysnames:
-    unfold.AddSysError(Hres_sys[sysname],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
+for channel in channels:
+    unfold = {}
+    for var in variants:
+        unfold[var] = TUnfoldDensity(response[channel],TUnfold.kHistMapOutputVert, TUnfold.kRegModeCurvature, TUnfold.kEConstraintArea, TUnfoldDensity.kDensityModeBinWidth)
+        unfold[var].SetInput(thisMeas[channel])
 
-# Subtract backgrounds with appropriate scale / uncertainty
-unfold.SubtractBackground(hMeas_tt_nonsemi,"TT_nonsemi",0.78,0.09)
-unfold.SubtractBackground(hMeas_SingleTop,"SingleTop",1.34,0.58)
-unfold.SubtractBackground(hMeas_WJets,"WJets",0.96,0.42)
-if options.lepType == "mu":
-    unfold.SubtractBackground(hMeas_QCD,"QCD",0.77,0.70)
-else :
-    unfold.SubtractBackground(hMeas_QCD,"QCD",0.74,0.67)
+        # Add systematic uncertainties
+        for sysname in allsysnames:
+            unfold[var].AddSysError(Hres_sys[sysname+var+"_"+channel],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
 
-# Do unfolding
-unfold.DoUnfold(0)
+        # Subtract backgrounds with appropriate scale / uncertainty
+        for background in backgrounds[channel]:
+            unfold[var].SubtractBackground(background.hist,background.name,background.norm,background.err)
 
-print "chi**2=" + str(unfold.GetChi2A()) + "+" + str(unfold.GetChi2L()) + " / " + str(unfold.GetNdf())
+        # Do unfolding
+        unfold[var].DoUnfold(0)
 
-# unfolded distribution (histogram)
-thisReco = unfold.GetOutput("reco")
-thisReco.Sumw2()
-
-# -------------------------------------------------------------------------------------
-#Plot error breakdown
-# -------------------------------------------------------------------------------------
-
-systs = ['JEC','JER','BTag','TopTag','lep','PDF','Q2','AS']
-backgrounds = ['TT_nonsemi','SingleTop','WJets','QCD']
-
-
-#Statistical -- input and unfolding matrix (GetEmatrixSysUncorr() and GetEmatrixInput())
-h_STAT = thisTrue.Clone("stat")
-h_STAT.Reset()
-#Experimental -- experimental systematics, plus background normalizations (GetEmatrixSysSource() for relevant, then GetEmatrixSysBackgroundUncorr() + GetEmatrixSysBackgroundScale()
-h_EXP = thisTrue.Clone("exp")
-h_EXP.Reset()
-#Theory -- theory systematics (GetEmatrixSysSource() for relevant)
-h_TH = thisTrue.Clone("th")
-h_TH.Reset()
-#Total is GetEmatrixTotal()
-h_TOT = thisTrue.Clone("tot")
-h_TOT.Reset()
-
-h_SYS = {}
-for syst in systs:
-    h_SYS[syst] = thisTrue.Clone(sysname)
-    h_SYS[syst].Reset()
-
-h_BKG = thisTrue.Clone(sysname)
-h_BKG.Reset()
-
-h_LUMI = thisTrue.Clone()
-h_LUMI.Reset()
-
-#Get actual error matrices / hists
-hErrInput = unfold.GetEmatrixInput("mErrInput")
-hErrStat = unfold.GetEmatrixSysUncorr("mErrStat")
-hErrTot = unfold.GetEmatrixTotal("mErrTot")
-
-hErrBkgStat = {}
-hErrBkgScale = {}
-for background in backgrounds:
-    hErrBkgStat[background] = unfold.GetEmatrixSysBackgroundUncorr(background,"mErrBkgStat_"+background)
-    hErrBkgScale[background] = unfold.GetDeltaSysBackgroundScale(background,"hErrBkgScale_"+background)
-
-hErrSys = {}
-for sysname in sysnames:
-    hErrSys[sysname] = unfold.GetDeltaSysSource(sysname,"hErrSys_"+sysname)
-  
-# Fill uncertainty histograms
-for ibin in xrange(1,nbinsTrue+1):
-    h_STAT.SetBinContent(ibin,math.sqrt(hErrInput.GetBinContent(ibin,ibin)+hErrStat.GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
-    h_TOT.SetBinContent(ibin,math.sqrt(hErrTot.GetBinContent(ibin,ibin)/pow(thisReco.GetBinContent(ibin),2)+0.026*0.026))
-    h_LUMI.SetBinContent(ibin,0.026)
-    for syst in systs:
-        h_SYS[syst].SetBinContent(ibin,(abs(hErrSys[syst+'Up'].GetBinContent(ibin))+abs(hErrSys[syst+'Down'].GetBinContent(ibin)))/ (2*thisReco.GetBinContent(ibin)))
-    tot_bkg = 0.0
-    for background in backgrounds:
-        tot_bkg += (hErrBkgStat[background].GetBinContent(ibin,ibin)+pow(hErrBkgScale[background].GetBinContent(ibin),2))/pow(thisReco.GetBinContent(ibin),2)
-    h_BKG.SetBinContent(ibin,math.sqrt(tot_bkg))
-
-# Plot error breakdown
-c6 = TCanvas("c6", "", 800, 600)
-c6.SetTopMargin(0.08)
-c6.SetRightMargin(0.05)
-c6.SetBottomMargin(0.14)
-c6.SetLeftMargin(0.16)
-
-h_TOT.GetXaxis().SetTitle("Top quark p_{T} (GeV)")
-h_TOT.GetYaxis().SetTitle("Uncertainty [%]")
-h_TOT.SetAxisRange(400,1199,"X")
-
-h_TOT.GetYaxis().SetTitleSize(0.055)    
-h_TOT.GetYaxis().SetTitleOffset(1.1)
-h_TOT.GetYaxis().SetLabelSize(0.045)
-
-h_TOT.GetXaxis().SetTitleSize(0.05)
-h_TOT.GetXaxis().SetTitleOffset(1.2)
-h_TOT.GetXaxis().SetLabelSize(0.0455)
-
-c6.cd()
-
-h_TOT.SetFillColor(17)
-h_TOT.SetFillStyle(3344)
-h_TOT.SetLineColor(16)
-h_TOT.SetLineWidth(2)
-
-h_STAT.SetLineColor(1)
-h_STAT.SetLineWidth(2)
-h_STAT.SetMarkerColor(1)
-h_STAT.SetMarkerStyle(20)
-
-h_LUMI.SetLineColor(40)
-h_LUMI.SetLineWidth(2)
-h_LUMI.SetMarkerColor(40)
-h_LUMI.SetMarkerStyle(34)
-
-colors = [632,600,617,417,432,801,864,906]
-markers = [20,21,22,23,33,24,25,26]
-for isys in xrange(0,len(systs)):
-    h_SYS[systs[isys]].SetLineColor(colors[isys])
-    h_SYS[systs[isys]].SetLineWidth(2)
-    h_SYS[systs[isys]].SetMarkerColor(colors[isys])
-    h_SYS[systs[isys]].SetMarkerStyle(markers[isys])
-
-h_BKG.SetLineColor(419)
-h_BKG.SetLineWidth(2)
-h_BKG.SetMarkerColor(419)
-h_BKG.SetMarkerStyle(32)
-
-longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","PDF Uncertainty","#mu_{R}, #mu_{F} scales","#alpha_{s} scale"]
-  
-leg6 = TLegend(0.2,0.65,0.45,0.88)
-leg6.AddEntry(h_TOT,"Total syst. uncertainty","f")
-leg6.AddEntry(h_STAT,"Statistical uncertainty","lp")
-leg6.AddEntry(h_LUMI,"Int. luminosity","lp")
-for isys in xrange(0,3):
-    leg6.AddEntry(h_SYS[systs[isys]],longnames[isys],"lp")
-
-leg6.SetFillStyle(0);
-leg6.SetBorderSize(0);
-leg6.SetTextSize(0.04);
-leg6.SetTextFont(42);
-
-leg66 = TLegend(0.55,0.65,0.8,0.88);
-for isys in xrange(3,8):
-    leg66.AddEntry(h_SYS[systs[isys]],longnames[isys],"lp")
-leg66.AddEntry(h_BKG,"Background normalization","lp")
-
-leg66.SetFillStyle(0)
-leg66.SetBorderSize(0)
-leg66.SetTextSize(0.04)
-leg66.SetTextFont(42)
-
-h_TOT.GetYaxis().SetRangeUser(0.0,1.0)
-h_TOT.Draw("hist")
-h_STAT.Draw("ep,same")
-h_LUMI.Draw("ep,same")
-for syst in systs:
-    h_SYS[syst].Draw("ep,same")
-h_BKG.Draw("ep,same")
-
-leg6.Draw(); 
-leg66.Draw(); 
-
-c6.SaveAs("UnfoldingPlots/unfold_relative_uncertainties_"+options.lepType+".pdf")
-
-
-# Fetch / fill error matrices
-diags = []
-for ibin in xrange(0,nbinsTrue):
-    tmp = math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) if (math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) is not 0) else 1.0
-    diags.append(tmp)
-sum_weight = 0.0
-sum_err = 0.0
-for ibinx in xrange(1,nbinsTrue+1):
-    for ibiny in xrange(1,nbinsTrue+1):
-        tmp = hErrTot.GetBinContent(ibinx,ibiny) / diags[ibinx-1] / diags[ibiny-1]
-        hErrTot.SetBinContent(ibinx,ibiny,tmp)
-
-c4 = TCanvas()
-hErrTot.GetXaxis().SetRangeUser(400.,1199.)
-hErrTot.GetYaxis().SetRangeUser(400.,1199.)
-hErrTot.GetZaxis().SetRangeUser(-1.0,1.0)
-hErrTot.Draw("colz")
-c4.SaveAs("UnfoldingPlots/covariance_"+options.lepType+"_data.pdf")
-
-# -------------------------------------------------------------------------------------
-# Translate to cross section (not events) in bins of pt N/L/BR)
-# -------------------------------------------------------------------------------------
-# TODO: should fix BR
-
-thisTrue.Scale(1.0/(lum*0.438/3.)) # true @ parton level
-thisMeas.Scale(1.0/(lum*0.438/3.)) # measured @ reco level
-thisReco.Scale(1.0/(lum*0.438/3.)) # unfolded to parton level
-
-print 'Troubleshoot 4: bin 2 has content ' + str(thisMeas.GetBinContent(2)) + '+-' + str(thisMeas.GetBinError(2))
-
-# -------------------------------------------------------------------------------------
-# Adjust for bin width
-# -------------------------------------------------------------------------------------
-
-for ibin in range(1, nbinsTrue+1 ) :
-
-    width = thisTrue.GetBinWidth(ibin)
+        print "chi**2=" + str(unfold[var].GetChi2A()) + "+" + str(unfold[var].GetChi2L()) + " / " + str(unfold[var].GetNdf())
     
-    thisTrue.SetBinContent(ibin, thisTrue.GetBinContent(ibin) / width )
-    thisTrue.SetBinError(ibin, thisTrue.GetBinError(ibin) / width )
+    # unfolded distribution (histogram)
+    thisReco = unfold["Up"].GetOutput("reco") #Same for both, so we just pick one
+    thisReco.Sumw2()
+
+    xvec = TMatrixD(nbinsTrue,1)
+    for ibin in xrange(0,nbinsTrue):
+        xvec[ibin][0] = thisReco.GetBinContent(ibin+1)
+
+    yvec = TMatrixD(nbinsMeas,1)
+    for ibin in xrange(0,nbinsMeas):
+        tmp = thisMeas[channel].GetBinContent(ibin+1)
+        for background in backgrounds[channel]:
+            tmp -= background.hist.GetBinContent(ibin+1)
+        yvec[ibin][0] = tmp
     
-    thisReco.SetBinContent(ibin, thisReco.GetBinContent(ibin) / width )
-    thisReco.SetBinError(ibin, thisReco.GetBinError(ibin) / width )
+    # -------------------------------------------------------------------------------------
+    #Plot error breakdown
+    # -------------------------------------------------------------------------------------
     
-for ibin in range(1, nbinsMeas+1) :
+    #Statistical -- input and unfolding matrix (GetEmatrixSysUncorr() and GetEmatrixInput())
+    h_STAT = thisTrue[channel].Clone("stat")
+    h_STAT.Reset()
+
+    h_EXP = thisTrue[channel].Clone("stat")
+    h_EXP.Reset()
+    
+    h_TH = thisTrue[channel].Clone("stat")
+    h_TH.Reset()
+
+    h_TOT = thisTrue[channel].Clone("tot")
+    h_TOT.Reset()
+    
+    # Individual error sources
+    h_SYS = {}
+    for sysname in allsysnames:
+        h_SYS[sysname] = thisTrue[channel].Clone(sysname)
+        h_SYS[sysname].Reset()
         
-    width = thisMeas.GetBinWidth(ibin)
+    h_BKG = thisTrue[channel].Clone()
+    h_BKG.Reset()
+
+    h_BSCALE = thisTrue[channel].Clone()
+    h_BSCALE.Reset()
     
-    thisMeas.SetBinContent(ibin,  thisMeas.GetBinContent(ibin) / width )
-    thisMeas.SetBinError(ibin,  thisMeas.GetBinError(ibin) / width )
+    h_BSTAT = thisTrue[channel].Clone()
+    h_BSTAT.Reset()
+    
+    h_INPUT = thisTrue[channel].Clone()
+    h_INPUT.Reset()
+    
+    h_MATRIX = thisTrue[channel].Clone()
+    h_MATRIX.Reset()
+    
+    h_LUMI = thisTrue[channel].Clone()
+    h_LUMI.Reset()
 
-print 'Troubleshoot 5: bin 2 has content ' + str(thisMeas.GetBinContent(2)) + '+-' + str(thisMeas.GetBinError(2))
+    #Get actual error matrices / hists
+    hErrInput = unfold["Up"].GetEmatrixInput("mErrInput")
+    hErrStat = unfold["Up"].GetEmatrixSysUncorr("mErrStat") #This might be buggy!!!
+    
+    # Construct average systematic errors; get FSR covariance matrix for later
+    hErrSys = {}
+    hCovSysFSR = hErrInput.Clone()
+    hCovSysFSR.Reset()
+    for sysname in allsysnames:
+        hErrSysUp = unfold["Up"].GetDeltaSysSource(sysname,"hErrSysUp_"+sysname)
+        hErrSysDn =  unfold["Down"].GetDeltaSysSource(sysname,"hErrSysDown_"+sysname)
+        hErrSys[sysname] = hErrSysUp.Clone()
+        hErrSys[sysname].Reset()
+        for ibinx in xrange(1,nbinsTrue+1):
+            hErrSys[sysname].SetBinContent(ibinx,(pow(hErrSysUp.GetBinContent(ibinx),2)+pow(hErrSysDn.GetBinContent(ibinx),2))/2.0)
+            if sysname is "FSR":
+                for ibiny in xrange(1,nbinsTrue+1):
+                    hCovSysFSR.SetBinContent(ibinx,ibiny,(hErrSysUp.GetBinContent(ibinx)*hErrSysUp.GetBinContent(ibiny)+hErrSysDn.GetBinContent(ibinx)*hErrSysDn.GetBinContent(ibiny))/2.0);
 
-# -------------------------------------------------------------------------------------
-# draw parton-level unfolding
-# -------------------------------------------------------------------------------------
+    hErrBkgStat = {}
+    hErrBkgScale = {}
+    for background in backgrounds[channel]:
+        hErrBkgStat[background.name] = unfold["Up"].GetEmatrixSysBackgroundUncorr(background.name,"mErrBkgStat_"+background.name)
+        hErrBkgScale[background.name] = unfold["Up"].GetDeltaSysBackgroundScale(background.name,"mErrBkgScale_"+background.name)
 
-## ratio of unfolded data to generator-level
+    # Average total covariance matrices
+    hErrTotUp = unfold["Up"].GetEmatrixTotal("mErrTotalUp")
+    hErrTotDn = unfold["Down"].GetEmatrixTotal("mErrTotalDown")
+    hErrTot = hErrTotUp.Clone()
+    hErrTot.Add(hErrTotDn)
+    hErrTot.Scale(0.5)
+    
+    # Correct FSR
+    hErrSys["FSR"].Scale(1.0/math.sqrt(2.0)); #Scale uncertainty from FSR down
+    hErrTot.Add(hCovSysFSR,1.0/math.sqrt(2.0)-1.0)        
+    
+    # Fill uncertainty histograms
+    for ibin in xrange(1,nbinsTrue+1):
+        h_STAT.SetBinContent(ibin,math.sqrt(hErrInput.GetBinContent(ibin,ibin)+hErrStat.GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
+        h_INPUT.SetBinContent(ibin,math.sqrt(hErrInput.GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
+        h_MATRIX.SetBinContent(ibin,math.sqrt(hErrStat.GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
+        h_TOT.SetBinContent(ibin,math.sqrt(hErrTot.GetBinContent(ibin,ibin)/pow(thisReco.GetBinContent(ibin),2)+0.025*0.025))
+        h_LUMI.SetBinContent(ibin,0.025)
+        tot_exp = 0.0
+        tot_th = 0.0
+        for sysname in allsysnames:
+            h_SYS[sysname].SetBinContent(ibin,math.sqrt(hErrSys[sysname].GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
+        for sysname in ["PDF","Q2","ISR","FSR"]:
+            tot_th += hErrSys[sysname].GetBinContent(ibin,ibin)
+        for sysname in ["JEC","JER","BTag","TopTag","lep","pu"]:
+            tot_exp += hErrSys[sysname].GetBinContent(ibin,ibin)
+        tot_bkg_stat = 0.0
+        tot_bkg_scale = 0.0
+        for background in backgrounds[channel]:
+            tot_bkg_stat += hErrBkgStat[background.name].GetBinContent(ibin,ibin)
+            tot_bkg_scale += pow(hErrBkgScale[background.name].GetBinContent(ibin),2)
+        h_BSTAT.SetBinContent(ibin,math.sqrt(tot_bkg_stat)/thisReco.GetBinContent(ibin))
+        h_BSCALE.SetBinContent(ibin,math.sqrt(tot_bkg_scale)/thisReco.GetBinContent(ibin))
+        h_BKG.SetBinContent(ibin,math.sqrt(tot_bkg_stat+tot_bkg_scale)/thisReco.GetBinContent(ibin))
+        tot_exp += tot_bkg_stat
+        tot_exp += tot_bkg_scale
+        h_EXP.SetBinContent(ibin,math.sqrt(tot_exp)/thisReco.GetBinContent(ibin))
+        h_TH.SetBinContent(ibin,math.sqrt(tot_th)/thisReco.GetBinContent(ibin))
 
-hFrac = thisReco.Clone()
-hFrac.SetName("hFrac")
-hFrac.SetTitle(";Top quark p_{T} (GeV);Data/MC")
-hFrac.Divide(thisTrue)
+    # Plot error breakdown
+    c6 = TCanvas("c6", "", 800, 600)
+    c6.SetTopMargin(0.08)
+    c6.SetRightMargin(0.05)
+    c6.SetBottomMargin(0.14)
+    c6.SetLeftMargin(0.16)
+    
+    h_TOT.GetXaxis().SetTitle("Top quark p_{T} (GeV)")
+    h_TOT.GetYaxis().SetTitle("Uncertainty [%]")
+    h_TOT.SetAxisRange(400,1199,"X")
+    
+    h_TOT.GetYaxis().SetTitleSize(0.055)    
+    h_TOT.GetYaxis().SetTitleOffset(1.1)
+    h_TOT.GetYaxis().SetLabelSize(0.045)
+    
+    h_TOT.GetXaxis().SetTitleSize(0.05)
+    h_TOT.GetXaxis().SetTitleOffset(1.2)
+    h_TOT.GetXaxis().SetLabelSize(0.0455)
+    
+    c6.cd()
+    
+    h_TOT.SetFillColor(17)
+    h_TOT.SetFillStyle(3344)
+    h_TOT.SetLineColor(16)
+    h_TOT.SetLineWidth(2)
+    
+    h_STAT.SetLineColor(1)
+    h_STAT.SetLineWidth(2)
+    h_STAT.SetMarkerColor(1)
+    h_STAT.SetMarkerStyle(20)
+    
+    h_LUMI.SetLineColor(40)
+    h_LUMI.SetLineWidth(2)
+    h_LUMI.SetMarkerColor(40)
+    h_LUMI.SetMarkerStyle(34)
+    
+    colors = [632,600,617,417,432,4,1,419,600,882]
+    markers = [20,21,22,23,33,26,24,25,27,32]
+    for isys in xrange(0,len(allsysnames)):
+        h_SYS[allsysnames[isys]].SetLineColor(colors[isys])
+        h_SYS[allsysnames[isys]].SetLineWidth(2)
+        h_SYS[allsysnames[isys]].SetMarkerColor(colors[isys])
+        h_SYS[allsysnames[isys]].SetMarkerStyle(markers[isys])
+        
+    h_BKG.SetLineColor(29)
+    h_BKG.SetLineWidth(2)
+    h_BKG.SetMarkerColor(29)
+    h_BKG.SetMarkerStyle(22)
+  
+    leg6 = TLegend(0.2,0.39,0.45,0.88)
+    leg6.AddEntry(h_TOT,"Total syst. uncertainty","f")
+    leg6.AddEntry(h_STAT,"Input stat. unc.","lp")
+    leg6.AddEntry(h_LUMI,"Int. luminosity","lp")
+    for isys in xrange(0,len(allsysnames)):
+        leg6.AddEntry(h_SYS[allsysnames[isys]],longnames[isys],"lp")
+    leg6.AddEntry(h_BKG,"Backgrounds","lp")
+        
+    leg6.SetFillStyle(0);
+    leg6.SetBorderSize(0);
+    leg6.SetTextSize(0.04);
+    leg6.SetTextFont(42);
 
-c1 = TCanvas("c", "c", 700, 700)
-pad1 =  TPad("pad1","pad1",0,0.3,1,1)
-pad1.SetBottomMargin(0.05);
-pad1.Draw();
-pad1.cd();
+    h_TOT.GetYaxis().SetRangeUser(0.0,1.0)
+    h_TOT.Draw("hist")
+    h_STAT.Draw("ep,same")
+    h_LUMI.Draw("ep,same")
+    for sysname in allsysnames:
+        h_SYS[sysname].Draw("ep,same")
+    h_BKG.Draw("ep,same")
+        
+    leg6.Draw(); 
 
-thisReco.SetMarkerStyle(21)
-thisMeas.SetMarkerStyle(25);
+    drawCMS(0.17,0.935)
+    
+    c6.SaveAs("UnfoldingPlots/unfold_relative_uncertainties_"+channel+".pdf")
 
-thisReco.GetXaxis().SetRangeUser(400.,1199.)
-thisTrue.GetXaxis().SetRangeUser(400.,1199.)
-thisMeas.GetXaxis().SetRangeUser(400.,1199.)
+    # -------------------------------------------------------------------------------------
+    # Troubleshoot stat. unc.
+    # -------------------------------------------------------------------------------------
 
-xsec_title = ";;d#sigma/dp_{T} [fb/GeV]"
+    # Get Vyy (manually)
+    Vyy_input = TMatrixD(nbinsMeas,nbinsMeas)
+    for ibin in xrange(0,nbinsMeas): #rows
+        Vyy_input[ibin][ibin] = pow(thisMeas[channel].GetBinError(ibin+1),2)
 
-thisReco.SetTitle(xsec_title)
-thisReco.GetYaxis().SetTitleOffset(1.2)
-thisReco.SetMinimum(0.0)
-max = thisTrue.GetMaximum()
-max2 = thisReco.GetMaximum()
-if max2 > max:
+    Vyy_bstat = TMatrixD(nbinsMeas,nbinsMeas)
+    Vyy_bscale = TMatrixD(nbinsMeas,nbinsMeas)
+
+    hBkg = thisMeas[channel].Clone()
+    hBkg.Reset()
+    for background in backgrounds[channel]:
+        hBkg.Add(background.hist,background.norm)
+
+    for ibinx in xrange(0,nbinsMeas): #rows
+        sumbkg = 0.0
+        row = '['+str(thisMeas[channel].GetXaxis().GetBinLowEdge(ibinx+1))+','+str(thisMeas[channel].GetXaxis().GetBinUpEdge(ibinx+1))+'] '
+        for background in backgrounds[channel]:
+            sumbkg += pow(background.norm*background.hist.GetBinError(ibinx+1),2)
+            row += ' & {:.1f}'.format(100.0*background.norm*background.hist.GetBinError(ibinx+1)/(thisMeas[channel].GetBinContent(ibinx+1)-hBkg.GetBinContent(ibinx+1)))
+        Vyy_bstat[ibinx][ibinx] = sumbkg
+        row += ' & {:.1f}'.format(100.0*math.sqrt(sumbkg)/(thisMeas[channel].GetBinContent(ibinx+1)-hBkg.GetBinContent(ibinx+1)))
+            
+        for ibiny in xrange(0,nbinsMeas): #cols
+            sumbkg2 = 0.0
+            for background in backgrounds[channel]:
+                sumbkg2 += pow(background.err,2)*background.hist.GetBinContent(ibinx+1)*background.hist.GetBinContent(ibiny+1)
+                if ibiny == ibinx:
+                    row += ' & {:.1f}'.format(100.0*background.err*math.sqrt(background.hist.GetBinContent(ibinx+1)*background.hist.GetBinContent(ibiny+1))/(thisMeas[channel].GetBinContent(ibinx+1)-hBkg.GetBinContent(ibinx+1)))
+            Vyy_bscale[ibinx][ibiny] = sumbkg2
+            if ibiny == ibinx:
+                row += ' & {:.1f}'.format(100.0*math.sqrt(sumbkg2)/(thisMeas[channel].GetBinContent(ibinx+1)-hBkg.GetBinContent(ibinx+1)))
+                row += ' & {:.1f}'.format(100.0*math.sqrt(sumbkg+sumbkg2)/(thisMeas[channel].GetBinContent(ibinx+1)-hBkg.GetBinContent(ibinx+1)))
+        print row
+
+    Vyy = TMatrixD(Vyy_input)
+    Vyy += Vyy_bstat
+    Vyy += Vyy_bscale
+
+    VyyInv = TMatrixD(Vyy)
+    VyyInv.Invert()
+
+    #Get A (normalized response matrix)
+    A = TMatrixD(nbinsMeas,nbinsTrue)
+    for irow in xrange(0,nbinsMeas):
+        for icol in xrange(0,nbinsTrue):
+            A[irow][icol] = response[channel].GetBinContent(irow+1,icol+1) / response[channel].Integral(0,nbinsMeas+1,icol+1,icol+1)
+            
+    #Manually calculate Vxx
+    AT = TMatrixD(nbinsTrue,nbinsMeas)
+    AT.Transpose(A)
+    
+    VxxInv1 = TMatrixD(nbinsTrue,nbinsMeas)
+    VxxInv1.Mult(AT,VyyInv)
+    VxxInv = TMatrixD(nbinsTrue,nbinsTrue)
+    VxxInv.Mult(VxxInv1,A)
+    Vxx = TMatrixD(VxxInv)
+    Vxx.Invert()
+
+    #Plot matrices
+    hVyy_input  = TH2F("hVyy_input","",nbinsMeas,0,nbinsMeas,nbinsMeas,0,nbinsMeas)
+    hVyy_bstat  = TH2F("hVyy_bstat","",nbinsMeas,0,nbinsMeas,nbinsMeas,0,nbinsMeas)
+    hVyy_bscale = TH2F("hVyy_bscale","",nbinsMeas,0,nbinsMeas,nbinsMeas,0,nbinsMeas)
+    hVyy        = TH2F("hVyy","",nbinsMeas,0,nbinsMeas,nbinsMeas,0,nbinsMeas)
+    hVyyInv     = TH2F("hVyyInv","",nbinsMeas,0,nbinsMeas,nbinsMeas,0,nbinsMeas)
+    hVxxInv     = TH2F("hVxxInv","",nbinsTrue,0,nbinsTrue,nbinsTrue,0,nbinsTrue)
+    hVxx        = TH2F("hVxx","",nbinsTrue,0,nbinsTrue,nbinsTrue,0,nbinsTrue)
+    
+    for ibinx in xrange(0,nbinsMeas):
+        hVyy_input.SetBinContent(ibinx+1,ibinx+1,Vyy_input[ibinx][ibinx])
+        hVyy_bstat.SetBinContent(ibinx+1,ibinx+1,Vyy_bstat[ibinx][ibinx])
+        for ibiny in xrange(0,nbinsMeas):
+            hVyy_bscale.SetBinContent(ibinx+1,ibiny+1,Vyy_bscale[ibinx][ibiny])
+            hVyy.SetBinContent(ibinx+1,ibiny+1,Vyy[ibinx][ibiny])
+            hVyyInv.SetBinContent(ibinx+1,ibiny+1,VyyInv[ibinx][ibiny])
+    for ibinx in xrange(0,nbinsTrue):
+        for ibiny in xrange(0,nbinsTrue):
+            hVxxInv.SetBinContent(ibinx+1,ibiny+1,VxxInv[ibinx][ibiny])
+            hVxx.SetBinContent(ibinx+1,ibiny+1,Vxx[ibinx][ibiny])
+                    
+    gStyle.SetPadTopMargin(0.06)
+    gStyle.SetPadRightMargin(0.15)
+    gStyle.SetPadBottomMargin(0.06)
+    gStyle.SetPadLeftMargin(0.06)
+
+    gStyle.SetPalette(55)
+    
+    c9 = TCanvas()
+    hVyy_input.SetMaximum(1000.)
+    hVyy_input.Draw("colz")
+    c9.SaveAs("UnfoldingPlots/covariance_input_"+channel+".pdf")
+    hVyy_bstat.SetMaximum(1000.)
+    hVyy_bstat.Draw("colz")
+    c9.SaveAs("UnfoldingPlots/covariance_bstat_"+channel+".pdf")
+    hVyy_bscale.SetMaximum(1000.)
+    hVyy_bscale.Draw("colz")
+    c9.SaveAs("UnfoldingPlots/covariance_bscale_"+channel+".pdf")    
+    #hVyy.SetMaximum(1000.)
+    hVyy.Draw("colz")
+    c9.SaveAs("UnfoldingPlots/covariance_totalVyy_"+channel+".pdf")    
+    hVyyInv.Draw("colz")
+    c9.SaveAs("UnfoldingPlots/VyyInv_"+channel+".pdf")    
+    hVxxInv.Draw("colz")
+    c9.SaveAs("UnfoldingPlots/VxxInv_"+channel+".pdf")    
+    hVxx.Draw("colz")
+    c9.SaveAs("UnfoldingPlots/Vxx_"+channel+".pdf")    
+    
+    gStyle.SetPadTopMargin(0.07)
+    gStyle.SetPadRightMargin(0.05)
+    gStyle.SetPadBottomMargin(0.16)
+    gStyle.SetPadLeftMargin(0.18)
+
+    #Plot comparisons of pre / post unfolding relative uncertainties
+    hVyyInput = thisMeas[channel].Clone()
+    hVyyInput.Reset()
+    hVyyBstat = thisMeas[channel].Clone()
+    hVyyBstat.Reset()
+    hVyyBscale = thisMeas[channel].Clone()
+    hVyyBscale.Reset()
+    hVyyTotal = thisMeas[channel].Clone()
+    hVyyTotal.Reset()
+    hVxxDiag = thisTrue[channel].Clone()
+    hVxxDiag.Reset()
+
+    for ibin in xrange(0,nbinsMeas):
+        hVyyInput.SetBinContent(ibin+1,math.sqrt(Vyy_input[ibin][ibin])/(thisMeas[channel].GetBinContent(ibin+1)-hBkg.GetBinContent(ibin+1)))
+        hVyyBstat.SetBinContent(ibin+1,math.sqrt(Vyy_bstat[ibin][ibin])/(thisMeas[channel].GetBinContent(ibin+1)-hBkg.GetBinContent(ibin+1)))
+        hVyyBscale.SetBinContent(ibin+1,math.sqrt(Vyy_bscale[ibin][ibin])/(thisMeas[channel].GetBinContent(ibin+1)-hBkg.GetBinContent(ibin+1)))
+        hVyyTotal.SetBinContent(ibin+1,math.sqrt(Vyy[ibin][ibin])/(thisMeas[channel].GetBinContent(ibin+1)-hBkg.GetBinContent(ibin+1)))
+    
+    for ibin in xrange(0,nbinsTrue):
+        hVxxDiag.SetBinContent(ibin+1,math.sqrt(Vxx[ibin][ibin])/thisReco.GetBinContent(ibin+1))
+
+    hVyyInput.SetLineColor(2)
+    hVyyBstat.SetLineColor(2)
+    hVyyBscale.SetLineColor(2)
+    hVyyTotal.SetLineColor(2)
+
+    c8 = TCanvas()
+    h_INPUT.SetMinimum(0.0)
+    h_INPUT.SetTitle(";top p_{T} [GeV];Relative unc.")
+    h_INPUT.Draw("hist")
+    hVyyInput.Draw("hist,same")
+    leg8 = TLegend(0.3,0.8,0.5,0.9)
+    leg8.SetBorderSize(0)
+    leg8.SetFillStyle(0)
+    leg8.SetTextSize(0.04)
+    leg8.AddEntry(hVyyInput,"Measured","l")
+    leg8.AddEntry(h_INPUT,"Unfolded","l")
+    leg8.Draw()
+    c8.SaveAs("UnfoldingPlots/compareUnc_input_"+channel+".pdf")
+
+    h_BSTAT.SetMinimum(0.0)
+    h_BSTAT.Draw("hist")
+    h_BSTAT.SetTitle(";top p_{T} [GeV];Relative unc.")
+    hVyyBstat.Draw("hist,same")
+    leg8.Draw()
+    c8.SaveAs("UnfoldingPlots/compareUnc_bstat_"+channel+".pdf")
+
+    h_BSCALE.SetMinimum(0.0)
+    h_BSCALE.Draw("hist")
+    h_BSCALE.SetTitle(";top p_{T} [GeV];Relative unc.")
+    hVyyBscale.Draw("hist,same")
+    leg8.Draw()
+    c8.SaveAs("UnfoldingPlots/compareUnc_bscale_"+channel+".pdf")
+
+    hVxxDiag.SetMinimum(0.0)
+    hVxxDiag.SetLineColor(1)
+    hVxxDiag.SetLineWidth(2)
+    hVxxDiag.SetTitle(";top p_{T} [GeV];Relative unc.")
+    hVxxDiag.Draw("hist")
+    hVyyTotal.Draw("hist,same")
+    leg8.Draw()
+    c8.SaveAs("UnfoldingPlots/compareUnc_total_"+channel+".pdf")
+
+    # -------------------------------------------------------------------------------------
+    # Plot covariance matrix
+    # -------------------------------------------------------------------------------------
+    gStyle.SetPadRightMargin(0.12);
+    gStyle.SetPadLeftMargin(0.15);
+    gStyle.SetPadTopMargin(0.07);
+    gStyle.SetPadBottomMargin(0.15);
+
+    diags = []
+    for ibin in xrange(0,nbinsTrue):
+        tmp = math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) if (math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) is not 0) else 1.0
+        diags.append(tmp)
+    sum_weight = 0.0
+    sum_err = 0.0
+    for ibinx in xrange(1,nbinsTrue+1):
+        for ibiny in xrange(1,nbinsTrue+1):
+            tmp = hErrTot.GetBinContent(ibinx,ibiny) / diags[ibinx-1] / diags[ibiny-1]
+            hErrTot.SetBinContent(ibinx,ibiny,tmp)
+
+    c4 = TCanvas()
+    hErrTot.GetXaxis().SetRangeUser(400.,1199.)
+    hErrTot.GetYaxis().SetRangeUser(400.,1199.)
+    hErrTot.GetZaxis().SetRangeUser(-1.0,1.0)
+    hErrTot.SetTitle(";unfolded top quark p_{T};unfolded top quark p_{T}")
+
+    hErrTot.Draw("colz")
+
+    drawCMS(0.16,0.945)
+
+    c4.SaveAs("UnfoldingPlots/covariance_"+channel+"_data.pdf")
+
+    gStyle.SetPadTopMargin(0.07);
+    gStyle.SetPadRightMargin(0.05);
+    gStyle.SetPadBottomMargin(0.16);
+    gStyle.SetPadLeftMargin(0.18);
+    
+    # -------------------------------------------------------------------------------------
+    # Translate to cross section (not events) in bins of pt N/L/BR)
+    # -------------------------------------------------------------------------------------
+    # TODO: should fix BR
+
+    if channel is "comb":
+        thisTrue[channel].Scale(1.0/(lum*0.438/3.*2.0)) # true @ parton level
+        thisMeas[channel].Scale(1.0/(lum*0.438/3.*2.0)) # measured @ reco level
+        thisReco.Scale(1.0/(lum*0.438/3.*2.0)) # unfolded to parton level
+        
+    else:
+        thisTrue[channel].Scale(1.0/(lum*0.438/3.)) # true @ parton level
+        thisMeas[channel].Scale(1.0/(lum*0.438/3.)) # measured @ reco level
+        thisReco.Scale(1.0/(lum*0.438/3.)) # unfolded to parton level
+    
+    # -------------------------------------------------------------------------------------
+    # Adjust for bin width
+    # -------------------------------------------------------------------------------------
+    
+    for ibin in range(1, nbinsTrue+1 ) :
+        
+        width = thisTrue[channel].GetBinWidth(ibin)
+        
+        thisTrue[channel].SetBinContent(ibin, thisTrue[channel].GetBinContent(ibin) / width )
+        thisTrue[channel].SetBinError(ibin, thisTrue[channel].GetBinError(ibin) / width )
+        
+        thisReco.SetBinContent(ibin, thisReco.GetBinContent(ibin) / width )
+        thisReco.SetBinError(ibin, thisReco.GetBinError(ibin) / width )
+        
+    for ibin in range(1, nbinsMeas+1) :
+        
+        width = thisMeas[channel].GetBinWidth(ibin)
+        
+        thisMeas[channel].SetBinContent(ibin,  thisMeas[channel].GetBinContent(ibin) / width )
+        thisMeas[channel].SetBinError(ibin,  thisMeas[channel].GetBinError(ibin) / width )
+        
+    # -------------------------------
+    # Make table of unfolding (w/ unc.)
+    # -------------------------------
+    
+    print "p_{T}[GeV]  & data  & stat. [%] & exp. [%] & th. [%] & lumi [%] & total [%] & PowhegPythia8"
+    for ibin in xrange(1,nbinsTrue+1):
+        print string.ljust("$[{:.0f},{:.0f}]$".format(thisTrue[channel].GetXaxis().GetBinLowEdge(ibin), thisTrue[channel].GetXaxis().GetBinUpEdge(ibin)),16) + "&" + string.rjust("{:.2f}".format(thisReco.GetBinContent(ibin)*1000.0),6) + " & " + string.rjust("{:.2f}".format(h_STAT.GetBinContent(ibin)*100.),4) + " & " + string.rjust("{:.2f}".format(h_EXP.GetBinContent(ibin)*100.),4) + " & " + string.rjust("{:.2f}".format(h_TH.GetBinContent(ibin)*100.),4) + " & 2.50 & " + string.rjust("{:.2f}".format(h_TOT.GetBinContent(ibin)*100.),4) + " & " + string.rjust("{:.2f}".format(thisTrue[channel].GetBinContent(ibin)*1000.0),4)        
+
+    # -------------------------------------------------------------------------------------
+    # draw parton-level unfolding
+    # -------------------------------------------------------------------------------------
+    
+    ## ratio of unfolded data to generator-level
+    hFrac = thisTrue[channel].Clone()
+    hFrac.SetName("hFrac")
+    hFrac.SetTitle(";Top quark p_{T} (GeV);Theory/Data")
+    hFrac.Divide(thisReco)
+    
+    # Convert h_TOT, h_STAT into error bands
+    for ibin in xrange(1,nbinsTrue+1):
+        h_TOT.SetBinError(ibin,h_TOT.GetBinContent(ibin))
+        h_TOT.SetBinContent(ibin,1.0)
+        h_STAT.SetBinError(ibin,h_STAT.GetBinContent(ibin))
+        h_STAT.SetBinContent(ibin,1.0)
+        
+    h_TOT.SetMarkerSize(0)
+    h_TOT.SetLineColor(0)
+    h_TOT.SetFillColor(860-9)
+    h_TOT.SetFillStyle(1001)
+    
+    h_STAT.SetMarkerSize(0)
+    h_STAT.SetLineColor(0)
+    h_STAT.SetFillColor(18)
+    h_STAT.SetFillStyle(1001)
+    
+    # Plot
+    c1 = TCanvas("c", "c", 700, 700)
+    pad1 =  TPad("pad1","pad1",0,0.3,1,1)
+    pad1.SetBottomMargin(0.05)
+    pad1.Draw()
+    pad1.cd()
+    
+    thisReco.SetMarkerStyle(21)
+    thisMeas[channel].SetMarkerStyle(25)
+    
+    thisReco.GetXaxis().SetRangeUser(400.,1199.)
+    thisTrue[channel].GetXaxis().SetRangeUser(400.,1199.)
+    thisMeas[channel].GetXaxis().SetRangeUser(400.,1199.)
+    
+    xsec_title = ";;d#sigma/dp_{T} [fb/GeV]"
+    
+    thisReco.SetTitle(xsec_title)
+    thisReco.GetYaxis().SetTitleOffset(1.2)
+    thisReco.SetMinimum(0.0)
+    max = thisTrue[channel].GetMaximum()
+    max2 = thisReco.GetMaximum()
+    if max2 > max:
 	max = max2
-thisReco.SetAxisRange(0,max*1.15,"Y")
-thisReco.Draw()
-thisTrue.Draw('hist same')
-print 'Troubleshoot 6: bin 2 has content ' + str(thisMeas.GetBinContent(2)) + '+-' + str(thisMeas.GetBinError(2))
-thisMeas.Draw('same')
-thisTrue.UseCurrentStyle()
-thisTrue.SetLineColor(4);
-thisTrue.GetYaxis().SetTitleSize(25)
-thisTrue.GetXaxis().SetLabelSize(0)
+    thisReco.SetAxisRange(0,max*1.15,"Y")
+    thisReco.Draw()
+    thisTrue[channel].Draw('hist same')
+    thisMeas[channel].Draw('same')
+    thisTrue[channel].UseCurrentStyle()
+    thisTrue[channel].SetLineColor(4)
+    thisTrue[channel].GetYaxis().SetTitleSize(25)
+    thisTrue[channel].GetXaxis().SetLabelSize(0)
+    
+    leg = TLegend(0.5, 0.5, 0.9, 0.75)
+    leg.SetFillStyle(0)
+    leg.SetTextFont(42)
+    leg.SetTextSize(0.045)
+    leg.SetBorderSize(0)
+    
+    tt = TLatex()
+    tt.SetNDC()
+    tt.SetTextFont(42)
+    leg.AddEntry( thisReco, 'Unfolded data', 'p')
+    leg.AddEntry( thisTrue[channel], 'Generated (Powheg)', 'l')
+    leg.AddEntry( thisMeas[channel], 'Measured data', 'p')
+    leg.AddEntry( h_STAT, 'Stat. uncertainty','f');
+    leg.AddEntry( h_TOT, 'Stat. #oplus syst. uncertainties','f');
+    
+    leg.Draw()
+    drawCMS(0.19,0.945)
+    
+    # write histograms to file
+    thisReco.SetName("UnfoldedMC")
+    
+    text1 = TLatex()
+    text1.SetNDC()
+    text1.SetTextFont(42)
+    text1.DrawLatex(0.55,0.8, "#scale[1.0]{L = 35.9 fb^{-1}, #sqrt{s} = 13 TeV}")
+    
+    c1.cd()
+    pad2 =  TPad("pad2","pad2",0,0.0,1,0.28)
+    pad2.SetTopMargin(0.05)
+    pad2.SetBottomMargin(0.4)
+    pad2.Draw()
+    pad2.cd()
+    pad2.SetGridy()
+    hFrac.SetMaximum(1.8)
+    hFrac.SetMinimum(0.2)
+    hFrac.UseCurrentStyle()
+    hFrac.GetYaxis().SetTitleSize(25)
+    hFrac.GetYaxis().SetTitleOffset(2.0)
+    hFrac.GetXaxis().SetTitleOffset(4.0)
+    hFrac.GetXaxis().SetLabelSize(25)
+    hFrac.GetYaxis().SetNdivisions(4,4,0,False)
+    
+    hFrac.Draw("hist")
+    h_TOT.Draw("same,e2")
+    h_STAT.Draw("same,e2")
+    hFrac.Draw("same,hist")
+    hFrac.GetXaxis().SetRangeUser(400., 1199.)
+    
+    c1.Update()
+    
+    c1.SaveAs("UnfoldingPlots/closure_"+channel+"_data.pdf")
 
-leg = TLegend(0.5, 0.55, 0.9, 0.75)
-leg.SetFillStyle(0)
-leg.SetTextFont(42)
-leg.SetTextSize(0.045)
-leg.SetBorderSize(0)
+    # Finally, plot response matrices
+    gStyle.SetPadRightMargin(0.15)
+    gStyle.SetPadLeftMargin(0.15)
+    gStyle.SetPadTopMargin(0.07)
+    gStyle.SetPadBottomMargin(0.15)
 
-tt = TLatex()
-tt.SetNDC()
-tt.SetTextFont(42)
-leg.AddEntry( thisReco, 'Unfolded data', 'p')
-leg.AddEntry( thisTrue, 'Generated (Powheg)', 'l')
-leg.AddEntry( thisMeas, 'Measured data', 'p')
-leg.Draw()
+    for ibiny in xrange(1,nbinsTrue+1):
+        tmp = response[channel].Integral(0,nbinsMeas+1,ibiny,ibiny)
+        for ibinx in xrange(1,nbinsMeas+1):
+            response[channel].SetBinContent(ibinx,ibiny,response[channel].GetBinContent(ibinx,ibiny)/tmp)    
 
-text1 = TLatex()
-text1.SetNDC()
-text1.SetTextFont(42)
-text1.DrawLatex(0.55,0.8, "#scale[1.0]{L = 35.9 fb^{-1}, #sqrt{s} = 13 TeV}")
+    c5 = TCanvas()
+    response[channel].SetTitle(";reconstructed top jet p_{T};true top quark p_{T}")
+    response[channel].GetZaxis().SetRangeUser(0.0,0.035)
+    response[channel].Draw("colz")
 
-c1.cd();
-pad2 =  TPad("pad2","pad2",0,0.0,1,0.28)
-pad2.SetTopMargin(0.05);
-pad2.SetBottomMargin(0.4);
-pad2.Draw();
-pad2.cd();
-pad2.SetGridy()
-hFrac.SetMaximum(1.8)
-hFrac.SetMinimum(0.2)
-hFrac.UseCurrentStyle()
-hFrac.GetYaxis().SetTitleSize(25)
-hFrac.GetYaxis().SetTitleOffset(2.0)
-hFrac.GetXaxis().SetTitleOffset(4.0)
-hFrac.GetXaxis().SetLabelSize(25)
-hFrac.GetYaxis().SetNdivisions(4,4,0,False)
+    c5.SaveAs("UnfoldingPlots/responseMatrix_"+channel+"_nom.pdf")
 
-hFrac.Draw("e")
-hFrac.GetXaxis().SetRangeUser(400., 1199.)
+    xvec.Print()
+    yvec.Print()
 
-c1.Update()
+    for systematic in ["ISRUp","ISRDown","FSRUp","FSRDown"]:
+        for ibiny in xrange(1,nbinsTrue+1):
+            tmp = Hres_sys[systematic+"_"+channel].Integral(0,nbinsMeas+1,ibiny,ibiny)
+            for ibinx in xrange(1,nbinsMeas+1):
+                Hres_sys[systematic+"_"+channel].SetBinContent(ibinx,ibiny,Hres_sys[systematic+"_"+channel].GetBinContent(ibinx,ibiny)/tmp)
+        Hres_sys[systematic+"_"+channel].Add(response[channel],-1.0)
+        Hres_sys[systematic+"_"+channel].GetZaxis().SetRangeUser(-0.015,0.015)
+        Hres_sys[systematic+"_"+channel].Draw("colz")
+        c5.SaveAs("UnfoldingPlots/responseMatrix_"+channel+"_"+systematic+".pdf")
 
-c1.SaveAs("UnfoldingPlots/closure_"+options.lepType+"_data.pdf")
+        dA = TMatrixD(nbinsMeas,nbinsTrue)
+        for irow in xrange(0,nbinsMeas):
+            for icol in xrange(0,nbinsTrue):
+                dA[irow][icol] = Hres_sys[systematic+"_"+channel].GetBinContent(irow+1,icol+1)
+            
+        #Manually calculate Vxx
+        dAT = TMatrixD(nbinsTrue,nbinsMeas)
+        dAT.Transpose(dA)
+        
+        dx1 = TMatrixD(nbinsMeas,1)
+        dx1.Mult(dA,xvec)
+        dx2 = TMatrixD(nbinsMeas,1)
+        dx2.Mult(VyyInv,dx1)
+        dx3 = TMatrixD(nbinsTrue,1)
+        dx3.Mult(AT,dx2)
 
+        dx4 = TMatrixD(nbinsMeas,1)
+        dx4.Mult(A,xvec)
+        dx5 = TMatrixD(yvec)
+        dx5 -= dx4
+        dx6 = TMatrixD(nbinsMeas,1)
+        dx6.Mult(VyyInv,dx5)
+        dx7 = TMatrixD(nbinsTrue,1)
+        dx7.Mult(dAT,dx6)
+
+        dx7 -= dx3
+
+        dx = TMatrixD(nbinsTrue,1)
+        dx.Mult(Vxx,dx7)
+        dx.Print()
+
+    gStyle.SetPadTopMargin(0.07)
+    gStyle.SetPadRightMargin(0.05)
+    gStyle.SetPadBottomMargin(0.16)
+    gStyle.SetPadLeftMargin(0.18)

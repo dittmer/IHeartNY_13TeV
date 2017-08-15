@@ -158,9 +158,10 @@ void runMakePlots(TString toPlot = "final"){
 
     cout << endl << "Finished making shape comparisons!" << endl << endl;
     
-    //makeCombineInputs("histfiles_full2016/","histfiles_full2016/");
+    makeCombineInputs("histfiles_full2016/","histfiles_full2016/","MC");
+    makeCombineInputs("histfiles_full2016/","histfiles_full2016/","data");
     
-    //cout << endl << "Finished making combine inputs!" << endl << endl;
+    cout << endl << "Finished making combine inputs!" << endl << endl;
 
     makeTable("histfiles_full2016/","histfiles_full2016/","mu",true,true,unBlind);
     cout << endl;
