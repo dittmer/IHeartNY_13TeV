@@ -22,16 +22,16 @@
 #include "TMath.h"
 
 #include "TSystem.h"
-#include "RooUnfold/src/RooUnfold.h"
-#include "RooUnfold/src/RooUnfoldBayes.h"
-#include "RooUnfold/src/RooUnfoldDagostini.h"
-#include "RooUnfold/src/RooUnfoldErrors.h"
-#include "RooUnfold/src/RooUnfoldInvert.h"
-#include "RooUnfold/src/RooUnfoldParms.h"
-#include "RooUnfold/src/RooUnfoldResponse.h"
-#include "RooUnfold/src/RooUnfoldSvd.h"
-#include "RooUnfold/src/RooUnfoldTUnfold.h"
- #include "BTagCalibrationStandalone.h"
+//#include "RooUnfold/src/RooUnfold.h"
+//#include "RooUnfold/src/RooUnfoldBayes.h"
+//#include "RooUnfold/src/RooUnfoldDagostini.h"
+//#include "RooUnfold/src/RooUnfoldErrors.h"
+//#include "RooUnfold/src/RooUnfoldInvert.h"
+//#include "RooUnfold/src/RooUnfoldParms.h"
+//#include "RooUnfold/src/RooUnfoldResponse.h"
+//#include "RooUnfold/src/RooUnfoldSvd.h"
+//#include "RooUnfold/src/RooUnfoldTUnfold.h"
+#include "BTagCalibrationStandalone.h"
 
 #include <iostream>
 #include <string>
@@ -99,11 +99,12 @@ float getMuonSF( double eta, double pt, TH2F* h_muID, TH1F* h_muTrig, TString sy
   float SF_tot = SF_muReco * SF_muID * SF_muTrig;
   
   if (usePost){
-    // Posterior nuisance parameter: -0.69 +- 0.96
-    // Treat as fully lognormal, even though initial uncertainty was linear -- err_tot is ~2%, so approximation holds
-    if (syst == "up")        return SF_tot * pow(1.0 + err_tot, 0.27);
-    else if (syst == "down") return SF_tot * pow(1.0 + err_tot, -1.65);
-    else                     return SF_tot * pow(1.0 + err_tot, -0.69);
+    // Posterior nuisance parameter: -0.68 +- 0.96
+    // Relative err. on SF is a roughly constant 2%, so dominant effect in interpolation is lognormal
+    // However, since effect was initially implemented linearly, will use asymmetric lognormal
+    if (syst == "up")        return SF_tot * pow(1.0 + err_tot, 0.28);
+    else if (syst == "down") return SF_tot * pow(1.0 - err_tot, 1.64);
+    else                     return SF_tot * pow(1.0 - err_tot, 0.68);
   }
   else{
     if (syst == "up") return SF_tot * (1 + err_tot);
@@ -154,11 +155,12 @@ double getElectronSF(double eta, double pt, TH2F* h_elReco, TH2F* h_elID, TH2F* 
   float SF_tot = SF_elReco * SF_elID * SF_elIso * SF_elTrig;
 
   if (usePost){
-    // Posterior nuisance parameter: 0.63 +- 0.88
-    // Treat as fully lognormal, even though initial uncertainty was linear -- err_tot is small enough that approximation holds
-    if (syst == "up")        return SF_tot * pow(1.0 + err_tot, 1.51);
-    else if (syst == "down") return SF_tot * pow(1.0 + err_tot, -0.25);
-    else                     return SF_tot * pow(1.0 + err_tot, 0.63);
+    // Posterior nuisance parameter: 0.54 +- 0.89
+    // Relative err. on SF is roughly constant, so dominant effect in interpolation is lognormal
+    // However, since effect was initially implemented linearly, will use asymmetric lognormal
+    if (syst == "up")        return SF_tot * pow(1.0 + err_tot, 1.43);
+    else if (syst == "down") return SF_tot * pow(1.0 - err_tot, 0.35);
+    else                     return SF_tot * pow(1.0 + err_tot, 0.54);
   }
   else{
     if (syst == "up") return SF_tot * (1 + err_tot);
@@ -172,7 +174,7 @@ double getElectronSF(double eta, double pt, TH2F* h_elReco, TH2F* h_elID, TH2F* 
 // ----------------------------------------------------------------------------------------------------------------
 
 
-void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, bool isData = false, bool isSignal = false, TString lepID = "Medium", TString iso = "None", bool doHemiCuts = false, float metCut = 0.0, bool doTriangular = false, bool isQCD = false, TString systematic = "nom", int oddOrEven = 0, bool usePost = false) {
+void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, bool isData = false, bool isSignal = false, TString lepID = "Medium", TString iso = "None", bool doHemiCuts = false, float metCut = 0.0, bool doTriangular = false, bool isQCD = false, TString systematic = "nom", int oddOrEven = 0, bool usePost = false, bool MttCut = false) {
   
   SetPlotStyle();
   TH1::AddDirectory(kFALSE);
@@ -180,6 +182,10 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   // minimum top pt cut
   float MINTOPPT = 400.0;
 
+  bool isNewSample = false;
+  if (sample.Contains("fullTruth") || sample.Contains("ZJets") || sample.Contains("WW") || sample.Contains("WZ") || sample.Contains("ZZ") || sample.Contains("SingleTop")) isNewSample = true;
+
+  if (isNewSample) cout << "Sample w/ el con veto bit" << endl;
   //--------------------------
   // Setup for response matrix
   //--------------------------
@@ -189,8 +195,8 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   //Instead of multiple binnings, currently filling only one very-finely-binned response matrix
   TH1D* h_bins_fine = new TH1D("bins_fine", ";;", 330, 350., 2000.);
 
-  RooUnfoldResponse response_fine(h_bins_fine, h_bins_fine);
-  response_fine.SetName("response_fine_pt");
+  //RooUnfoldResponse response_fine(h_bins_fine, h_bins_fine);
+  //response_fine.SetName("response_fine_pt");
   TH2D* h_response_fine = new TH2D("response_fine_pt_TH2", ";p_{T}(reconstructed top) [GeV];p_{T}(generated top) [GeV]", 330, 350., 2000., 330, 350., 2000.);
   
   TH1D* h_ptGenTop_fine = new TH1D("ptGenTop_fine", ";p_{T}(generated top) [GeV]; Events / 5 GeV", 330, 350., 2000.);
@@ -214,14 +220,14 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   float bins2_split[nbins2_split+1] = {350.0, 375.0, 400.0, 425.0, 450.0, 485.0, 525.0, 560.0, 600.0, 650.0, 700.0, 750.0, 800.0, 860.0, 925.0, 1060.0, 1200.0, 1600.0, 2000.0};
   TH1D* h_bins2_split = new TH1D("bins2_split",";;",nbins2_split,bins2_split);
 
-  RooUnfoldResponse response(h_bins, h_bins);
-  response.SetName("response_pt");
-  RooUnfoldResponse response2(h_bins2, h_bins2);
-  response2.SetName("response2_pt");
-  RooUnfoldResponse response_split(h_bins_split, h_bins);
-  response_split.SetName("response_pt_split");
-  RooUnfoldResponse response2_split(h_bins2_split, h_bins2);
-  response2_split.SetName("response2_pt_split");
+  //RooUnfoldResponse response(h_bins, h_bins);
+  //response.SetName("response_pt");
+  //RooUnfoldResponse response2(h_bins2, h_bins2);
+  //response2.SetName("response2_pt");
+  //RooUnfoldResponse response_split(h_bins_split, h_bins);
+  //response_split.SetName("response_pt_split");
+  //RooUnfoldResponse response2_split(h_bins2_split, h_bins2);
+  //response2_split.SetName("response2_pt_split");
 
   TH2D* h_response           = new TH2D("response_pt_TH2"          , ";p_{T}(reconstructed top) [GeV];p_{T}(generated top) [GeV]", nbins,  bins,  nbins,  bins);
   TH2D* h_response2          = new TH2D("response2_pt_TH2"         , ";p_{T}(reconstructed top) [GeV];p_{T}(generated top) [GeV]", nbins2, bins2, nbins2, bins2);
@@ -247,16 +253,24 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   TH1D* h_ptRecoTopModDown2       = new TH1D("ptRecoTopModDown2"      , ";p_{T}(reconstructed top) [GeV]; Events / 5 GeV", nbins2, bins2);  
   TH1D* h_ptRecoTop2_split        = new TH1D("ptRecoTop2_split"       , ";p_{T}(reconstructed top) [GeV]; Events / 5 GeV", nbins2_split, bins2_split);
   TH1D* h_ptRecoTopMod2_split     = new TH1D("ptRecoTopMod2_split"    , ";p_{T}(reconstructed top) [GeV]; Events / 5 GeV", nbins2_split, bins2_split);
-  TH1D* h_ptRecoTopModDown2_split = new TH1D("ptRecoTopModDown2_split", ";p_{T}(reconstructed top) [GeV]; Events / 5 GeV", nbins2_split, bins2_split);  
+  TH1D* h_ptRecoTopModDown2_split = new TH1D("ptRecoTopModDown2_split", ";p_{T}(reconstructed top) [GeV]; Events / 5 GeV", nbins2_split, bins2_split);
+
+  TH1D* h_ptRecoTop_split_l       = new TH1D("ptRecoTop_split_l"      , ";p_{T}(reconstructed top) [GeV]; Events / 5 GeV", nbins_split, bins_split);
+
+  TH1F* h_genTTbarMass_full       = new TH1F("genTTbarMass_full" ,";top quark pair mass (GeV);Events / 10 GeV" ,50,250.,1250.);
+  TH1F* h_hardTTbarMass           = new TH1F("hardTTbarMass" ,";top quark pair mass (GeV);Events / 10 GeV" ,50,250.,1250.);
 
   float LUM = 35867.0; //From https://hypernews.cern.ch/HyperNews/CMS/get/physics-announcements/4495/1.html -- not filtered for SingleMuon or SingleElectron yet
 
-  double weight_response = LUM * 831.76 / 77229341.; //lum * xsec / Nevents for PowhegPythia8
-  if (sample.Contains("p2")) weight_response = LUM * 831.76 / (78006311. * 1191. / 1192.);
+  //double weight_response = LUM * 831.76 / 77229341.; //lum * xsec / Nevents for PowhegPythia8
+  //if (sample.Contains("p2")) weight_response = LUM * 831.76 / (78006311. * 1191. / 1192.);
+  //else if (sample.Contains("ISRUp")) weight_response = LUM * 831.76 / 59033604.;
+  //else if (sample.Contains("ISRDn")) weight_response = LUM * 831.76 / 58999580.;
+  //else if (sample.Contains("FSRUp")) weight_response = LUM * 831.76 / 59230899.;
+  //else if (sample.Contains("FSRDn")) weight_response = LUM * 831.76 / 59306906.;
 
   // Correction factors for miss events in response matrix
-  TString append = sample.Contains("p2") ? "_p2" : "";
-  TFile* f_corr = TFile::Open("corrFac_miss"+append+".root");
+  TFile* f_corr = TFile::Open("corrFac_miss.root");
   TH1D* h_corr1 = (TH1D*) f_corr->Get("corrFac1_miss_"+channel+"_"+systematic)->Clone();
   TH1D* h_corr2 = (TH1D*) f_corr->Get("corrFac2_miss_"+channel+"_"+systematic)->Clone();
   f_corr->Close();
@@ -282,6 +296,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     vector<float>* genTopEta_TO    = 0;
     vector<float>* genTopPhi_TO    = 0;
     vector<float>* genTTbarMass_TO = 0;
+    vector<float>* hardTTbarMass_TO = 0;
     vector<float>* eventWeight_nom_TO = 0;
     vector<float>* eventWeight_puUp_TO = 0;
     vector<float>* eventWeight_puDown_TO = 0;
@@ -296,6 +311,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     TBranch* b_genTopEta_TO;
     TBranch* b_genTopPhi_TO;
     TBranch* b_genTTbarMass_TO;
+    TBranch* b_hardTTbarMass_TO;
     TBranch* b_eventWeight_nom_TO;
     TBranch* b_eventWeight_puUp_TO;
     TBranch* b_eventWeight_puDown_TO;
@@ -310,6 +326,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     treeTO->SetBranchAddress("genTopEta"             , &genTopEta_TO             , &b_genTopEta_TO             );
     treeTO->SetBranchAddress("genTopPhi"             , &genTopPhi_TO             , &b_genTopPhi_TO             );
     treeTO->SetBranchAddress("genTTbarMass"          , &genTTbarMass_TO          , &b_genTTbarMass_TO          );
+    if (sample.Contains("PowhegPythia8_fullTruth")) treeTO->SetBranchAddress("hardTTbarMass"         , &hardTTbarMass_TO         , &b_hardTTbarMass_TO);
     treeTO->SetBranchAddress("eventWeight_nom"       , &eventWeight_nom_TO       , &b_eventWeight_nom_TO       );
     treeTO->SetBranchAddress("eventWeight_puUp"      , &eventWeight_puUp_TO      , &b_eventWeight_puUp_TO      );
     treeTO->SetBranchAddress("eventWeight_puDown"    , &eventWeight_puDown_TO    , &b_eventWeight_puDown_TO    );
@@ -328,6 +345,8 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       if (oddOrEven != 0){
 	if (i % 2 == oddOrEven - 1) continue;
       }
+
+      if (MttCut && hardTTbarMass_TO->at(0) > 700.0) continue;
 
       float weight = eventWeight_nom_TO->at(0);
 
@@ -353,31 +372,34 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       if (truthChannel_TO->at(0) == 0 && channel == "el") continue;
       if (truthChannel_TO->at(0) == 1 && channel == "mu") continue;
 
+      h_genTTbarMass_full->Fill(genTTbarMass_TO->at(0),weight);
+      if (sample.Contains("PowhegPythia8_fullTruth")) h_hardTTbarMass->Fill(hardTTbarMass_TO->at(0),weight);
+
       if (genTopPt_TO->at(0) < 350.0 || genTopPt_TO->at(0) > 2000.0) continue;
 
       int ibin = h_corr1->FindBin(genTopPt_TO->at(0));
       corr_fac1 = h_corr1->GetBinContent(ibin);
       corr_fac2 = h_corr2->GetBinContent(ibin);
       
-      float w_ptup = (1.0 + 0.0008*genTopPt_TO->at(0));
-      float w_ptdn = (1.0 - 0.0008*genTopPt_TO->at(0));
+      float w_ptup = (1.0 + 0.0004*genTopPt_TO->at(0));
+      float w_ptdn = 1.0/(1.0 + 0.0004*genTopPt_TO->at(0));
 
       h_ptGenTop_fine->Fill(genTopPt_TO->at(0),weight);
       h_ptGenTopMod_fine->Fill(genTopPt_TO->at(0),weight*w_ptup);
       h_ptGenTopModDown_fine->Fill(genTopPt_TO->at(0),weight*w_ptdn);
 
-      response_fine.Miss(genTopPt_TO->at(0),weight_parton*corr_fac2*weight_response);
-      h_response_fine->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac2*weight_response);
+      //response_fine.Miss(genTopPt_TO->at(0),weight_parton*corr_fac2*weight_response);
+      h_response_fine->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac2);
 
       h_ptGenTop2->Fill(genTopPt_TO->at(0),weight);
       h_ptGenTopMod2->Fill(genTopPt_TO->at(0),weight*w_ptup);
       h_ptGenTopModDown2->Fill(genTopPt_TO->at(0),weight*w_ptdn);
 
-      response2.Miss(genTopPt_TO->at(0),weight_parton*corr_fac2*weight_response);
-      response2_split.Miss(genTopPt_TO->at(0),weight_parton*corr_fac2*weight_response);
-      h_response2->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac2*weight_response);
-      h_response2_split->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac2*weight_response);
-      h_response2_noweight->Fill(299.0, genTopPt_TO->at(0),weight_parton*weight_response);
+      //response2.Miss(genTopPt_TO->at(0),weight_parton*corr_fac2*weight_response);
+      //response2_split.Miss(genTopPt_TO->at(0),weight_parton*corr_fac2*weight_response);
+      h_response2->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac2);
+      h_response2_split->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac2);
+      h_response2_noweight->Fill(299.0, genTopPt_TO->at(0),weight_parton);
 
       if (genTopPt_TO->at(0) < MINTOPPT || genTopPt_TO->at(0) > 1200.0) continue;
 
@@ -385,10 +407,10 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       h_ptGenTopMod->Fill(genTopPt_TO->at(0),weight*w_ptup);
       h_ptGenTopModDown->Fill(genTopPt_TO->at(0),weight*w_ptdn);
 
-      response.Miss(genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
-      response_split.Miss(genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
-      h_response->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
-      h_response_split->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
+      //response.Miss(genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
+      //response_split.Miss(genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
+      h_response->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac1);
+      h_response_split->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac1);
 
     }
     treeTO->Delete();
@@ -744,7 +766,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   tree->SetBranchAddress("eldRPt40"               , &eldRPt40            , &b_eldRPt40            );
   tree->SetBranchAddress("eldRPt45"               , &eldRPt45            , &b_eldRPt45            );
   tree->SetBranchAddress("elTight"                , &elTight             , &b_elTight             );
-  if (sample.Contains("fullTruth_p2")) tree->SetBranchAddress("elPassConVeto"          , &elPassConVeto       , &b_elPassConVeto       );
+  if (isNewSample) tree->SetBranchAddress("elPassConVeto"          , &elPassConVeto       , &b_elPassConVeto       );
   tree->SetBranchAddress("elCharge"               , &elCharge            , &b_elCharge            );
   tree->SetBranchAddress("ak4jetPt"               , &ak4jetPt            , &b_ak4jetPt            );
   tree->SetBranchAddress("ak4jetEta"              , &ak4jetEta           , &b_ak4jetEta           );
@@ -821,6 +843,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   vector<float>* genElEta       = 0;
   vector<float>* genElPhi       = 0;
   vector<float>* genTTbarMass   = 0;
+  vector<float>* hardTTbarMass   = 0;
   
   // particle level
   //vector<float>* genAK4jetPt    = 0;
@@ -850,6 +873,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     TBranch* b_genElEta       ;
     TBranch* b_genElPhi       ;
     TBranch* b_genTTbarMass   ;
+    TBranch* b_hardTTbarMass   ;
     
     // particle level
     //TBranch* b_genAK4jetPt    ;
@@ -877,6 +901,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     tree->SetBranchAddress("genElEta"               , &genElEta            , &b_genElEta            );
     tree->SetBranchAddress("genElPhi"               , &genElPhi            , &b_genElPhi            );
     tree->SetBranchAddress("genTTbarMass"           , &genTTbarMass        , &b_genTTbarMass        );
+    if (sample.Contains("PowhegPythia8_fullTruth")) tree->SetBranchAddress("hardTTbarMass"           , &hardTTbarMass        , &b_hardTTbarMass);
     
     //tree->SetBranchAddress("genAK4jetPt"            , &genAK4jetPt         , &b_genAK4jetPt         );
     //tree->SetBranchAddress("genAK4jetEta"           , &genAK4jetEta        , &b_genAK4jetEta        );
@@ -907,7 +932,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   TH1F* h_genTopPt                 = new TH1F("genTopPt"     ,";top quark p_{T} (GeV);Events / 20 GeV"     ,60,0.0,1200.);
   TH1F* h_genTopEta                = new TH1F("genTopEta"    ,";top quark #eta;Events / 0.1"               ,50,-2.5,2.5);
   TH1F* h_genTopPhi                = new TH1F("genTopPhi"    ,";top quark #phi;Events / 0.1"               ,70,-3.5,3.5);
-  TH1F* h_genTTbarMass             = new TH1F("genTTbarMass" ,";top quark pair mass (GeV);Events / 10 GeV" ,50,0.0,500.);
+  TH1F* h_genTTbarMass             = new TH1F("genTTbarMass" ,";top quark pair mass (GeV);Events / 10 GeV" ,50,250.0,1250.);
   TH1F* h_genLepPt                 = new TH1F("genLepPt"     ,";truth lepton p_{T} (GeV);Events / 10 GeV"  ,50,0.0,500.);
   TH1F* h_genLepEta                = new TH1F("genLepEta"    ,";truth lepton #eta;Events / 0.1"            ,50,-2.5,2.5);
   TH1F* h_genLepPhi                = new TH1F("genLepPhi"    ,";truth lepton #phi;Events / 0.1"            ,70,-3.5,3.5);
@@ -1141,6 +1166,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   TH1F* h_nAK8jet1t1b               = new TH1F("nAK8jet1t1b"               ,";# AK8 jets;Events"                                          ,10, -0.5, 9.5);
   TH1F* h_nTjet1t1b                 = new TH1F("nTjet1t1b"                 ,";# t-jet cands;Events"                                       ,5,  -0.5, 4.5);
   TH1F* h_ak8jetPt1t1b              = new TH1F("ak8jetPt1t1b"              ,";p_{T} of t-jet (GeV);Events / 20 GeV"                       ,80,400.0, 1200.);
+  TH1F* h_ak8jetPt1t1b_l            = new TH1F("ak8jetPt1t1b_l"            ,";p_{T} of t-jet (GeV);Events / 20 GeV"                       ,80,400.0, 1200.);
   TH1F* h_ak8jetEta1t1b             = new TH1F("ak8jetEta1t1b"             ,";#eta of t-jet;Events / 0.1"                                 ,50, -2.5, 2.5);
   TH1F* h_ak8jetPhi1t1b             = new TH1F("ak8jetPhi1t1b"             ,";#phi of t-jet;Events / 0.1"                                 ,70, -3.5, 3.5);
   TH1F* h_ak8jetY1t1b               = new TH1F("ak8jetY1t1b"               ,";Rapidity of t-jet;Events / 0.1"                             ,50, -2.5, 2.5);
@@ -1294,6 +1320,9 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     if (oddOrEven != 0){
       if (i % 2 == oddOrEven - 1) continue;
     }
+
+    if (MttCut && hardTTbarMass->at(0) > 700.0) continue;
+
     // ----------------------------------------------------------------------------------------------------------------
     
     float weight = eventWeight_nom->at(0);
@@ -1352,9 +1381,11 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	h_genTopEta->Fill(genTopEta->at(0),weight);
 	h_genTopPhi->Fill(genTopPhi->at(0),weight);
 	h_genTTbarMass->Fill(genTTbarMass->at(0),weight);
+	h_genTTbarMass_full->Fill(genTTbarMass->at(0),weight);
+	if (sample.Contains("PowhegPythia8_fullTruth")) h_hardTTbarMass->Fill(hardTTbarMass->at(0),weight);
 	
-	unfold_w_ptup = (1.0 + 0.0008*genTopPt->at(0));
-	unfold_w_ptdn = (1.0 - 0.0008*genTopPt->at(0));
+	unfold_w_ptup = (1.0 + 0.0004*genTopPt->at(0));
+	unfold_w_ptdn = 1.0/(1.0 + 0.0004*genTopPt->at(0));
 
 	int ibin = h_corr1->FindBin(genTopPt->at(0));
 	corr_fac1 = h_corr1->GetBinContent(ibin);
@@ -1433,19 +1464,19 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     std::vector<TLorentzVector> ak4Jets;
     if ((int)ak4jetPt->size() == 0) {
       if (passPartonLoose && isSignal) {
-	  response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
-	  h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	//response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
+	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
 
 	if (passParton){
-	  response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
 	}
       }
       continue;
@@ -1485,19 +1516,19 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     std::vector<TLorentzVector> ak8Jets;
     if ((int)ak8jetPt->size() == 0) {
       if (passPartonLoose && isSignal) {
-	  response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
-	  h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	//response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
+	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
 
 	if (passParton){
-	  response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
 	}
       }
       continue;
@@ -1587,8 +1618,8 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     // We only expect 0 or 1 electrons, but leaving this as a loop for now in case we change something later
     if ((int)elPt->size() != 0) {
       for (int iel = 0; iel < (int)elPt->size(); iel++){
-	if (elEta->at(iel) > 2.1) continue;
-	if (sample.Contains("fullTruth_p2") && elPassConVeto->at(iel) == 0) continue;
+	if (abs(elEta->at(iel)) > 2.1) continue;
+	if (isNewSample && elPassConVeto->at(iel) == 0) continue;
 	float dRclosest = 99.;
 	float ptRelClosest = -1.0;
 	if ((int)ak4Jets.size() != 0){
@@ -1680,7 +1711,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       
       if (channel == "el" && (int)elPtRelPt15->size() != 0){
 	if (lepID == "Medium" || (lepID == "Tight" && elTight->at(0))){
-	  if (!sample.Contains("fullTruth_p2") || elPassConVeto->at(0) == 1){
+	  if (!isNewSample || elPassConVeto->at(0) == 1){
 	    h_2DisoPt15->Fill(eldRPt15->at(0),elPtRelPt15->at(0),weight);
 	    h_2DisoPt20->Fill(eldRPt20->at(0),elPtRelPt20->at(0),weight);
 	    h_2DisoPt25->Fill(eldRPt25->at(0),elPtRelPt25->at(0),weight);
@@ -1696,7 +1727,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	for (int ii = 0; ii < 30; ii ++){
 	  for (int jj = 0; jj < (int)elPt->size(); jj++){
 	    if (lepID == "Medium" || (lepID == "Tight" && elTight->at(jj))){
-	      if (!sample.Contains("fullTruth_p2") || elPassConVeto->at(jj) == 1){
+	      if (!isNewSample || elPassConVeto->at(jj) == 1){
 		if (elMiniIso->at(jj) < MiniIsoCuts[ii]) MiniIsoCounts[ii] += weight;
 	      }
 	    }
@@ -1707,7 +1738,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	  for (int jj = 0; jj < 4; jj++){
 	    for (int kk = 0; kk < (int)elPtRelPt15->size(); kk++){
 	      if (lepID == "Medium" || (lepID == "Tight" && elTight->at(kk))){
-		if (!sample.Contains("fullTruth_p2") || elPassConVeto->at(kk) == 1){
+		if (!isNewSample || elPassConVeto->at(kk) == 1){
 		  if (elPtRelPt15->at(kk) > PtRelCuts[ii] || eldRPt15->at(kk) > dRCuts[jj]) Count2DIso[0][ii][jj] += weight;
 		  if (elPtRelPt20->at(kk) > PtRelCuts[ii] || eldRPt20->at(kk) > dRCuts[jj]) Count2DIso[1][ii][jj] += weight;
 		  if (elPtRelPt25->at(kk) > PtRelCuts[ii] || eldRPt25->at(kk) > dRCuts[jj]) Count2DIso[2][ii][jj] += weight;
@@ -1735,38 +1766,38 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     else {
       if (channel == "mu" && !(nGoodMu == 1 && nMuForVeto == 1 && nElForVeto == 0)) {
 	if (passPartonLoose && isSignal) {
-	  response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
-	  h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	  //response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	  //response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	  //response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
+	  h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	  h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	  h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	  h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
 	  
 	  if (passParton){
-	    response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	    response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	    h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	    h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	    //response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	    //response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	    h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	    h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
 	  }
 	}
 	continue;
       }
       if (channel == "el" && !(nGoodEl == 1 && nElForVeto == 1 && nMuForVeto == 0)) {
 	if (passPartonLoose && isSignal) {
-	  response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
-	  h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	  //response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	  //response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	  //response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
+	  h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	  h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	  h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	  h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
 	  
 	  if (passParton){
-	    response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	    response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	    h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	    h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	    //response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	    //response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	    h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	    h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
 	  }
 	}
 	continue;
@@ -1823,19 +1854,19 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       
       if (std::abs(dphi_emet-1.5) > 1.5 * metPt->at(0) / 110.0 || std::abs(dphi_jetmet-1.5) > 1.5 * metPt->at(0) / 110.0){
 	if (passPartonLoose && isSignal) {
-	  response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
-	  h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	  h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	  //response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	  //response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	  //response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
+	  h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	  h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	  h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	  h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
 	  
 	  if (passParton){
-	    response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	    response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	    h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	    h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	    //response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	    //response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	    h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	    h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
 	  }
 	}
 	continue;
@@ -1847,19 +1878,19 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     // Require at least two jets
     if ((int)ak4Jets.size() < 2) {
       if (passPartonLoose && isSignal) {
-	response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
-	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	//response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
+	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
 	
 	if (passParton){
-	  response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
 	}
       }
       continue;
@@ -1894,19 +1925,19 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     // Require at least one leptonic jet
     if (nLepJet < 1) {
       if (passPartonLoose && isSignal) {
-	response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
-	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	//response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
+	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
 	
 	if (passParton){
-	  response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
 	}
       }
       continue;
@@ -1931,19 +1962,19 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     // Require at least one hadronic jet
     if (nHadJet < 1) {
       if (passPartonLoose && isSignal) {
-	response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
-	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	//response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
+	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
 	
 	if (passParton){
-	  response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
 	}
       }
       continue;
@@ -1953,19 +1984,19 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     // Require MET > 35 GeV
     if (metPt->at(0) < metCut) {
       if (passPartonLoose && isSignal) {
-	response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
-	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	//response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response); 
+	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
 	
 	if (passParton){
-	  response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  //response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	  h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	  h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
 	}
       }
       continue;
@@ -1991,18 +2022,19 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     float highmasscut = 220.;
     bool passTopTag = false;
     float toptagSF = 1.0;
-    float toptagSFUp = 1.0 + 0.25;
-    float toptagSFDown = 1.0 - 0.25;
+    float toptagSFUp = 1.25; //25% lognormal uncertainty
+    float toptagSFDown = 1.0/1.25;
+    //When running on flat 1 +- 0.25 SF, tag nuisance parameter was 0.16 +- 0.33 and mistag nuisance parameter was -0.85 +- 0.31
     if (usePost) {
       if (sample.Contains("PowhegPythia8") || sample.Contains("SingleTop")){
-	toptagSF = 1.06; 
-	toptagSFUp = 1.17;
-	toptagSFDown = 0.97;
+	toptagSF = pow(1.25,0.16); 
+	toptagSFUp = pow(1.25,0.16+0.33);
+	toptagSFDown = pow(0.75,-0.16+0.33);
       }
       else {
-	toptagSF = 0.82; 
-	toptagSFUp = 0.88;
-	toptagSFDown = 0.76;
+	toptagSF = pow(0.75,0.85); 
+	toptagSFUp = pow(0.75,0.85-0.31);
+	toptagSFDown = pow(0.75,0.85+0.31);
       }
     }
     if (ak8jetSDmass->at(itopJetCand) > lowmasscut && ak8jetSDmass->at(itopJetCand) < highmasscut){
@@ -2084,41 +2116,42 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       
       if (isSignal){
 	if (passPartonLoose) {
-	  response2.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
-	  response_fine.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
-	  response2_split.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
-	  h_response2->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
-	  h_response_fine->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
-	  h_response2_split->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
-	  h_response2_noweight->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight_parton*weight_response);
+	  //response2.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
+	  //response_fine.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
+	  //response2_split.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
+	  h_response2->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF);
+	  h_response_fine->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF);
+	  h_response2_split->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF);
+	  h_response2_noweight->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight_parton);
 	}
 	else {
-	  response2.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
-	  response_fine.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
-	  response2_split.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
-	  h_response2->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF*weight_response);
-	  h_response_fine->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF*weight_response);
-	  h_response2_split->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF*weight_response);
-	  h_response2_noweight->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight_parton*weight_response);
+	  //response2.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
+	  //response_fine.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
+	  //response2_split.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
+	  h_response2->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF);
+	  h_response_fine->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF);
+	  h_response2_split->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF);
+	  h_response2_noweight->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight_parton);
 	}
       }
     }
 
     else{
       if (passPartonLoose && isSignal) {
-	response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2*weight_response);
-	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton*weight_response);
+	//response2            .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response_fine        .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	//response2_split      .Miss(genTopPt->at(0),weight_parton*corr_fac2*weight_response);
+	h_response2          ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response_fine      ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_split    ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac2);
+	h_response2_noweight ->Fill(299.0, genTopPt->at(0),weight_parton);
       }
     }
       
     if (passTopTag && passBtag && ak8Jets.at(itopJetCand).Perp() > MINTOPPT && ak8Jets.at(itopJetCand).Perp() < 1200.0){
       h_ptRecoTop->Fill(ak8Jets.at(itopJetCand).Perp(),weight*toptagSF*btagSF);
       h_ptRecoTop_split->Fill(ak8Jets.at(itopJetCand).Perp(),weight*toptagSF*btagSF);
+      if (sample.Contains("WJets") && nB == 0 && nC == 0) h_ptRecoTop_split_l->Fill(ak8Jets.at(itopJetCand).Perp(),weight*toptagSF*btagSF);
       h_ptRecoTopMod->Fill(ak8Jets.at(itopJetCand).Perp(),weight*toptagSF*btagSF*unfold_w_ptup);
       h_ptRecoTopMod_split->Fill(ak8Jets.at(itopJetCand).Perp(),weight*toptagSF*btagSF*unfold_w_ptup);
       h_ptRecoTopModDown->Fill(ak8Jets.at(itopJetCand).Perp(),weight*toptagSF*btagSF*unfold_w_ptdn);
@@ -2126,25 +2159,25 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 
       if (isSignal){
 	if (passParton) {
-	  response.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
-	  response_split.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
-	  h_response->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
-	  h_response_split->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
+	  //response.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
+	  //response_split.Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF*weight_response);
+	  h_response->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF);
+	  h_response_split->Fill(ak8Jets.at(itopJetCand).Perp(),genTopPt->at(0),weight*btagSF*toptagSF);
 	}
 	else {
-	  response.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
-	  response_split.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
-	  h_response->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF*weight_response);
-	  h_response_split->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF*weight_response);
+	  //response.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
+	  //response_split.Fake(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF*weight_response);
+	  h_response->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF);
+	  h_response_split->Fill(ak8Jets.at(itopJetCand).Perp(),299.0,weight*btagSF*toptagSF);
 	}
       }
     }
     else {
       if (passParton){
-	response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
-	h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	//response         .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	//response_split   .Miss(genTopPt->at(0),weight_parton*corr_fac1*weight_response);
+	h_response       ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
+	h_response_split ->Fill(299.0, genTopPt->at(0),weight_parton*corr_fac1);
       }
     }
 
@@ -2439,6 +2472,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       h_nAK8jet1t1b->Fill((int)ak8Jets.size(),weight*btagSF*toptagSF);
       h_nTjet1t1b->Fill(nHadJet,weight*btagSF*toptagSF);
       h_ak8jetPt1t1b->Fill(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF);
+      if (sample.Contains("WJets") && nB == 0 && nC == 0) h_ak8jetPt1t1b_l->Fill(ak8Jets.at(itopJetCand).Perp(),weight*btagSF*toptagSF);
       h_ak8jetEta1t1b->Fill(ak8Jets.at(itopJetCand).Eta(),weight*btagSF*toptagSF);
       h_ak8jetPhi1t1b->Fill(ak8Jets.at(itopJetCand).Phi(),weight*btagSF*toptagSF);
       h_ak8jetY1t1b->Fill(ak8Jets.at(itopJetCand).Rapidity(),weight*btagSF*toptagSF);
@@ -2585,6 +2619,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   // -------------------------------------------------------------------------------------------
 
   TString outname = sample + "_" + channel;
+  if ((sample == "PowhegPythia8_fullTruth" || sample == "PowhegPythia8_fullTruth_p2") && !MttCut && usePost && !isQCD) outname = sample + "_mInc_" + channel;
   if (sample.Contains("Data")) outname = sample;
   if (!isData) outname = outname + "_" + systematic;
   if (isQCD) outname = outname + "_qcd";
@@ -2609,6 +2644,8 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     h_genTopEta->Write();
     h_genTopPhi->Write();
     h_genTTbarMass->Write();
+    h_genTTbarMass_full->Write();
+    if (sample.Contains("PowhegPythia8_fullTruth")) h_hardTTbarMass->Write();
     h_genLepPt->Write();
     h_genLepEta->Write();
     h_genLepPhi->Write();
@@ -2623,11 +2660,11 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     h_ptGenTopModDown2->Write();
     h_ptGenTopModDown_fine->Write();
 
-    response.Write();
-    response_fine.Write();
-    response_split.Write();
-    response2.Write();
-    response2_split.Write();
+    //response.Write();
+    //response_fine.Write();
+    //response_split.Write();
+    //response2.Write();
+    //response2_split.Write();
     h_response->Write();
     h_response_fine->Write();
     h_response_split->Write();
@@ -2655,6 +2692,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   h_ptRecoTop->Write();
   h_ptRecoTop_fine->Write();
   h_ptRecoTop_split->Write();
+  if (sample.Contains("WJets")) h_ptRecoTop_split_l->Write();
   h_ptRecoTop2->Write();
   h_ptRecoTop2_split->Write();
   h_ptRecoTopMod->Write();
@@ -2905,6 +2943,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   h_nAK8jet1t1b->Write();
   h_nTjet1t1b->Write();
   h_ak8jetPt1t1b->Write();
+  if (sample.Contains("WJets")) h_ak8jetPt1t1b_l->Write();
   h_ak8jetEta1t1b->Write();
   h_ak8jetPhi1t1b->Write();
   h_ak8jetY1t1b->Write();
@@ -3031,6 +3070,8 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   h_genLepEta->Delete();
   h_genLepPhi->Delete();
   h_genTTbarMass->Delete();
+  h_genTTbarMass_full->Delete();
+  h_hardTTbarMass->Delete();
 
   h_ptGenTop->Delete();
   h_ptGenTop2->Delete();
@@ -3045,6 +3086,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   h_ptRecoTop->Delete();
   h_ptRecoTop_fine->Delete();
   h_ptRecoTop_split->Delete();
+  h_ptRecoTop_split_l->Delete();
   h_ptRecoTop2->Delete();
   h_ptRecoTop2_split->Delete();
   h_ptRecoTopMod->Delete();
@@ -3058,11 +3100,11 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   h_ptRecoTopModDown2->Delete();
   h_ptRecoTopModDown2_split->Delete();
 
-  response.Delete();
-  response_fine.Delete();
-  response_split.Delete();
-  response2.Delete();
-  response2_split.Delete();
+  //response.Delete();
+  //response_fine.Delete();
+  //response_split.Delete();
+  //response2.Delete();
+  //response2_split.Delete();
   h_response->Delete();
   h_response_fine->Delete();
   h_response_split->Delete();
@@ -3306,6 +3348,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   h_nAK8jet1t1b              ->Delete();
   h_nTjet1t1b                ->Delete();
   h_ak8jetPt1t1b             ->Delete();
+  h_ak8jetPt1t1b_l           ->Delete();
   h_ak8jetEta1t1b            ->Delete();
   h_ak8jetPhi1t1b            ->Delete();
   h_ak8jetY1t1b              ->Delete();

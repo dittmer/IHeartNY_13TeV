@@ -62,43 +62,11 @@ gStyle.SetPadRightMargin(0.05)
 gStyle.SetPadBottomMargin(0.16)
 gStyle.SetPadLeftMargin(0.18)
   
-#gSystem.Load("RooUnfold/libRooUnfold.so")
-
-#from ROOT import RooUnfoldResponse
-#from ROOT import RooUnfold
-#from ROOT import RooUnfoldBayes
-#from ROOT import RooUnfoldSvd
-#from ROOT import RooUnfoldTUnfold
-
 print "TUnfold version is " + str(TUnfold.GetTUnfoldVersion())
 
 # -------------------------------------------------------------------------------------
 # Define helper functions
 # -------------------------------------------------------------------------------------
-
-#def makeResponse( response ) :
-#    Hres = response.HresponseNoOverflow()
-#    vtru = response.Vtruth()
-#    etru = response.Etruth()
-#        
-#    for j in xrange(1,response.GetNbinsTruth()+1) :
-#        ntru = 0.0
-#        for i in xrange(1,response.GetNbinsMeasured()+1) :
-#            ntru += Hres.GetBinContent(i,j)
-#        Hres.SetBinContent(0, j, vtru[j-1]-ntru)
-#        Hres.SetBinError(0, j, etru[j-1])
-#        
-#    return Hres
-
-#def removeFakes( hMeas, response ):
-#    if response.FakeEntries() :
-#        fakes = response.Vfakes()
-#        fac = response.Vmeasured().Sum() # Measured, from response matrix
-#        if fac != 0.0 :
-#            measVec = RooUnfoldResponse.H2V(hMeas,response.GetNbinsMeasured(),0) #Actual measured input
-#            fac = measVec.Sum() / fac 
-#            for i in xrange(1,response.GetNbinsMeasured()+1) :
-#                hMeas.SetBinContent(i,hMeas.GetBinContent(i) - fac * fakes[i-1])
 
 def noNegBins( hist ):
     for i in xrange(1,hist.GetNbinsX()+1):
@@ -109,8 +77,6 @@ lum = 35867.0
 
 response_name = "response_pt_split_TH2"
 hMeas_name    = "ptRecoTop_split"
-hMeasUp_name  = "ptRecoTopMod_split"
-hMeasDn_name  = "ptRecoTopModDown_split"
 hTrue_name    = "ptGenTop"
 
 # -------------------------------------------------------------------------------------
@@ -121,41 +87,45 @@ muOrEl = "mu"
 if options.lepType=="ele":
     muOrEl = "el"
 
-f_ttbar        = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_post.root")
-f_ttbar_even   = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_even_post.root")
-f_ttbar_odd    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_odd_post.root")
-f_ttbar_2      = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_post.root")
-f_ttbar_even_2 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_even_post.root")
-f_ttbar_odd_2  = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_odd_post.root")
+if options.type == "full":
+    f_ttbar_m0to700_p1_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_post.root")
+    f_ttbar_m0to700_p2_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_post.root")
+    f_ttbar_m700to1000_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_nom_post.root")
+    f_ttbar_m1000toInf_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_nom_post.root")
+    f_ttbar_m0to700_p1_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_post.root")
+    f_ttbar_m0to700_p2_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_post.root")
+    f_ttbar_m700to1000_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_nom_post.root")
+    f_ttbar_m1000toInf_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_nom_post.root")    
+else:
+    f_ttbar_m0to700_p1_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m0to700_p2_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m700to1000_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m1000toInf_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m0to700_p1_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m0to700_p2_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m700to1000_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m1000toInf_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_nom_odd_post.root")
+    
 
 # -------------------------------------------------------------------------------------
 # Get response matrix
 # -------------------------------------------------------------------------------------
-
-if options.type == "full":
-    response = f_ttbar.Get(response_name)
-    response.Sumw2()
-    response.Scale(77229341. / (77229341. + 78006311. * 1191. / 1192.))
-    response2 = f_ttbar_2.Get(response_name)
-    response2.Sumw2()
-    response2.Scale(78006311. * 1191. / 1192. / (77229341. + 78006311. * 1191. / 1192.))
-    response.Add(response2)
-elif options.type == "half" :
-    response = f_ttbar_odd.Get(response_name)
-    response.Sumw2()
-    response.Scale(77229341. / (77229341. + 78006311. * 1191. / 1192.))
-    response2 = f_ttbar_odd_2.Get(response_name)
-    response2.Sumw2()
-    response2.Scale(78006311. * 1191. / 1192. / (77229341. + 78006311. * 1191. / 1192.))
-    response.Add(response2)
-    response.Scale(2.0)
-elif options.type == "each" : #unfold p1 with p2
-    response = f_ttbar_2.Get(response_name)
-    response.Sumw2()
-else :
-    response = f_ttbar_odd.Get(response_name)
-    response.Sumw2()
-    response.Scale(2.0)
+response_m0to700_p1 = f_ttbar_m0to700_p1_response.Get(response_name)
+response_m0to700_p2 = f_ttbar_m0to700_p2_response.Get(response_name)
+response_m700to1000 = f_ttbar_m700to1000_response.Get(response_name)
+response_m1000toInf = f_ttbar_m1000toInf_response.Get(response_name)
+response_m0to700_p1.Sumw2()
+response_m0to700_p2.Sumw2()
+response_m700to1000.Sumw2()
+response_m1000toInf.Sumw2()
+response_m0to700 = response_m0to700_p1.Clone()
+response_m0to700.Add(response_m0to700_p2)
+response_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+response_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+response_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+response = response_m0to700.Clone()
+response.Add(response_m700to1000);
+response.Add(response_m1000toInf);
     
 TH1.AddDirectory(0)
 
@@ -163,39 +133,43 @@ TH1.AddDirectory(0)
 # Get systematic variations
 # -------------------------------------------------------------------------------------
 Hres_sys = {}
-sysnames = ['JEC','JER','BTag','TopTag','lep','PDF','Q2','AS']
-vars = ['Up','Down']
+sysnames = ['JEC','JER','BTag','TopTag','lep','pu','PDF','Q2']
+thsysnames = ['ISR','FSR']
+allsysnames = sysnames+thsysnames
+longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR"]
+variants = ['Up','Down']
 
 for sysname in sysnames:
-    for var in vars:
-        f_ttbar_sys        = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_"+sysname+var+"_post.root")
-        f_ttbar_sys_odd    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-        f_ttbar_sys_2      = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_"+sysname+var+"_post.root")
-        f_ttbar_sys_odd_2  = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-
+    for var in variants:
         if options.type == "full":
-            response_sys = f_ttbar_sys.Get(response_name)
-            response_sys.Sumw2()
-            response_sys.Scale(77229341. / (77229341. + 78006311. * 1191. / 1192.))
-            response_sys2 = f_ttbar_sys_2.Get(response_name)
-            response_sys2.Sumw2()
-            response_sys2.Scale(78006311. * 1191. / 1192. / (77229341. + 78006311. * 1191. / 1192.))
-            response_sys.Add(response_sys2)
-        elif options.type == "half" :
-            response_sys = f_ttbar_sys_odd.Get(response_name)
-            response_sys.Sumw2()
-            response_sys.Scale(77229341. / (77229341. + 78006311. * 1191. / 1192.))
-            response_sys2 = f_ttbar_sys_odd_2.Get(response_name)
-            response_sys2.Sumw2()
-            response_sys2.Scale(78006311. * 1191. / 1192. / (77229341. + 78006311. * 1191. / 1192.))
-            response_sys.Add(response_sys2)
-            response_sys.Scale(2.0)
-        elif options.type == "each" : #unfold p1 with p2
-            response_sys = f_ttbar_sys_2.Get(response_name)
-            response_sys.Sumw2()
-        else :
-            response_sys = f_ttbar_sys_odd.Get(response_name)
-            response_sys.Sumw2()
+            f_ttbar_m0to700_p1_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_"+sysname+var+"_post.root")
+            f_ttbar_m0to700_p2_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_"+sysname+var+"_post.root")
+            f_ttbar_m700to1000_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_"+sysname+var+"_post.root")
+            f_ttbar_m1000toInf_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_"+sysname+var+"_post.root")
+        else:
+            f_ttbar_m0to700_p1_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+            f_ttbar_m0to700_p2_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+            f_ttbar_m700to1000_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+            f_ttbar_m1000toInf_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+            
+        response_sys_m0to700_p1 = f_ttbar_m0to700_p1_sys.Get(response_name)
+        response_sys_m0to700_p2 = f_ttbar_m0to700_p2_sys.Get(response_name)
+        response_sys_m700to1000 = f_ttbar_m700to1000_sys.Get(response_name)
+        response_sys_m1000toInf = f_ttbar_m1000toInf_sys.Get(response_name)
+        response_sys_m0to700_p1.Sumw2()
+        response_sys_m0to700_p2.Sumw2()
+        response_sys_m700to1000.Sumw2()
+        response_sys_m1000toInf.Sumw2()
+        response_sys_m0to700 = response_sys_m0to700_p1.Clone()
+        response_sys_m0to700.Add(response_sys_m0to700_p2)
+        response_sys_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+        response_sys_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+        response_sys_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+        response_sys = response_sys_m0to700.Clone()
+        response_sys.Add(response_sys_m700to1000);
+        response_sys.Add(response_sys_m1000toInf);
+
+        if options.type == "half":
             response_sys.Scale(2.0)
             
         for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
@@ -204,116 +178,68 @@ for sysname in sysnames:
         
         Hres_sys[sysname+var] = response_sys
 
-    # -------------------------------------------------------------------------------------
-    # Troubleshoot systematic variations
-    # -------------------------------------------------------------------------------------
-    gStyle.SetPadLeftMargin(0.15)
-    gStyle.SetPadRightMargin(0.12)
-    
-    hDiffSysUp = Hres_sys[sysname+"Up"].Clone()
-    hDiffSysUp.Add(response,-1.0)
-    hDiffSysDn = Hres_sys[sysname+"Down"].Clone()
-    hDiffSysDn.Add(response,-1.0)
+for thsysname in thsysnames:
+    for var in variants:
+        f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+muOrEl+"_"+thsysname+var+"_post.root")
+        response_sys = f_ttbar_sys.Get(response_name)
+        response_sys.Sumw2()
 
-    c7 = TCanvas()
-    hDiffSysUp.GetXaxis().SetRangeUser(400.,1199.)
-    hDiffSysUp.GetYaxis().SetRangeUser(400.,1199.)
-    hDiffSysUp.Draw("colz")
-    c7.SaveAs("UnfoldingPlots/compareSysResponse_"+sysname+"Up_"+options.lepType+"_"+options.type+".pdf")
+        for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
+            response_sys.SetBinContent(ibin,0,0)
+            response_sys.SetBinContent(ibin,0,0)
 
-    hDiffSysDn.GetXaxis().SetRangeUser(400.,1199.)
-    hDiffSysDn.GetYaxis().SetRangeUser(400.,1199.)
-    hDiffSysDn.Draw("colz")
-    c7.SaveAs("UnfoldingPlots/compareSysResponse_"+sysname+"Dn_"+options.lepType+"_"+options.type+".pdf")
-
-    gStyle.SetPadLeftMargin(0.18)
-    gStyle.SetPadRightMargin(0.05)
-
+        Hres_sys[thsysname+var] = response_sys
 
 # -------------------------------------------------------------------------------------
 # read & normalize histograms
 # -------------------------------------------------------------------------------------
 
-if options.type == "full":
-    if options.toy == "up" :
-        thisMeas = f_ttbar.Get(hMeasUp_name).Clone()
-        thisTrue = f_ttbar.Get(hTrue_name+"Mod").Clone()
-        thisMeas2 = f_ttbar_2.Get(hMeasUp_name).Clone()
-        thisTrue2 = f_ttbar_2.Get(hTrue_name+"Mod").Clone()
-    elif options.toy == "dn" :
-        thisMeas = f_ttbar.Get(hMeasDn_name).Clone() 
-        thisTrue = f_ttbar.Get(hTrue_name+"ModDown").Clone() 
-        thisMeas2 = f_ttbar_2.Get(hMeasDn_name).Clone() 
-        thisTrue2 = f_ttbar_2.Get(hTrue_name+"ModDown").Clone() 
-    else : 
-        thisMeas = f_ttbar.Get(hMeas_name).Clone() 
-        thisTrue = f_ttbar.Get(hTrue_name).Clone()
-        thisMeas2 = f_ttbar_2.Get(hMeas_name).Clone() 
-        thisTrue2 = f_ttbar_2.Get(hTrue_name).Clone()
-    thisMeas.Sumw2()
-    thisTrue.Sumw2()
-    thisMeas2.Sumw2()
-    thisTrue2.Sumw2()
-    thisMeas.Add(thisMeas2)
-    thisTrue.Add(thisTrue2)
-    thisMeas.Scale(lum * 831.76 / (77229341. + 78006311. * 1191. / 1192.))
-    thisTrue.Scale(lum * 831.76 / (77229341. + 78006311. * 1191. / 1192.))
+print 'Getting input/true'
+if options.toy == "up":
+    hMeas_name = hMeas_name.replace("Top","TopMod")
+    hTrue_name = hTrue_name.replace("Top","TopMod")
+elif options.toy == "dn":
+    hMeas_name = hMeas_name.replace("Top","TopModDown")
+    hTrue_name = hTrue_name.replace("Top","TopModDown")
 
-elif options.type == "half":
-    if options.toy == "up" :
-        thisMeas = f_ttbar_even.Get(hMeasUp_name).Clone()
-        thisTrue = f_ttbar_even.Get(hTrue_name+"Mod").Clone()
-        thisMeas2 = f_ttbar_even_2.Get(hMeasUp_name).Clone()
-        thisTrue2 = f_ttbar_even_2.Get(hTrue_name+"Mod").Clone()
-    elif options.toy == "dn" :
-        thisMeas = f_ttbar_even.Get(hMeasDn_name).Clone() 
-        thisTrue = f_ttbar_even.Get(hTrue_name+"ModDown").Clone() 
-        thisMeas2 = f_ttbar_even_2.Get(hMeasDn_name).Clone() 
-        thisTrue2 = f_ttbar_even_2.Get(hTrue_name+"ModDown").Clone() 
-    else : 
-        thisMeas = f_ttbar_even.Get(hMeas_name).Clone() 
-        thisTrue = f_ttbar_even.Get(hTrue_name).Clone() 
-        thisMeas2 = f_ttbar_even_2.Get(hMeas_name).Clone() 
-        thisTrue2 = f_ttbar_even_2.Get(hTrue_name).Clone()
-    thisMeas.Sumw2()
-    thisTrue.Sumw2()
-    thisMeas2.Sumw2()
-    thisTrue2.Sumw2()
-    thisMeas.Add(thisMeas2)
-    thisTrue.Add(thisTrue2)
-    thisMeas.Scale(lum * 831.76 * 2.0 / (77229341. + 78006311. * 1191. / 1192.))
-    thisTrue.Scale(lum * 831.76 * 2.0 / (77229341. + 78006311. * 1191. / 1192.))
+thisMeas_m0to700_p1 = f_ttbar_m0to700_p1_input.Get(hMeas_name)
+thisMeas_m0to700_p2 = f_ttbar_m0to700_p2_input.Get(hMeas_name)
+thisMeas_m700to1000 = f_ttbar_m700to1000_input.Get(hMeas_name)
+thisMeas_m1000toInf = f_ttbar_m1000toInf_input.Get(hMeas_name)
+thisMeas_m0to700_p1.Sumw2()
+thisMeas_m0to700_p2.Sumw2()
+thisMeas_m700to1000.Sumw2()
+thisMeas_m1000toInf.Sumw2()
+thisMeas_m0to700 = thisMeas_m0to700_p1.Clone()
+thisMeas_m0to700.Add(thisMeas_m0to700_p2)
+thisMeas_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+thisMeas_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+thisMeas_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+thisMeas = thisMeas_m0to700.Clone()
+thisMeas.Add(thisMeas_m700to1000);
+thisMeas.Add(thisMeas_m1000toInf);
+
+thisTrue_m0to700_p1 = f_ttbar_m0to700_p1_input.Get(hTrue_name)
+thisTrue_m0to700_p2 = f_ttbar_m0to700_p2_input.Get(hTrue_name)
+thisTrue_m700to1000 = f_ttbar_m700to1000_input.Get(hTrue_name)
+thisTrue_m1000toInf = f_ttbar_m1000toInf_input.Get(hTrue_name)
+thisTrue_m0to700_p1.Sumw2()
+thisTrue_m0to700_p2.Sumw2()
+thisTrue_m700to1000.Sumw2()
+thisTrue_m1000toInf.Sumw2()
+thisTrue_m0to700 = thisTrue_m0to700_p1.Clone()
+thisTrue_m0to700.Add(thisTrue_m0to700_p2)
+thisTrue_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+thisTrue_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+thisTrue_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+thisTrue = thisTrue_m0to700.Clone()
+thisTrue.Add(thisTrue_m700to1000);
+thisTrue.Add(thisTrue_m1000toInf);
+
+if options.type == "half":
+    thisMeas.Scale(2.0)
+    thisTrue.Scale(2.0)
     
-elif options.type == "each" : #unfold p1 with p2
-    if options.toy == "up" :
-        thisMeas = f_ttbar.Get(hMeasUp_name).Clone()
-        thisTrue = f_ttbar.Get(hTrue_name+"Mod").Clone()
-    elif options.toy == "dn" :
-        thisMeas = f_ttbar.Get(hMeasDn_name).Clone() 
-        thisTrue = f_ttbar.Get(hTrue_name+"ModDown").Clone() 
-    else : 
-        thisMeas = f_ttbar.Get(hMeas_name).Clone() 
-        thisTrue = f_ttbar.Get(hTrue_name).Clone()
-    thisMeas.Sumw2()
-    thisTrue.Sumw2()
-    thisMeas.Scale( lum * 831.76 / 77229341.)
-    thisTrue.Scale( lum * 831.76 / 77229341.)
-
-else :
-    if options.toy == "up" :
-        thisMeas = f_ttbar_even.Get(hMeasUp_name).Clone()
-        thisTrue = f_ttbar_even.Get(hTrue_name+"Mod").Clone()
-    elif options.toy == "dn" :
-        thisMeas = f_ttbar_even.Get(hMeasDn_name).Clone() 
-        thisTrue = f_ttbar_even.Get(hTrue_name+"ModDown").Clone() 
-    else : 
-        thisMeas = f_ttbar_even.Get(hMeas_name).Clone() 
-        thisTrue = f_ttbar_even.Get(hTrue_name).Clone()
-    thisMeas.Sumw2()
-    thisTrue.Sumw2()
-    thisMeas.Scale( lum * 831.76 * 2.0 / 77229341.)
-    thisTrue.Scale( lum * 831.76 * 2.0 / 77229341.)
-
 noNegBins(thisMeas)
 noNegBins(thisTrue)
     
@@ -334,8 +260,6 @@ for ibin in xrange(1,response.GetXaxis().GetNbins()+1):
     response.SetBinContent(ibin,0,0)
     response.SetBinError(ibin,0,0)
 
-    print 'Bin ' + str(ibin) + ' has content ' + str(thisMeas.GetBinContent(ibin)) + ' +- ' + str(thisMeas.GetBinError(ibin))
-
 # -------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------
 #
@@ -348,7 +272,6 @@ for ibin in xrange(1,response.GetXaxis().GetNbins()+1):
 # generate toys
 # -------------------------------------------------------------------------------------
 
-'''
 hToy = thisMeas.Clone() 
 hToy.SetName("toys")
 hToy.Reset() 
@@ -377,20 +300,16 @@ for itoy in xrange(0,ntoys) :
 # -------------------------------------------------------------------------------------
 
 hDiff_bin = []
-hDiffIni_bin = []
 h_tau = TH1F("tau_toys",";log(Tau);Toys",100,-4.0,-1.0)
 
 for ibin in xrange(0,nbinsTrue) :
     hDiff_tmp = TH1F("diff_bin"+str(ibin),";(truth-unfolded)/truth; number of events",100,-1,1)
     hDiff_bin.append(hDiff_tmp)
-for ibin in xrange(0,nbinsMeas) :
-    hDiffIni_tmp = TH1F("diff_bin"+str(ibin),";(meas-toy)/meas; number of events",100,-1,1)
-    hDiffIni_bin.append(hDiffIni_tmp)
         
 for itoy in xrange(0,ntoys) :
     unfold_tmp = TUnfoldDensity(response,TUnfold.kHistMapOutputVert, TUnfold.kRegModeCurvature, TUnfold.kEConstraintArea, TUnfoldDensity.kDensityModeBinWidth)
     unfold_tmp.SetInput(hToy_i[itoy])
-    for sysname in sysnames:
+    for sysname in allsysnames:
         unfold_tmp.AddSysError(Hres_sys[sysname+"Up"],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
     
     if options.regType == "LCurve" :
@@ -417,9 +336,6 @@ for itoy in xrange(0,ntoys) :
     for ibin in range(0, nbinsTrue):
         if thisTrue.GetBinContent(ibin+1) > 0.0:
             hDiff_bin[ibin].Fill( (thisTrue.GetBinContent(ibin+1) - hReco_tmp.GetBinContent(ibin+1)) / thisTrue.GetBinContent(ibin+1))
-    for ibin in xrange(0,nbinsMeas):
-        if thisMeas.GetBinContent(ibin+1) > 0.0:
-            hDiffIni_bin[ibin].Fill((thisMeas.GetBinContent(ibin+1) - hToy_i[itoy].GetBinContent(ibin+1)) / thisMeas.GetBinContent(ibin+1))
 
 for ibin in xrange(0,nbinsTrue) :
     c = TCanvas()
@@ -451,83 +367,132 @@ hBias_pt.SetAxisRange(-0.5,0.5,"Y")
 hBias_pt.Draw()
 ccc.SaveAs("UnfoldingPlots/bias_vspt"+options.toy+"_"+options.regType+"_"+options.lepType+"_"+options.type+".pdf")
 
-hBiasIni_pt = thisMeas.Clone() 
-hBiasIni_pt.SetName("initialBiasVsPt_"+options.toy+"_"+options.regType+"_"+options.lepType+"_"+options.type)
-hBiasIni_pt.Reset()
-
-for ibin in xrange(0,nbinsMeas) :
-    mean = hDiffIni_bin[ibin].GetMean()
-    err = hDiffIni_bin[ibin].GetRMS()
-
-    hBiasIni_pt.SetBinContent(ibin+1, mean)
-    hBiasIni_pt.SetBinError(ibin+1, err)
-            
-c3 = TCanvas()
-gPad.SetGridy()
-hBiasIni_pt.GetYaxis().SetTitle("Input Bias")
-hBiasIni_pt.GetXaxis().SetTitle("Top quark p_{T} (GeV)")
-#hBiasIni_pt.SetAxisRange(400,1199,"X")
-hBiasIni_pt.SetAxisRange(-0.5,0.5,"Y")
-hBiasIni_pt.Draw()
-c3.SaveAs("UnfoldingPlots/bias_vspt"+options.toy+"_"+options.lepType+"_"+options.type+".pdf")
-'''
-
 # -------------------------------------------------------------------------------------
 # Done with toys, doing actual unfolding
 # -------------------------------------------------------------------------------------
+unfold = {}
+for var in variants:
+    unfold[var] = TUnfoldDensity(response,TUnfold.kHistMapOutputVert, TUnfold.kRegModeCurvature, TUnfold.kEConstraintArea, TUnfoldDensity.kDensityModeBinWidth)
+    unfold[var].SetInput(thisMeas)
+    for sysname in allsysnames:
+        unfold[var].AddSysError(Hres_sys[sysname+var],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
 
-unfold = TUnfoldDensity(response,TUnfold.kHistMapOutputVert, TUnfold.kRegModeCurvature, TUnfold.kEConstraintArea, TUnfoldDensity.kDensityModeBinWidth)
-unfold.SetInput(thisMeas)
-for sysname in sysnames:
-    unfold.AddSysError(Hres_sys[sysname+"Down"],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
+    # -------------------------------------------------------------------------------------
+    # Plot tau scan
+    # -------------------------------------------------------------------------------------
+    if options.regType == "LCurve" :
+        c2 = TCanvas("c2", "c2", 700, 700)
+        c2.cd()
+        c2.UseCurrentStyle()
+        logTauX = TSpline3()
+        logTauY = TSpline3()
+        lCurve = TGraph()
+        bestLCurve = TGraph(1)
+        iBest = unfold[var].ScanLcurve(30,0.,0.,lCurve,logTauX,logTauY)
+        Tau = Double(0)
+        x = Double(0)
+        y = Double(0)
+        logTauX.GetKnot(iBest,Tau,x)
+        logTauY.GetKnot(iBest,Tau,y)
+        bestLCurve.SetPoint(1,x,y)
+        bestLCurve.SetMarkerColor(2)
+        lCurve.GetXaxis().SetTitle("log L_{1}")
+        lCurve.GetYaxis().SetTitle("log L_{2} / #tau^{2}")
+        lCurve.Draw()
+        bestLCurve.Draw("*")
+        tl2 = TLatex()
+        tl2.SetNDC()
+        tl2.SetTextFont(42)
+        legend = "log(#tau) = %.3e" % Tau
+        tl2.DrawLatex(0.55,0.8,legend)
+        c2.SaveAs("UnfoldingPlots/TauScan_"+options.regType+"_"+options.lepType+"_"+options.toy+"_"+options.type+"_"+var+"Unc.pdf")
 
-if options.regType == "LCurve" :
-    logTauX = TSpline3()
-    logTauY = TSpline3()
-    lCurve = TGraph()
-    bestLCurve = TGraph(1)
-    iBest = unfold.ScanLcurve(30,0.,0.,lCurve,logTauX,logTauY)
-    Tau = Double(0)
-    x = Double(0)
-    y = Double(0)
-    logTauX.GetKnot(iBest,Tau,x)
-    logTauY.GetKnot(iBest,Tau,y)
-    bestLCurve.SetPoint(1,x,y)
-    bestLCurve.SetMarkerColor(2)
+    elif options.regType == "ScanTau" :
+        c2 = TCanvas("c2", "c2", 700, 700)
+        c2.cd()
+        c2.UseCurrentStyle()
+        bestTau = TGraph(1)
+        scanResult = TSpline3()
+        iBest = unfold[var].ScanTau(100,0.0001,0.1,scanResult,TUnfoldDensity.kEScanTauRhoAvgSys)
+        Tau = Double(0)
+        rho = Double(0)
+        scanResult.GetKnot(iBest,Tau,rho)
+        bestTau.SetPoint(1,Tau,rho)
+        bestTau.SetMarkerColor(2)
+        scanResult.Draw("P")
+        bestTau.Draw("*")
+        tl2 = TLatex()
+        tl2.SetNDC()
+        tl2.SetTextFont(42)
+        legend = "log(#tau) = %.3e" % Tau
+        tl2.DrawLatex(0.55,0.8,legend)
+        c2.SaveAs("UnfoldingPlots/TauScan_"+options.regType+"_"+options.lepType+"_"+options.toy+"_"+options.type+"_"+var+"Unc.pdf")
 
-elif options.regType == "ScanTau" :
-    bestTau = TGraph(1)
-    scanResult = TSpline3()
-    iBest = unfold.ScanTau(100,0.0001,0.1,scanResult,TUnfoldDensity.kEScanTauRhoAvgSys)
-    Tau = Double(0)
-    rho = Double(0)
-    scanResult.GetKnot(iBest,Tau,rho)
-    bestTau.SetPoint(1,Tau,rho)
-    bestTau.SetMarkerColor(2)
+    # -------------------------------------------------------------------------------------
+    # Do manual scan to get bias / stat. unc. / total unc.
+    # -------------------------------------------------------------------------------------
+    h_BiasVsTau    = TH1F("biasVsTau"   ,";log(#tau);Bias"      ,21,-4.0,-1.0)
+    h_StatUncVsTau = TH1F("statUncVsTau",";log(#tau);Stat. Unc.",21,-4.0,-1.0)
+    h_TotUncVsTau  = TH1F("totUncVsTau" ,";log(#tau);Total Unc.",21,-4.0,-1.0)
+    for ii in xrange(0,21):
+        thistau = pow(10,-4.0+3.0/21.0*(ii+0.5))
+        unfold[var].DoUnfold(thistau)
+        thisReco_tmp = unfold[var].GetOutput("reco")
+        bias = 0.0
+        statUnc = 0.0
+        totalUnc = 0.0
+        for ibin in xrange(1,nbinsTrue+1):
+            bias += pow((thisReco_tmp.GetBinContent(ibin) - thisTrue.GetBinContent(ibin))/thisReco_tmp.GetBinContent(ibin),2)
+            statUnc += pow(thisReco_tmp.GetBinError(ibin)/thisReco_tmp.GetBinContent(ibin),2)
+            totalUnc += unfold[var].GetEmatrixTotal("totUnc").GetBinContent(ibin,ibin)/pow(thisReco_tmp.GetBinContent(ibin),2)
+        h_BiasVsTau.SetBinContent(ii+1,math.sqrt(bias))
+        h_StatUncVsTau.SetBinContent(ii+1,math.sqrt(statUnc))
+        h_TotUncVsTau.SetBinContent(ii+1,math.sqrt(totalUnc))
+    c5 = TCanvas()
+    h_BiasVsTau.SetLineColor(1)
+    h_StatUncVsTau.SetLineColor(2)
+    h_TotUncVsTau.SetLineColor(3)
+    h_BiasVsTau.GetYaxis().SetRangeUser(0.0,1.5)
+    leg5 = TLegend(0.4, 0.7, 0.6, 0.9)
+    leg5.SetFillStyle(0)
+    leg5.SetTextFont(42)
+    leg5.SetTextSize(0.045)
+    leg5.SetBorderSize(0)
+    leg5.AddEntry(h_BiasVsTau, 'Bias', 'l')
+    leg5.AddEntry(h_StatUncVsTau, 'Stat. Unc.', 'l')
+    leg5.AddEntry(h_TotUncVsTau, 'Total Unc.', 'l')
+    h_BiasVsTau.Draw("hist")
+    h_StatUncVsTau.Draw("hist,same")
+    h_TotUncVsTau.Draw("hist,same")
+    leg5.Draw()
+    c5.SaveAs("UnfoldingPlots/CoarseTauScan_"+options.regType+"_"+options.lepType+"_"+options.toy+"_"+options.type+"_"+var+"Unc.pdf")
 
-#else :
-unfold.DoUnfold(0)
+    # -------------------------------------------------------------------------------------
+    # Final unfolding is non-regularized
+    # -------------------------------------------------------------------------------------
+    unfold[var].DoUnfold(0)
 
-print "chi**2=" + str(unfold.GetChi2A()) + "+" + str(unfold.GetChi2L()) + " / " + str(unfold.GetNdf())
-
+    print "chi**2=" + str(unfold[var].GetChi2A()) + "+" + str(unfold[var].GetChi2L()) + " / " + str(unfold[var].GetNdf())
+    
 # unfolded distribution (histogram)
-thisReco = unfold.GetOutput("reco")
+# Use "Up" because uncertainty variants do not affect nominal
+thisReco = unfold["Up"].GetOutput("reco")
 thisReco.Sumw2()
 
 # -------------------------------------------------------------------------------------
-#Plot error breakdown
+# Plot error breakdown
 # -------------------------------------------------------------------------------------
 
 #Statistical -- input and unfolding matrix (GetEmatrixSysUncorr() and GetEmatrixInput())
 h_STAT = thisTrue.Clone("stat")
 h_STAT.Reset()
-#Total is GetEmatrixTotal() (+lumi, since missing)
+
 h_TOT = thisTrue.Clone("tot")
 h_TOT.Reset()
 
 # Individual error sources
 h_SYS = {}
-for sysname in sysnames:
+for sysname in allsysnames:
     h_SYS[sysname] = thisTrue.Clone(sysname)
     h_SYS[sysname].Reset()
 
@@ -541,23 +506,44 @@ h_LUMI = thisTrue.Clone()
 h_LUMI.Reset()
 
 #Get actual error matrices / hists
-hErrInput = unfold.GetEmatrixInput("mErrInput")
-hErrStat = unfold.GetEmatrixSysUncorr("mErrStat") #This might be buggy!!!
-hErrTot = unfold.GetEmatrixTotal("mErrTot")
+hErrInput = unfold["Up"].GetEmatrixInput("mErrInput")
+hErrStat = unfold["Up"].GetEmatrixSysUncorr("mErrStat") #This might be buggy!!!
 
+# Construct average systematic error matrices
 hErrSys = {}
-for sysname in sysnames:
-    hErrSys[sysname] = unfold.GetDeltaSysSource(sysname,"hErrSys_"+sysname)
-  
+hCovSysFSR = hErrInput.Clone()
+hCovSysFSR.Reset()
+for sysname in allsysnames:
+    hErrSysUp = unfold["Up"].GetDeltaSysSource(sysname,"hErrSysUp_"+sysname)
+    hErrSysDn =  unfold["Down"].GetDeltaSysSource(sysname,"hErrSysDown_"+sysname)
+    hErrSys[sysname] = hErrSysUp.Clone()
+    hErrSys[sysname].Reset()
+    for ibin in xrange(1,nbinsTrue+1):
+        hErrSys[sysname].SetBinContent(ibin,(pow(hErrSysUp.GetBinContent(ibin),2)+pow(hErrSysDn.GetBinContent(ibin),2))/2.0)
+        if sysname is "FSR":
+            for ibiny in xrange(1,nbinsTrue+1):
+                hCovSysFSR.SetBinContent(ibin,ibiny,(hErrSysUp.GetBinContent(ibin)*hErrSysUp.GetBinContent(ibiny)+hErrSysDn.GetBinContent(ibin)*hErrSysDn.GetBinContent(ibiny))/2.0);
+
+# Average total covariance matrices
+hErrTotUp = unfold["Up"].GetEmatrixTotal("mErrTotalUp")
+hErrTotDn = unfold["Down"].GetEmatrixTotal("mErrTotalDown")
+hErrTot = hErrTotUp.Clone()
+hErrTot.Add(hErrTotDn)
+hErrTot.Scale(0.5)
+
+# Correct FSR
+hErrSys["FSR"].Scale(1.0/math.sqrt(2.0)); #Scale uncertainty from FSR down
+hErrTot.Add(hCovSysFSR,1.0/math.sqrt(2.0)-1.0)        
+
 # Fill uncertainty histograms
 for ibin in xrange(1,nbinsTrue+1):
     h_STAT.SetBinContent(ibin,math.sqrt(hErrInput.GetBinContent(ibin,ibin)+hErrStat.GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
     h_INPUT.SetBinContent(ibin,math.sqrt(hErrInput.GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
     h_MATRIX.SetBinContent(ibin,math.sqrt(hErrStat.GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
-    h_TOT.SetBinContent(ibin,math.sqrt(hErrTot.GetBinContent(ibin,ibin)/pow(thisReco.GetBinContent(ibin),2)+0.026*0.026))
-    h_LUMI.SetBinContent(ibin,0.026)
-    for sysname in sysnames:
-        h_SYS[sysname].SetBinContent(ibin,hErrSys[sysname].GetBinContent(ibin)/thisReco.GetBinContent(ibin))
+    h_TOT.SetBinContent(ibin,math.sqrt(hErrTot.GetBinContent(ibin,ibin)/pow(thisReco.GetBinContent(ibin),2)+0.025*0.025))
+    h_LUMI.SetBinContent(ibin,0.025)
+    for sysname in allsysnames:
+        h_SYS[sysname].SetBinContent(ibin,math.sqrt(hErrSys[sysname].GetBinContent(ibin))/thisReco.GetBinContent(ibin))
 
 # Plot error breakdown
 c6 = TCanvas("c6", "", 800, 600)
@@ -593,55 +579,43 @@ h_INPUT.SetMarkerStyle(20)
 h_MATRIX.SetLineColor(419)
 h_MATRIX.SetLineWidth(2)
 h_MATRIX.SetMarkerColor(419)
-h_MATRIX.SetMarkerStyle(32)
+h_MATRIX.SetMarkerStyle(21)
 
 h_LUMI.SetLineColor(40)
 h_LUMI.SetLineWidth(2)
 h_LUMI.SetMarkerColor(40)
-h_LUMI.SetMarkerStyle(34)
+h_LUMI.SetMarkerStyle(22)
 
-colors = [632,600,617,417,432,801,864,906]
-markers = [20,21,22,23,33,24,25,26]
-for isys in xrange(0,len(sysnames)):
-    h_SYS[sysnames[isys]].SetLineColor(colors[isys])
-    h_SYS[sysnames[isys]].SetLineWidth(2)
-    h_SYS[sysnames[isys]].SetMarkerColor(colors[isys])
-    h_SYS[sysnames[isys]].SetMarkerStyle(markers[isys])
+colors = [632,600,617,417,432,4,1,419,600,882]
+markers = [20,21,22,23,33,26,24,25,27,32]
+for isys in xrange(0,len(allsysnames)):
+    h_SYS[allsysnames[isys]].SetLineColor(colors[isys])
+    h_SYS[allsysnames[isys]].SetLineWidth(2)
+    h_SYS[allsysnames[isys]].SetMarkerColor(colors[isys])
+    h_SYS[allsysnames[isys]].SetMarkerStyle(markers[isys])
 
-longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","PDF Uncertainty","#mu_{R}, #mu_{F} scales","#alpha_{s} scale"]
-  
-leg6 = TLegend(0.2,0.65,0.45,0.88)
+leg6 = TLegend(0.2,0.39,0.45,0.88)
 leg6.AddEntry(h_TOT,"Total syst. uncertainty","f")
 leg6.AddEntry(h_INPUT,"Input stat. unc.","lp")
 leg6.AddEntry(h_MATRIX,"Response stat. unc.","lp")
 leg6.AddEntry(h_LUMI,"Int. luminosity","lp")
-for isys in xrange(0,2):
-    leg6.AddEntry(h_SYS[sysnames[isys]],longnames[isys],"lp")
+for isys in xrange(0,9):
+    leg6.AddEntry(h_SYS[allsysnames[isys]],longnames[isys],"lp")
 
 leg6.SetFillStyle(0);
 leg6.SetBorderSize(0);
 leg6.SetTextSize(0.04);
 leg6.SetTextFont(42);
 
-leg66 = TLegend(0.55,0.65,0.8,0.88);
-for isys in xrange(2,8):
-    leg66.AddEntry(h_SYS[sysnames[isys]],longnames[isys],"lp")
-
-leg66.SetFillStyle(0)
-leg66.SetBorderSize(0)
-leg66.SetTextSize(0.04)
-leg66.SetTextFont(42)
-
 h_TOT.GetYaxis().SetRangeUser(0.0,1.0)
 h_TOT.Draw("hist")
 h_INPUT.Draw("ep,same")
 h_MATRIX.Draw("ep,same")
 h_LUMI.Draw("ep,same")
-for sysname in sysnames:
+for sysname in allsysnames:
     h_SYS[sysname].Draw("ep,same")
 
 leg6.Draw(); 
-leg66.Draw(); 
 
 c6.SaveAs("UnfoldingPlots/closure_relative_uncertainties_"+options.regType+"_"+options.lepType+"_"+options.toy+"_"+options.type+".pdf")
 
@@ -694,7 +668,7 @@ leg8.Draw()
 c8.SaveAs("UnfoldingPlots/compare_rel_unc_"+options.regType+"_"+options.lepType+"_"+options.toy+"_"+options.type+".pdf")
 
 # -------------------------------------------------------------------------------------
-#Plot covariance matrix
+# Plot covariance matrix
 # -------------------------------------------------------------------------------------
 
 diags = []
@@ -718,45 +692,6 @@ hErrTot.GetYaxis().SetRangeUser(400.,1199.)
 hErrTot.GetZaxis().SetRangeUser(-1.0,1.0)
 hErrTot.Draw("colz")
 c4.SaveAs("UnfoldingPlots/closure_covariance_"+options.regType+"_"+options.lepType+"_"+options.toy+"_"+options.type+".pdf")
-
-'''
-# Do manual scan to get bias / stat. unc. / total unc.
-h_BiasVsTau    = TH1F("biasVsTau"   ,";log(#tau);Bias"      ,21,-4.0,-1.0)
-h_StatUncVsTau = TH1F("statUncVsTau",";log(#tau);Stat. Unc.",21,-4.0,-1.0)
-h_TotUncVsTau  = TH1F("totUncVsTau" ,";log(#tau);Total Unc.",21,-4.0,-1.0)
-for ii in xrange(0,21):
-    thistau = pow(10,-4.0+3.0/21.0*(ii+0.5))
-    unfold.DoUnfold(thistau)
-    thisReco_tmp = unfold.GetOutput("reco")
-    bias = 0.0
-    statUnc = 0.0
-    totalUnc = 0.0
-    for ibin in xrange(1,nbinsTrue+1):
-        bias += pow((thisReco_tmp.GetBinContent(ibin) - thisTrue.GetBinContent(ibin))/thisReco_tmp.GetBinContent(ibin),2)
-        statUnc += pow(thisReco_tmp.GetBinError(ibin)/thisReco_tmp.GetBinContent(ibin),2)
-        totalUnc += unfold.GetEmatrixTotal("totUnc").GetBinContent(ibin,ibin)/pow(thisReco_tmp.GetBinContent(ibin),2)
-    h_BiasVsTau.SetBinContent(ii+1,math.sqrt(bias))
-    h_StatUncVsTau.SetBinContent(ii+1,math.sqrt(statUnc))
-    h_TotUncVsTau.SetBinContent(ii+1,math.sqrt(totalUnc))
-c5 = TCanvas()
-h_BiasVsTau.SetLineColor(1)
-h_StatUncVsTau.SetLineColor(2)
-h_TotUncVsTau.SetLineColor(3)
-h_BiasVsTau.GetYaxis().SetRangeUser(0.0,1.5)
-leg5 = TLegend(0.4, 0.7, 0.6, 0.9)
-leg5.SetFillStyle(0)
-leg5.SetTextFont(42)
-leg5.SetTextSize(0.045)
-leg5.SetBorderSize(0)
-leg5.AddEntry(h_BiasVsTau, 'Bias', 'l')
-leg5.AddEntry(h_StatUncVsTau, 'Stat. Unc.', 'l')
-leg5.AddEntry(h_TotUncVsTau, 'Total Unc.', 'l')
-h_BiasVsTau.Draw("hist")
-h_StatUncVsTau.Draw("hist,same")
-h_TotUncVsTau.Draw("hist,same")
-leg5.Draw()
-c5.SaveAs("UnfoldingPlots/CoarseTauScan_"+options.regType+"_"+options.lepType+"_"+options.toy+"_"+options.type+".pdf")
-'''
 
 # -------------------------------------------------------------------------------------
 # Translate to cross section (not events) in bins of pt N/L/BR)
@@ -899,34 +834,4 @@ c1.Update()
 
 c1.SaveAs("UnfoldingPlots/closure_"+options.regType+"_"+options.lepType+"_"+options.toy+"_"+options.type+"_result.pdf")
 
-# -------------------------------------------------------------------------------------
-# Plot L-curve scan
-# -------------------------------------------------------------------------------------
-
-if not options.regType == "None" :
-    c2 = TCanvas("c2", "c2", 700, 700)
-    c2.cd()
-    c2.UseCurrentStyle()
-    if options.regType == "LCurve" :
-        lCurve.GetXaxis().SetTitle("log L_{1}")
-        lCurve.GetYaxis().SetTitle("log L_{2} / #tau^{2}")
-        lCurve.Draw()
-        bestLCurve.Draw("*")
-    else :
-        #dummy = TGraph()
-        #dummy.GetXaxis.SetRangeUser(-4.0,-1.0)
-        #dummy.GetXaxis.SetTitle("log(#tau)")
-        #dummy.GetYaxis.SetRangeUser(0.5,1.0)
-        #dummy.GetYaxis.SetTitle("Correlation")
-        #dummy.Draw()
-        scanResult.Draw("P")
-        bestTau.Draw("*")
-        
-    tl2 = TLatex()
-    tl2.SetNDC()
-    tl2.SetTextFont(42)
-    legend = "log(#tau) = %.3e" % Tau
-    tl2.DrawLatex(0.55,0.8,legend)
-
-    c2.SaveAs("UnfoldingPlots/TauScan_"+options.regType+"_"+options.lepType+"_"+options.toy+"_"+options.type+".pdf")
 
