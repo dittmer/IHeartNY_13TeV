@@ -115,8 +115,8 @@ void unfold_getBinning(TString channel) {
   
   binedges.push_back(400.0);
 
-  int lastbin = 20;
-  for (int ib = 21; ib < 341; ib++){ //These are currently hardcoded -- 340 bins, for which bin 21 is has low edge 400
+  int lastbin = 10;
+  for (int ib = 11; ib < 331; ib++){ //These are currently hardcoded -- 330 bins, each width 5, from 350 to 2000
 
     // Get purity / stability / efficiency
     double purity, stability, efficiency;
@@ -141,7 +141,7 @@ void unfold_getBinning(TString channel) {
 
     // Quality condition: we want bins with purity / stability > 0.5, resolution < binwidth
     //if ((ib%5 == 0 && purity > 0.5 && stability > 0.5 && (res_gaus < binwidth || res_RMS < binwidth)) || ib == 340){
-    if (ib == 30 || ib == 45 || ib == 60 || ib == 80 || ib == 100 || ib == 125 || ib == 180 || ib == 340){ //hardcoded combined bin edges
+    if (ib == 20 || ib == 35 || ib == 50 || ib == 70 || ib == 90 || ib == 115 || ib == 170 || ib == 330){ //hardcoded combined bin edges
       binedges.push_back(h_response->GetXaxis()->GetBinUpEdge(ib));
       v_stability.push_back(stability);
       v_purity.push_back(purity);
@@ -190,6 +190,7 @@ void unfold_getBinning(TString channel) {
   // ----------------------------------------------------------------------------------------------------------------
 
   h_purity->SetAxisRange(0,1.2,"Y");
+  h_purity->SetAxisRange(401.0,1199.0,"X");
   h_purity->GetYaxis()->SetTitleOffset(1.1);
   h_purity->GetYaxis()->SetTitle("");  
   h_purity->GetYaxis()->SetTitle("Fractional");
@@ -223,6 +224,7 @@ void unfold_getBinning(TString channel) {
   // ------------------------------------------------------------------------------------
 
   h_res_gaus->SetAxisRange(0,2.0,"Y");
+  h_res_gaus->SetAxisRange(401.0,1199.0,"X");
   h_res_gaus->GetYaxis()->SetTitleOffset(1.1);
   h_res_gaus->GetYaxis()->SetTitle("");  
   h_res_gaus->GetYaxis()->SetTitle("Fractional");

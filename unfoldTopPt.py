@@ -655,8 +655,8 @@ for channel in channels:
     hErrTot.Scale(0.5)
     
     # Correct FSR
-    hErrSys["FSR"].Scale(1.0/math.sqrt(2.0)); #Scale uncertainty from FSR down
-    hErrTot.Add(hCovSysFSR,1.0/math.sqrt(2.0)-1.0)        
+    hErrSys["FSR"].Scale(0.5); #Scale uncertainty from FSR down by sqrt(2) -> scale covariance down by 2
+    hErrTot.Add(hCovSysFSR,-0.5)        
     
     # Fill uncertainty histograms
     for ibin in xrange(1,nbinsTrue+1):
@@ -979,17 +979,16 @@ for channel in channels:
     # -------------------------------------------------------------------------------------
     # Translate to cross section (not events) in bins of pt N/L/BR)
     # -------------------------------------------------------------------------------------
-    # TODO: should fix BR
 
+    BR = 0.172
+    if channel is "el":
+        BR = 0.173
     if channel is "comb":
-        thisTrue[channel].Scale(1.0/(lum*0.438/3.*2.0)) # true @ parton level
-        thisMeas[channel].Scale(1.0/(lum*0.438/3.*2.0)) # measured @ reco level
-        thisReco.Scale(1.0/(lum*0.438/3.*2.0)) # unfolded to parton level
-        
-    else:
-        thisTrue[channel].Scale(1.0/(lum*0.438/3.)) # true @ parton level
-        thisMeas[channel].Scale(1.0/(lum*0.438/3.)) # measured @ reco level
-        thisReco.Scale(1.0/(lum*0.438/3.)) # unfolded to parton level
+        BR = 0.172 + 0.173
+
+    thisTrue[channel].Scale(1.0/(lum*BR)) # true @ parton level
+    thisMeas[channel].Scale(1.0/(lum*BR)) # measured @ reco level
+    thisReco.Scale(1.0/(lum*BR)) # unfolded to parton level
     
     # -------------------------------------------------------------------------------------
     # Adjust for bin width
