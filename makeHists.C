@@ -183,7 +183,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   float MINTOPPT = 400.0;
 
   bool isNewSample = false;
-  if (sample.Contains("fullTruth") || sample.Contains("ZJets") || sample.Contains("WW") || sample.Contains("WZ") || sample.Contains("ZZ") || sample.Contains("SingleTop")) isNewSample = true;
+  if (sample.Contains("fullTruth") || sample.Contains("_PL") || sample.Contains("ZJets") || sample.Contains("WW") || sample.Contains("WZ") || sample.Contains("ZZ") || sample.Contains("SingleTop")) isNewSample = true;
   if (isNewSample) cout << "Sample w/ el con veto bit" << endl;
 
 
@@ -280,7 +280,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   TH1F* h_genTTbarMass_full       = new TH1F("genTTbarMass_full" ,";top quark pair mass (GeV);Events / 10 GeV" ,50,250.,1250.);
   TH1F* h_hardTTbarMass           = new TH1F("hardTTbarMass" ,";top quark pair mass (GeV);Events / 10 GeV" ,50,250.,1250.);
 
-  float LUM = 35867.0; //From https://hypernews.cern.ch/HyperNews/CMS/get/physics-announcements/4495/1.html -- not filtered for SingleMuon or SingleElectron yet
+  //float LUM = 35867.0; //From https://hypernews.cern.ch/HyperNews/CMS/get/physics-announcements/4495/1.html -- not filtered for SingleMuon or SingleElectron yet
 
   //double weight_response = LUM * 831.76 / 77229341.; //lum * xsec / Nevents for PowhegPythia8
   //if (sample.Contains("p2")) weight_response = LUM * 831.76 / (78006311. * 1191. / 1192.);
@@ -302,7 +302,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   // If running on signal, load truth information for events not passing reco, in order to fill response matrix
   // ----------------------------------------------------------------------------------------------------------
 
-  if (sample.Contains("fullTruth")){
+  if (sample.Contains("fullTruth") || sample.Contains("_PL")){
     TChain* treeTO = new TChain("trueTree");
     treeTO->Add(INDIR + sample + ".root");
     
@@ -447,9 +447,10 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       if (sample.Contains("PowhegPythia8_fullTruth")) h_hardTTbarMass->Fill(hardTTbarMass_TO->at(0),weight);
 
       // corrections based on parton-level regardless of parton vs particle
-      int ibin = h_corr1->FindBin(genTopPt_TO->at(0));
-      corr_fac1 = h_corr1->GetBinContent(ibin);
-      corr_fac2 = h_corr2->GetBinContent(ibin);
+      int ibin1 = h_corr1->FindBin(genTopPt_TO->at(0));
+      int ibin2 = h_corr2->FindBin(genTopPt_TO->at(0));
+      corr_fac1 = h_corr1->GetBinContent(ibin1);
+      corr_fac2 = h_corr2->GetBinContent(ibin2);
       
       float w_ptup = (1.0 + 0.0004*genTopPt_TO->at(0));
       float w_ptdn = 1.0/(1.0 + 0.0004*genTopPt_TO->at(0));
@@ -474,16 +475,16 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	h_response2_split->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac2);
 	h_response2_noweight->Fill(299.0, genTopPt_TO->at(0),weight_parton);
 	
-	if (genTopPt_TO->at(0) < MINTOPPT || genTopPt_TO->at(0) > 1200.0) continue;
-	
-	h_ptGenTop->Fill(genTopPt_TO->at(0),weight);
-	h_ptGenTopMod->Fill(genTopPt_TO->at(0),weight*w_ptup);
-	h_ptGenTopModDown->Fill(genTopPt_TO->at(0),weight*w_ptdn);
-	
-	//response.Miss(genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
-	//response_split.Miss(genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
-	h_response->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac1);
-	h_response_split->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac1);
+	if (genTopPt_TO->at(0) > MINTOPPT && genTopPt_TO->at(0) < 1200.0) {
+	  h_ptGenTop->Fill(genTopPt_TO->at(0),weight);
+	  h_ptGenTopMod->Fill(genTopPt_TO->at(0),weight*w_ptup);
+	  h_ptGenTopModDown->Fill(genTopPt_TO->at(0),weight*w_ptdn);
+	  
+	  //response.Miss(genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
+	  //response_split.Miss(genTopPt_TO->at(0),weight_parton*corr_fac1*weight_response);
+	  h_response->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac1);
+	  h_response_split->Fill(299.0, genTopPt_TO->at(0),weight_parton*corr_fac1);
+	}
 	
       }// end parton level unfolding 
 
@@ -542,11 +543,10 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	partJetP4.SetPtEtaPhiM(partAK8jetPt_TO->at(ij),partAK8jetEta_TO->at(ij),partAK8jetPhi_TO->at(ij),partAK8jetMass_TO->at(ij));
 
 	float dRtemp = partLepP4.DeltaR(partJetP4);
-	if (doHemiCuts && dRtemp > 3.1415 / 2.) continue;
-	if (doHemiCuts && dRtemp < 0.3) continue;
+	if (doHemiCuts && dRtemp < 3.1415 / 2.) continue;
 	
 	part_ntopjet++;
-	this_topjet=ij;
+	if (this_topjet<0) this_topjet=ij; //choose first particle-level top jet that passes all cuts as the good one
       }
 
       if (part_ntopjet<1) continue;
@@ -670,6 +670,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   delete f_elTrig;
   if (h_elTrig == 0) cout << "Electron trigger SFs are missing!" << endl;  
 
+
   // ----------------------------------------------------------------------------------------------------------------
   // read ntuples
   TChain* tree = new TChain("recoTree");
@@ -679,6 +680,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     cout << "File doesn't exist or is empty, returning..." << endl;
     return;
   }
+
   
   // ----------------------------------------------------------------------------------------------------------------
   // define leafs & branches
@@ -1551,9 +1553,10 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	unfold_w_ptup = (1.0 + 0.0004*genTopPt->at(0));
 	unfold_w_ptdn = 1.0/(1.0 + 0.0004*genTopPt->at(0));
 	
-	int ibin = h_corr1->FindBin(genTopPt->at(0));
-	corr_fac1 = h_corr1->GetBinContent(ibin);
-	corr_fac2 = h_corr2->GetBinContent(ibin);
+	int ibin1 = h_corr1->FindBin(genTopPt->at(0));
+	int ibin2 = h_corr1->FindBin(genTopPt->at(0));
+	corr_fac1 = h_corr1->GetBinContent(ibin1);
+	corr_fac2 = h_corr2->GetBinContent(ibin2);
       }
 
       // --------------------------------------------------------------------------------------------------
@@ -1671,8 +1674,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	  partJetP4.SetPtEtaPhiM(partAK8jetPt->at(ij),partAK8jetEta->at(ij),partAK8jetPhi->at(ij),partAK8jetMass->at(ij));
 	  
 	  float dRtemp = partLepP4.DeltaR(partJetP4);
-	  if (doHemiCuts && dRtemp > 3.1415 / 2.) continue;
-	  if (doHemiCuts && dRtemp < 0.3) continue;
+	  if (doHemiCuts && dRtemp < 3.1415 / 2.) continue;
 	  
 	  if (part_ntopjet==0) partTopJetP4 = partJetP4;
 	  part_ntopjet++;
