@@ -129,28 +129,31 @@ if options.doSys:
 #  read histogram files
 # -------------------------------------------------------------------------------------
 
+DIR="histfiles_full2016"
+PL="_PL"
+
 muOrEl = "mu"
 if options.lepType=="ele":
     muOrEl = "el"
 
 if options.type == "full":
-    f_ttbar_m0to700_p1_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_post.root")
-    f_ttbar_m0to700_p2_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_post.root")
-    f_ttbar_m700to1000_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_nom_post.root")
-    f_ttbar_m1000toInf_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_nom_post.root")
-    f_ttbar_m0to700_p1_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_post.root")
-    f_ttbar_m0to700_p2_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_post.root")
-    f_ttbar_m700to1000_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_nom_post.root")
-    f_ttbar_m1000toInf_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_nom_post.root")    
+    f_ttbar_m0to700_p1_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m0to700_p2_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_post.root")
+    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m0to700_p1_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m0to700_p2_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_post.root")
+    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_nom_post.root")    
 else:
-    f_ttbar_m0to700_p1_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m0to700_p2_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m700to1000_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m1000toInf_input    = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m0to700_p1_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_nom_odd_post.root")
-    f_ttbar_m0to700_p2_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_nom_odd_post.root")
-    f_ttbar_m700to1000_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_nom_odd_post.root")
-    f_ttbar_m1000toInf_response = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m0to700_p1_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m0to700_p2_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m0to700_p1_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m0to700_p2_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_nom_odd_post.root")
     
 
 # -------------------------------------------------------------------------------------
@@ -191,15 +194,15 @@ if options.doSys:
     for sysname in sysnames:
         for var in variants:
             if options.type == "full":
-                f_ttbar_m0to700_p1_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_"+sysname+var+"_post.root")
-                f_ttbar_m0to700_p2_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_"+sysname+var+"_post.root")
-                f_ttbar_m700to1000_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_"+sysname+var+"_post.root")
-                f_ttbar_m1000toInf_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m0to700_p1_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m0to700_p2_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
             else:
-                f_ttbar_m0to700_p1_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-                f_ttbar_m0to700_p2_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-                f_ttbar_m700to1000_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-                f_ttbar_m1000toInf_sys = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m0to700_p1_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m0to700_p2_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
                 
             response_sys_m0to700_p1 = f_ttbar_m0to700_p1_sys.Get(response_name)
             response_sys_m0to700_p2 = f_ttbar_m0to700_p2_sys.Get(response_name)
@@ -229,7 +232,7 @@ if options.doSys:
 
     for thsysname in thsysnames:
         for var in variants:
-            f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+muOrEl+"_"+thsysname+var+"_post.root")
+            f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+muOrEl+"_"+thsysname+var+"_post.root")
             response_sys = f_ttbar_sys.Get(response_name)
             response_sys.Sumw2()
 
@@ -626,8 +629,9 @@ if options.doSys : #Doesn't seem necessary otherwise
     hErrTot.Scale(0.5)
     
     # Correct FSR
-    hErrSys["FSR"].Scale(0.5); #Scale uncertainty by sqrt(2) -> scale covariance by 2?
-    hErrTot.Add(hCovSysFSR,-0.5)        
+    if "FSR" in allsysnames:
+        hErrSys["FSR"].Scale(0.5); #Scale uncertainty by sqrt(2) -> scale covariance by 2?
+        hErrTot.Add(hCovSysFSR,-0.5)        
     
     # Fill uncertainty histograms
     for ibin in xrange(1,nbinsTrue+1):
