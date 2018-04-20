@@ -296,6 +296,7 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
     p1->Draw();
     p2->Draw();
     p1->cd();
+    //if (hist.Contains("Pt")) p1->SetLogy();
     
     h_ratio2->SetMarkerSize(0);
     h_ratio2->SetLineColor(0);
@@ -309,6 +310,7 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
     h_data->GetYaxis()->SetTitleSize(32);
     h_data->GetYaxis()->SetTitleOffset(1.4);
     h_data->GetXaxis()->SetTitle("");
+    if (hist.Contains("Pt")) h_data->SetMinimum(0.1);
     
     h_data->Draw("LE0P");
   }
@@ -1060,7 +1062,7 @@ void makeQCDComp(TString DIR, TString DIRqcd, TString channel, TString var) {
 // -------------------------------------------------------------------------------------
 // print cutflow latex table
 // -------------------------------------------------------------------------------------
-void makeTable(TString DIR, TString DIRqcd, TString channel, bool inSideband, bool useQCDMC, bool unBlind) {
+void makeTable(TString DIR, TString DIRqcd, TString channel, bool inSideband, bool useQCDMC, bool unBlind, bool usePost = false) {
 
   const int nhist = 4;
   TString what = "lepPhi";
@@ -1090,12 +1092,12 @@ void makeTable(TString DIR, TString DIRqcd, TString channel, bool inSideband, bo
   // Get count and error for each sample
   for (int ii = 0; ii < nhist; ii ++){
     // get histograms
-    SummedHist* diboson = getDiboson(DIR, what, regions[ii], channel, inSideband, "nom", false );
-    SummedHist* zjets = getZJets(DIR, what, regions[ii], channel, inSideband, "nom", false );
-    SummedHist* wjets = getWJets(DIR, what, regions[ii], channel, inSideband, "nom", false );
-    SummedHist* singletop = getSingleTop(DIR, what, regions[ii], channel, inSideband, "nom", false );
-    SummedHist* ttbar = getTTbar(DIR, what, regions[ii], channel, inSideband, "nom", false );
-    SummedHist* ttbar_nonSemiLep = getTTbarNonSemiLep(DIR, what, regions[ii], channel, inSideband, "nom", false );
+    SummedHist* diboson = getDiboson(DIR, what, regions[ii], channel, inSideband, "nom", usePost );
+    SummedHist* zjets = getZJets(DIR, what, regions[ii], channel, inSideband, "nom", usePost );
+    SummedHist* wjets = getWJets(DIR, what, regions[ii], channel, inSideband, "nom", usePost );
+    SummedHist* singletop = getSingleTop(DIR, what, regions[ii], channel, inSideband, "nom", usePost );
+    SummedHist* ttbar = getTTbar(DIR, what, regions[ii], channel, inSideband, "nom", usePost );
+    SummedHist* ttbar_nonSemiLep = getTTbarNonSemiLep(DIR, what, regions[ii], channel, inSideband, "nom", usePost );
     SummedHist* data = getData(DIR, what, regions[ii], channel, inSideband);
 
     TH1F* h_diboson = (TH1F*) diboson->hist();
@@ -1108,11 +1110,22 @@ void makeTable(TString DIR, TString DIRqcd, TString channel, bool inSideband, bo
 
     TH1F* h_qcd;
     if(inSideband || useQCDMC) {
-      SummedHist* qcd = getQCDMC(DIRqcd, what, regions[ii], channel, inSideband, "nom", false);
+      SummedHist* qcd = getQCDMC(DIRqcd, what, regions[ii], channel, inSideband, "nom", usePost);
       h_qcd = (TH1F*) qcd->hist();
     }
-    else h_qcd = (TH1F*) getQCDData(DIR,DIRqcd,what, regions[ii],channel,"nom", false);
-    
+    else h_qcd = (TH1F*) getQCDData(DIR,DIRqcd,what, regions[ii],channel,"nom", usePost);
+
+    if (usePost){
+      if (channel == "mu") h_qcd->Scale(0.71);
+      else h_qcd->Scale(0.91);                 
+      h_diboson->Scale(0.99);
+      h_zjets->Scale(0.67);
+      h_singletop->Scale(1.32);
+      h_ttbar_semiLep->Scale(0.80);
+      h_ttbar_nonSemiLep->Scale(0.80);
+      h_wjets->Scale(0.97);
+    }
+
     // error on pre-fit counts
     for (int ib=0; ib<h_ttbar_semiLep->GetNbinsX(); ib++) {
       if (h_ttbar_semiLep) err_tt_semiLep[ii]    += h_ttbar_semiLep->GetBinError(ib+1)*h_ttbar_semiLep->GetBinError(ib+1);
