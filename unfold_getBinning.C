@@ -23,14 +23,18 @@
 
 using namespace std;
 
-void getPurityStabilityEfficiency(TH2D* h_response, int ibinlow, int ibinhigh, double &purity, double &stability, double &efficiency){
-
-  int ibin_low;
-  int ibin_high = h_response->GetNbinsX();
-  for (int ib = 1; ib < ibin_high; ib++){
-    if (h_response->GetXaxis()->GetBinLowEdge(ib) == 400.0) ibin_low = ib;
+int get400bin(TH1* pt_hist){
+  for (int ib = 1; ib < pt_hist->GetNbinsX(); ib++){
+    if (pt_hist->GetXaxis()->GetBinLowEdge(ib) == 400.0) return ib;
   }
-  
+  return -1;
+}
+
+void getPurityStabilityEfficiency(TH2D* h_response, TString which, int ibinlow, int ibinhigh, double &purity, double &stability, double &efficiency){
+
+  int ibin_low = (which == "pt") ? get400bin(h_response) : 1;
+  int ibin_high = h_response->GetNbinsX();
+
   double ngen = h_response->Integral(ibin_low,ibin_high,ibinlow,ibinhigh);
   double ngenfull = h_response->Integral(0,ibin_high+1,ibinlow,ibinhigh);
   double nrec = h_response->Integral(ibinlow,ibinhigh,ibin_low,ibin_high);
@@ -38,7 +42,6 @@ void getPurityStabilityEfficiency(TH2D* h_response, int ibinlow, int ibinhigh, d
   double nrecgen = h_response->Integral(ibinlow,ibinhigh,ibinlow,ibinhigh);
   
   if (ngen == 0 || nrec == 0) {
-    cout << "Error! 0 reco or gen events" << endl;
     purity = stability = efficiency = -1.0;
     return;
   }
@@ -55,13 +58,13 @@ void rebinTH2(TH2D* h_input, TH2D* h_output){
   int outbinx = 0;
   int inbinx_first = 0;
   for (int ibx = 0; ibx < h_input->GetXaxis()->GetNbins()+2; ibx++){
-    if ((h_input->GetXaxis()->GetBinUpEdge(ibx) == h_output->GetXaxis()->GetBinUpEdge(outbinx)) ||
+    if (((float)h_input->GetXaxis()->GetBinUpEdge(ibx) == (float)h_output->GetXaxis()->GetBinUpEdge(outbinx)) ||
 	(ibx == h_input->GetXaxis()->GetNbins()+1 && outbinx == h_output->GetXaxis()->GetNbins()+1)){ //Overflow bins will not have same upper edge
       int outbiny = 0;
       int inbiny_first = 0;
       for (int iby = 0; iby < h_input->GetYaxis()->GetNbins()+2; iby++){
-	if ((h_input->GetYaxis()->GetBinUpEdge(iby) == h_output->GetYaxis()->GetBinUpEdge(outbiny)) ||
-	(iby == h_input->GetYaxis()->GetNbins()+1 && outbiny == h_output->GetYaxis()->GetNbins()+1)){ 
+	if (((float)h_input->GetYaxis()->GetBinUpEdge(iby) == (float)h_output->GetYaxis()->GetBinUpEdge(outbiny)) ||
+	(iby == h_input->GetYaxis()->GetNbins()+1 && outbiny == h_output->GetYaxis()->GetNbins()+1)){
 	  double err;
 	  double sum = h_input->IntegralAndError(inbinx_first,ibx,inbiny_first,iby,err);
 	  h_output->SetBinContent(outbinx,outbiny,sum);
@@ -74,23 +77,28 @@ void rebinTH2(TH2D* h_input, TH2D* h_output){
       inbinx_first = ibx+1;
     }
   }
+  h_output->GetXaxis()->SetTitle(h_input->GetXaxis()->GetTitle());
+  h_output->GetYaxis()->SetTitle(h_input->GetYaxis()->GetTitle());
   return;
 }
 
-void unfold_getBinning(TString channel) {
+void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   
   TH1::AddDirectory(kFALSE);
   gStyle->SetOptStat(0);
 
-  TFile* f_ttbar_m0to700_p1 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+channel+"_nom_post.root");
-  TFile* f_ttbar_m0to700_p2 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+channel+"_nom_post.root");
-  TFile* f_ttbar_m700to1000 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+channel+"_nom_post.root");
-  TFile* f_ttbar_m1000toInf = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+channel+"_nom_post.root");   	
+  TString append = (doPL) ? "_PL" : ""; // particle level response matrix 
+  TString sample = "_PL";               // use sample w/ particle level info -- hardcoded default for now
 
-  TH2D* h_response_m0to700_p1 = (TH2D*) f_ttbar_m0to700_p1->Get("response_fine_pt_TH2");
-  TH2D* h_response_m0to700_p2 = (TH2D*) f_ttbar_m0to700_p2->Get("response_fine_pt_TH2");
-  TH2D* h_response_m700to1000 = (TH2D*) f_ttbar_m700to1000->Get("response_fine_pt_TH2");
-  TH2D* h_response_m1000toInf = (TH2D*) f_ttbar_m1000toInf->Get("response_fine_pt_TH2");
+  TFile* f_ttbar_m0to700_p1 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth"+sample+"_"+channel+"_nom_post.root");
+  TFile* f_ttbar_m0to700_p2 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth"+sample+"_p2_"+channel+"_nom_post.root");
+  TFile* f_ttbar_m700to1000 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000"+sample+"_"+channel+"_nom_post.root");
+  TFile* f_ttbar_m1000toInf = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf"+sample+"_"+channel+"_nom_post.root");   	
+
+  TH2D* h_response_m0to700_p1 = (TH2D*) f_ttbar_m0to700_p1->Get("response_fine_"+which+"_TH2"+append);
+  TH2D* h_response_m0to700_p2 = (TH2D*) f_ttbar_m0to700_p2->Get("response_fine_"+which+"_TH2"+append);
+  TH2D* h_response_m700to1000 = (TH2D*) f_ttbar_m700to1000->Get("response_fine_"+which+"_TH2"+append);
+  TH2D* h_response_m1000toInf = (TH2D*) f_ttbar_m1000toInf->Get("response_fine_"+which+"_TH2"+append);
   h_response_m0to700_p1->Sumw2();
   h_response_m0to700_p2->Sumw2();
   h_response_m700to1000->Sumw2();
@@ -113,35 +121,36 @@ void unfold_getBinning(TString channel) {
   std::vector<float> v_res_rms;
   std::vector<float> v_stat_unc;
   
-  binedges.push_back(400.0);
+  if (which == "pt") binedges.push_back(400.0);
+  else binedges.push_back(h_response->GetXaxis()->GetBinLowEdge(1)); //Should be -2.6
 
-  int lastbin = 10;
-  for (int ib = 11; ib < 331; ib++){ //These are currently hardcoded -- 330 bins, each width 5, from 350 to 2000
+  int lastbin = (which == "pt") ? get400bin(h_response) - 1 : 0;
+  for (int ib = lastbin+1; ib < h_response->GetNbinsX()+1; ib++){
 
     // Get purity / stability / efficiency
     double purity, stability, efficiency;
-    getPurityStabilityEfficiency(h_response, lastbin+1, ib, purity, stability, efficiency);
+    getPurityStabilityEfficiency(h_response, which, lastbin+1, ib, purity, stability, efficiency);
 
     // Get resolution
     float binwidth = (h_response->GetXaxis()->GetBinUpEdge(ib) - h_response->GetXaxis()->GetBinLowEdge(lastbin+1));
-    TH1D* h_slice = h_response->ProjectionX(Form("slice_%i",(int)binedges.size()),lastbin+1,ib,"e");
+    TH1D* h_slice = h_response->ProjectionX(Form("slice_%i",(int)binedges.size()),lastbin+1,ib,"e"); //TODO make sure this is correct projection
     float res_gaus = 2.0 * binwidth; //Just to make sure it's too high if following fails
     if (h_slice->Integral() > 0.0){
-      TF1* mygaus = new TF1("mygaus","gaus",400.,2000.);
+      TF1* mygaus = new TF1("mygaus","gaus",h_response->GetXaxis()->GetBinLowEdge(1),h_response->GetXaxis()->GetBinUpEdge(h_response->GetNbinsX()));
       mygaus->SetParameters(h_slice->GetMaximum(),h_slice->GetMean(),h_slice->GetRMS());
       h_slice->Fit("mygaus","Q");
-      TF1* mygaus_result = h_slice->GetFunction("mygaus");
-      res_gaus = mygaus_result->GetParameter(2);
+      res_gaus = mygaus->GetParameter(2);
     }
     float res_RMS = (h_slice->Integral() > 0.0) ? h_slice->GetRMS() : 2.0 * binwidth;
 
     double err_stat;
-    double stat = h_slice->IntegralAndError(1,340,err_stat);
+    double stat = h_slice->IntegralAndError(1,h_response->GetNbinsX(),err_stat);
     float stat_unc = (float) err_stat / stat;
 
     // Quality condition: we want bins with purity / stability > 0.5, resolution < binwidth
-    //if ((ib%5 == 0 && purity > 0.5 && stability > 0.5 && (res_gaus < binwidth || res_RMS < binwidth)) || ib == 340){
-    if (ib == 20 || ib == 35 || ib == 50 || ib == 70 || ib == 90 || ib == 115 || ib == 170 || ib == 330){ //hardcoded combined bin edges
+    //if ((ib%5 == 0 && purity > 0.5 && stability > 0.5 && res_gaus < binwidth && res_RMS < binwidth) || ib == h_response->GetNbinsX()){
+    //if (ib == 20 || ib == 35 || ib == 50 || ib == 70 || ib == 90 || ib == 115 || ib == 170 || ib == 330){ //hardcoded combined bin edges, pt unfolding
+    if (ib == 25 || ib == 45 || ib == 65 || ib == 85 || ib == 100 || ib == 110 || ib == 120 || ib == 130 || ib == 140 || ib == 150 || ib == 160 || ib == 175 || ib == 195 || ib == 215 || ib == 235 || ib == 260){ //hardcoded combined bin edges
       binedges.push_back(h_response->GetXaxis()->GetBinUpEdge(ib));
       v_stability.push_back(stability);
       v_purity.push_back(purity);
@@ -152,7 +161,7 @@ void unfold_getBinning(TString channel) {
 
       lastbin = ib;
       cout << "Added bin edge at " << h_response->GetXaxis()->GetBinUpEdge(ib) << ", lastbin is now " << lastbin << endl;
-      cout << "Purity " << purity << " stability " << stability << endl;
+      cout << "Purity " << purity << " stability " << stability << " res_gaus " << res_gaus/binwidth << " res_RMS " << res_RMS/binwidth << endl;
     }
   }
   
@@ -163,8 +172,8 @@ void unfold_getBinning(TString channel) {
   for (int ii = 0; ii < nbins_final+1; ii++){
     binedges_final[ii] = binedges.at(ii);
   }
-
-  TH2D* h_response_final = new TH2D("response_final",";reconstructed top jet p_{T} (GeV);generated top quark p_{T} (GeV)",nbins_final,binedges_final,nbins_final,binedges_final);
+  
+  TH2D* h_response_final = new TH2D("response_final","",nbins_final,binedges_final,nbins_final,binedges_final);
   rebinTH2(h_response,h_response_final);
   
   // Get purity / stability / efficiency
@@ -190,11 +199,12 @@ void unfold_getBinning(TString channel) {
   // ----------------------------------------------------------------------------------------------------------------
 
   h_purity->SetAxisRange(0,1.2,"Y");
-  h_purity->SetAxisRange(401.0,1199.0,"X");
   h_purity->GetYaxis()->SetTitleOffset(1.1);
   h_purity->GetYaxis()->SetTitle("");  
   h_purity->GetYaxis()->SetTitle("Fractional");
-  h_purity->GetXaxis()->SetTitle("Top p_{T} [GeV]");
+  if (which == "pt") h_purity->GetXaxis()->SetTitle("Top p_{T} [GeV]");
+  else h_purity->GetXaxis()->SetTitle("Top rapidity");
+  h_purity->GetXaxis()->SetRangeUser(400.0,1199.0);
 
   TCanvas c;
   h_purity->SetLineColor(4); 
@@ -207,7 +217,7 @@ void unfold_getBinning(TString channel) {
   h_efficiency->SetLineWidth(2);
   h_efficiency->Draw("same,hist");
 
-  TLegend* leg = new TLegend(0.62,0.7,0.87,0.9);
+  TLegend* leg = new TLegend(0.62,0.4,0.87,0.6);
   leg->SetBorderSize(0);
   leg->SetFillStyle(0);
   leg->SetTextFont(42);
@@ -217,18 +227,19 @@ void unfold_getBinning(TString channel) {
   leg->AddEntry(h_efficiency, " Efficiency", "l");
   leg->Draw();
 
-  c.SaveAs("UnfoldingPlots/purity-stability_"+channel+"_pt.pdf");
+  c.SaveAs("UnfoldingPlots/purity-stability_"+channel+"_"+which+append+".pdf");
 
   // ------------------------------------------------------------------------------------
   //Plot resolution / statistical uncertainty
   // ------------------------------------------------------------------------------------
 
   h_res_gaus->SetAxisRange(0,2.0,"Y");
-  h_res_gaus->SetAxisRange(401.0,1199.0,"X");
   h_res_gaus->GetYaxis()->SetTitleOffset(1.1);
   h_res_gaus->GetYaxis()->SetTitle("");  
   h_res_gaus->GetYaxis()->SetTitle("Fractional");
-  h_res_gaus->GetXaxis()->SetTitle("Top p_{T} [GeV]");
+  if (which == "pt") h_res_gaus->GetXaxis()->SetTitle("Top p_{T} [GeV]");
+  else h_res_gaus->GetXaxis()->SetTitle("Top rapidity");
+  h_res_gaus->GetXaxis()->SetRangeUser(400.0,1199.0);
   
   TCanvas c2;
   h_res_gaus->SetLineColor(4); 
@@ -251,16 +262,19 @@ void unfold_getBinning(TString channel) {
   leg2->AddEntry(h_stat_unc, "Stat. Unc.", "l");
   leg2->Draw();
 
-  c2.SaveAs("UnfoldingPlots/resolution_"+channel+"_pt.pdf");
+  c2.SaveAs("UnfoldingPlots/resolution_"+channel+"_"+which+append+".pdf");
 
   // -------------------------------------------------------------------------------------
   // plot response matrices 
   // -------------------------------------------------------------------------------------
 
   double length[2] {0.00, 1.00};
-  double red[2] = {0.99, 0.32};
-  double green[2] = {0.99, 0.42};
-  double blue[2] = {0.99, 0.9};
+  //double red[2] = {0.99, 0.32};
+  //double green[2] = {0.99, 0.42};
+  //double blue[2] = {0.99, 0.9};
+  double red[2] = {0.98, 0.0};
+  double green[2] = {0.98, 0.0};
+  double blue[2] = {1.0, 1.0};
   TColor::CreateGradientColorTable(2,length,red,green,blue,256);
   gStyle->SetNumberContours(256);
   gStyle->SetPadRightMargin(0.12);
@@ -269,31 +283,35 @@ void unfold_getBinning(TString channel) {
   TCanvas cr;
 
   //Draw fine-binned response matrix
+  h_response->GetXaxis()->SetTitleOffset(0.8);
+  h_response->GetYaxis()->SetTitleOffset(0.8);
   h_response->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_full_pt_"+channel+"_nom.pdf");
+  cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_full_"+which+"_"+channel+"_nom"+append+".pdf");
 
   // normalize so that for each bin of true top quark pt(eta), the bins in measured top pt(eta) add up to 100%
-  for (int ir = 1; ir < 341; ir++){
-    double rowsum = h_response->Integral(1,341,ir,ir);
-    for (int ic = 1; ic < 341; ic++){
+  for (int ir = 1; ir < h_response->GetNbinsY()+1; ir++){
+    double rowsum = h_response->Integral(1,h_response->GetNbinsX()+1,ir,ir);
+    for (int ic = 1; ic < h_response->GetNbinsX()+1; ic++){
       double normval = rowsum > 0.0 ? h_response->GetBinContent(ic,ir) / rowsum * 100.0 : 0.0;
       h_response->SetBinContent(ic,ir,normval);
     }
   }
-
-  h_response->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_pt_"+channel+"_nom.pdf");
   
-  h_response->SetAxisRange(401.0,1199.0,"X");
-  h_response->SetAxisRange(401.0,1199.0,"Y");
   h_response->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_zoom_pt_"+channel+"_nom.pdf");
-
+  cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_"+which+"_"+channel+"_nom"+append+".pdf");
+  
+  if (which == "pt"){
+    h_response->SetAxisRange(401.0,1199.0,"X");
+    h_response->SetAxisRange(401.0,1199.0,"Y");
+    h_response->Draw("colz");
+    cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_zoom_"+which+"_"+channel+"_nom"+append+".pdf");
+  }
+    
   //Draw final binning response matrix
-  h_response_final->GetXaxis()->SetTitleOffset(1.2);
-  h_response_final->GetYaxis()->SetTitleOffset(1.2);
+  //h_response_final->GetXaxis()->SetTitleOffset(0.8);
+  //h_response_final->GetYaxis()->SetTitleOffset(1.2);
   h_response_final->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_full_pt_"+channel+"_nom.pdf");
+  cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_full_"+which+"_"+channel+"_nom"+append+".pdf");
 
   // normalize so that for each bin of true top quark pt(eta), the bins in measured top pt(eta) add up to 100%
   for (int ir = 1; ir < nbins_final+1; ir++){
@@ -305,11 +323,12 @@ void unfold_getBinning(TString channel) {
   }
 
   h_response_final->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_pt_"+channel+"_nom.pdf");
-  
-  h_response_final->SetAxisRange(401.0,1199.0,"X");
-  h_response_final->SetAxisRange(401.0,1199.0,"Y");
-  h_response_final->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_zoom_pt_"+channel+"_nom.pdf");
+  cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_"+which+"_"+channel+"_nom"+append+".pdf");
 
+  if (which == "pt"){
+    h_response_final->SetAxisRange(401.0,1199.0,"X");
+    h_response_final->SetAxisRange(401.0,1199.0,"Y");
+    h_response_final->Draw("colz");
+    cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_zoom_"+which+"_"+channel+"_nom"+append+".pdf");
+  }
 }
