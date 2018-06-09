@@ -18,6 +18,16 @@ parser.add_option('--lepType', metavar='F', type='string', action='store',
                   dest='lepType',
                   help='Lepton type (ele or muon)')
 
+parser.add_option('--toUnfold', metavar='F', type='string', action='store',
+                  default='pt',
+                  dest='toUnfold',
+                  help='Distribution to unfold (pt or y)')
+
+parser.add_option('--level', metavar='F', type='string', action='store',
+                  default='gen',
+                  dest='level',
+                  help='Level to unfold (gen or part)')
+
 parser.add_option('--type', metavar='F', type='string', action='store',
                   default='full',
                   dest='type',
@@ -54,11 +64,19 @@ parser.add_option('--doSys', metavar='F', action='store_true',
                   help='Add sys uncertainties')
 
 # -------------------------------------------------------------------------------------
-# load options & set plot style
+# load options & check they make sense 
 # -------------------------------------------------------------------------------------
 
 (options, args) = parser.parse_args()
 argv = []
+
+if options.toUnfold != "pt" and options.fullRange :
+    print 'Full range option only works with pt unfolding! Exiting...'
+    exit(0)
+
+# -------------------------------------------------------------------------------------
+# set plot style
+# -------------------------------------------------------------------------------------
 
 import sys
 
@@ -85,7 +103,7 @@ gStyle.SetPadLeftMargin(0.18)
 print "TUnfold version is " + str(TUnfold.GetTUnfoldVersion())
 
 # -------------------------------------------------------------------------------------
-# Define helper functions and set unfolding options
+# Define helper functions
 # -------------------------------------------------------------------------------------
 
 def noNegBins( hist ):
@@ -93,16 +111,61 @@ def noNegBins( hist ):
         if hist.GetBinContent(i) < 0.0 :
             hist.SetBinContent(i,0.0)
 
+# Reweight response underflow (effective anti-tag SF)
+def antiTagWeight(h_true, h_response):
+    for ii in xrange(1,h_response.GetNbinsY()+1):
+        rowsum = h_response.Integral(1,h_response.GetNbinsX()+1,ii,ii)
+        binweight = (h_true.GetBinContent(ii) - rowsum)/h_response.GetBinContent(0,ii)
+        h_response.SetBinContent(0,ii,h_response.GetBinContent(0,ii)*binweight)
+        
+    
+# Combine underflow / overflow
+def convertForTUnfold(h_response):
+    h_response.SetBinContent(0,0,0)
+    h_response.SetBinContent(h_response.GetNbinsX()+1,h_response.GetNbinsY()+1,0)
+    for ii in xrange(1,h_response.GetNbinsY()+1):
+        underflow = h_response.GetBinContent(0,                       ii)
+        overflow  = h_response.GetBinContent(h_response.GetNbinsX()+1,ii)
+        h_response.SetBinContent(0,ii,underflow+overflow)
+        print 'Bin (' + str(h_response.GetNbinsX()+1) + ',' + str(ii) + ') ' + str(overflow) + ' added to bin (0,'+str(ii)+') ' + str(underflow)
+    for jj in xrange(1,h_response.GetNbinsX()+1):
+        underflow = h_response.GetBinContent(jj,0)
+        overflow  = h_response.GetBinContent(jj,h_response.GetNbinsY()+1)
+        h_response.SetBinContent(jj,0,underflow+overflow)
+        print 'Bin (' + str(jj) + ',0) ' + str(overflow) + ' added to bin ('+str(jj)+','+str(h_response.GetNbinsY()+1)+') ' + str(underflow)
+
+# Subtract fakes from input
+def removeFakes(h_input, h_response):
+    for ii in xrange(1,h_response.GetNbinsX()+1):
+        if h_response.Integral(ii,ii,0,response.GetNbinsY()+1) > 0.0 :
+            fakefraction = h_response.GetBinContent(ii,0) / h_response.Integral(ii,ii,0,h_response.GetNbinsY()+1)
+            print 'Bin [' + str(h_response.GetXaxis().GetBinLowEdge(ii)) + ',' + str(h_response.GetXaxis().GetBinUpEdge(ii)) + '] fakefraction ' + str(fakefraction)
+            h_input.SetBinContent(ii,h_input.GetBinContent(ii)*(1.0-fakefraction))
+            h_input.SetBinError(ii,h_input.GetBinError(ii)*(1.0-fakefraction))
+            h_response.SetBinContent(ii,0,0)
+            h_response.SetBinError(ii,0,0)
+
+
+# -------------------------------------------------------------------------------------
+# Set unfolding options
+# -------------------------------------------------------------------------------------
+    
 lum = 35867.0
 
-response_name = "response_pt_split_TH2"
-hMeas_name    = "ptRecoTop_split"
-hTrue_name    = "ptGenTop"
+response_name = "response_"+options.toUnfold+"_split_TH2"
+hMeas_name    = options.toUnfold+"RecoTop_split"
+hTrue_name    = options.toUnfold+"GenTop"
 
-if options.fullRange :
-    response_name = "response2_pt_split_TH2"
-    hMeas_name    = "ptRecoTop2_split"
-    hTrue_name    = "ptGenTop2"
+if options.level == "part":
+    response_name += "_PL"
+    hTrue_name.replace("Gen","Part")
+
+if options.fullRange:
+    response_name.replace("response","response2")
+    hMeas_name.replace("Top","Top2")
+    hTrue_name.replace("Top","Top2")
+
+labelstring = "quark" if (options.level == "gen") else "jet"
 
 theRegMode = TUnfold.kRegModeCurvature
 if options.regMode == "derivative" :
@@ -139,21 +202,21 @@ if options.lepType=="ele":
 if options.type == "full":
     f_ttbar_m0to700_p1_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_post.root")
     f_ttbar_m0to700_p2_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_post.root")
-    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_nom_post.root")
-    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_nom_post.root")
     f_ttbar_m0to700_p1_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_post.root")
     f_ttbar_m0to700_p2_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_post.root")
-    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_nom_post.root")
-    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_nom_post.root")    
+    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_nom_post.root")    
 else:
     f_ttbar_m0to700_p1_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_even_post.root")
     f_ttbar_m0to700_p2_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_nom_even_post.root")
     f_ttbar_m0to700_p1_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_odd_post.root")
     f_ttbar_m0to700_p2_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_odd_post.root")
-    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_nom_odd_post.root")
-    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_nom_odd_post.root")
     
 
 # -------------------------------------------------------------------------------------
@@ -186,9 +249,9 @@ variants = ['Up']
 
 if options.doSys:
     sysnames = ['JEC','JER','BTag','TopTag','lep','pu','PDF','Q2']
-    thsysnames = ['ISR','FSR']
+    thsysnames = ['ISR','FSR','Tune','Hdamp','ErdOn']
     allsysnames = sysnames+thsysnames
-    longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR"]
+    longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection"]
     variants = ['Up','Down']
 
     for sysname in sysnames:
@@ -196,13 +259,13 @@ if options.doSys:
             if options.type == "full":
                 f_ttbar_m0to700_p1_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
                 f_ttbar_m0to700_p2_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_"+sysname+var+"_post.root")
-                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
-                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
             else:
                 f_ttbar_m0to700_p1_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
                 f_ttbar_m0to700_p2_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_m700to1000"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_m1000toInf"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
                 
             response_sys_m0to700_p1 = f_ttbar_m0to700_p1_sys.Get(response_name)
             response_sys_m0to700_p2 = f_ttbar_m0to700_p2_sys.Get(response_name)
@@ -221,32 +284,68 @@ if options.doSys:
             response_sys.Add(response_sys_m700to1000);
             response_sys.Add(response_sys_m1000toInf);
 
-            if options.type == "half":
-                response_sys.Scale(2.0)
-            
+            true_sys_m0to700_p1 = f_ttbar_m0to700_p1_sys.Get(hTrue_name)
+            true_sys_m0to700_p2 = f_ttbar_m0to700_p2_sys.Get(hTrue_name)
+            true_sys_m700to1000 = f_ttbar_m700to1000_sys.Get(hTrue_name)
+            true_sys_m1000toInf = f_ttbar_m1000toInf_sys.Get(hTrue_name)
+            true_sys_m0to700_p1.Sumw2()
+            true_sys_m0to700_p2.Sumw2()
+            true_sys_m700to1000.Sumw2()
+            true_sys_m1000toInf.Sumw2()
+            true_sys_m0to700 = true_sys_m0to700_p1.Clone()
+            true_sys_m0to700.Add(true_sys_m0to700_p2)
+            true_sys_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+            true_sys_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+            true_sys_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+            true_sys = true_sys_m0to700.Clone()
+            true_sys.Add(true_sys_m700to1000);
+            true_sys.Add(true_sys_m1000toInf);
+
+            antiTagWeight(true_sys,response_sys)
+            convertForTUnfold(response_sys)
             for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
                 response_sys.SetBinContent(ibin,0,0)
-                response_sys.SetBinError(ibin,0,0)
-        
+                response_sys.SetBinError(ibin,0,0)            
+            
+            if options.type == "half":
+                response_sys.Scale(2.0)
+                
             Hres_sys[sysname+var] = response_sys
 
     for thsysname in thsysnames:
-        for var in variants:
-            f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+muOrEl+"_"+thsysname+var+"_post.root")
+        if thsysname is "ErdOn":
+            f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_fullTruth_"+muOrEl+"_"+thsysname+"_post.root")
             response_sys = f_ttbar_sys.Get(response_name)
             response_sys.Sumw2()
-
+            true_sys = f_ttbar_sys.Get(hTrue_name)
+            antiTagWeight(true_sys,response_sys)
+            convertForTUnfold(response_sys)
             for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
                 response_sys.SetBinContent(ibin,0,0)
                 response_sys.SetBinContent(ibin,0,0)
 
-            Hres_sys[thsysname+var] = response_sys
+            Hres_sys[thsysname] = response_sys
+
+        else :
+            for var in variants:
+                f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+muOrEl+"_"+thsysname+var+"_post.root")
+                response_sys = f_ttbar_sys.Get(response_name)
+                response_sys.Sumw2()
+                true_sys = f_ttbar_sys.Get(hTrue_name)
+                antiTagWeight(true_sys,response_sys)
+                convertForTUnfold(response_sys)
+                for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
+                    response_sys.SetBinContent(ibin,0,0)
+                    response_sys.SetBinContent(ibin,0,0)
+
+                Hres_sys[thsysname+var] = response_sys
 
 # -------------------------------------------------------------------------------------
 # read & normalize histograms
 # -------------------------------------------------------------------------------------
 
 'Getting input/true'
+hTrue_name_orig = hTrue_name
 if options.toy == "up":
     hMeas_name = hMeas_name.replace("Top","TopMod")
     hTrue_name = hTrue_name.replace("Top","TopMod")
@@ -305,13 +404,26 @@ nbinsTrue = thisTrue.GetNbinsX()
 # Convert for TUnfold
 # -------------------------------------------------------------------------------------
 
-for ibin in xrange(1,response.GetXaxis().GetNbins()+1):
-    if response.Integral(ibin,ibin,0,response.GetYaxis().GetNbins()+1) > 0.0 :
-        fakefraction = response.GetBinContent(ibin,0) / response.Integral(ibin,ibin,0,response.GetYaxis().GetNbins()+1)
-        thisMeas.SetBinContent(ibin,thisMeas.GetBinContent(ibin)*(1.0-fakefraction))
-        thisMeas.SetBinError(ibin,thisMeas.GetBinError(ibin)*(1.0-fakefraction))
-        response.SetBinContent(ibin,0,0)
-        response.SetBinError(ibin,0,0)
+refTrue_m0to700_p1 = f_ttbar_m0to700_p1_response.Get(hTrue_name_orig)
+refTrue_m0to700_p2 = f_ttbar_m0to700_p2_response.Get(hTrue_name_orig)
+refTrue_m700to1000 = f_ttbar_m700to1000_response.Get(hTrue_name_orig)
+refTrue_m1000toInf = f_ttbar_m1000toInf_response.Get(hTrue_name_orig)
+refTrue_m0to700_p1.Sumw2()
+refTrue_m0to700_p2.Sumw2()
+refTrue_m700to1000.Sumw2()
+refTrue_m1000toInf.Sumw2()
+refTrue_m0to700 = refTrue_m0to700_p1.Clone()
+refTrue_m0to700.Add(refTrue_m0to700_p2)
+refTrue_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+refTrue_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+refTrue_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+refTrue = refTrue_m0to700.Clone()
+refTrue.Add(refTrue_m700to1000);
+refTrue.Add(refTrue_m1000toInf);
+
+antiTagWeight(refTrue,response)
+convertForTUnfold(response)
+removeFakes(thisMeas,response)
 
 # -------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------
@@ -365,8 +477,11 @@ for itoy in xrange(0,ntoys) :
     unfold_tmp.SetInput(hToy_i[itoy])
     if options.doSys:
         for sysname in allsysnames:
-            unfold_tmp.AddSysError(Hres_sys[sysname+"Up"],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
-    
+            if sysname == "ErdOn" :
+                unfold_tmp.AddSysError(Hres_sys[sysname],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
+            else :
+                unfold_tmp.AddSysError(Hres_sys[sysname+"Up"],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
+            
     if options.tauMode == "LCurve" :
         logTauX_tmp = TSpline3()
         logTauY_tmp = TSpline3()
@@ -416,8 +531,11 @@ for ibin in xrange(0,nbinsTrue):
 ccc = TCanvas()
 gPad.SetGridy()
 hBias.GetYaxis().SetTitle("Relative bias / unc.")
-hBias.GetXaxis().SetTitle("Top quark p_{T} (GeV)")
-hBias.SetAxisRange(400,1199,"X")
+if options.toUnfold == "pt":
+    hBias.GetXaxis().SetTitle("Top "+labelstring+" p_{T} (GeV)")
+    hBias.SetAxisRange(400,1199,"X")
+else :
+    hBias.GetXaxis().SetTitle("Top "+labelstring+" rapidity")
 hBias.SetAxisRange(-0.5,0.5,"Y")
 hBias.SetLineColor(1)
 hErr_stat.SetLineColor(2)
@@ -439,7 +557,7 @@ else :
     leg4.AddEntry(hErr_stat, 'Input Stat. Unc.', 'l')
     leg4.AddEntry(hErr_tot, 'Matrix Stat. Unc.', 'l')
 leg4.Draw()
-ccc.SaveAs("UnfoldingPlots/bias_vspt"+options.toy+"_"+options.tauMode+"_"+options.lepType+"_"+options.type+suffix+".pdf")
+ccc.SaveAs("UnfoldingPlots/bias_vs"+options.toUnfold+options.toy+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.type+suffix+".pdf")
 
 # -------------------------------------------------------------------------------------
 # Done with toys, doing actual unfolding
@@ -450,7 +568,10 @@ for var in variants:
     unfold[var].SetInput(thisMeas)
     if options.doSys:
         for sysname in allsysnames:
-            unfold[var].AddSysError(Hres_sys[sysname+var],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
+            if sysname == "ErdOn" :
+                unfold[var].AddSysError(Hres_sys[sysname],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
+            else :
+                unfold[var].AddSysError(Hres_sys[sysname+var],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
             
     varFlag = ''
     if len(variants) > 1:
@@ -504,7 +625,7 @@ for var in variants:
     h_StatUncVsTau.Draw("hist,same")
     h_TotUncVsTau.Draw("hist,same")
     leg5.Draw()
-    c5.SaveAs("UnfoldingPlots/CoarseTauScan_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+varFlag+suffix+".pdf")
+    c5.SaveAs("UnfoldingPlots/CoarseTauScan_"+options.toUnfold+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+varFlag+suffix+".pdf")
 
     # -------------------------------------------------------------------------------------
     # Plot tau scan
@@ -534,7 +655,7 @@ for var in variants:
         tl2.SetTextFont(42)
         legend = "log(#tau) = %.3e" % Tau
         tl2.DrawLatex(0.55,0.8,legend)
-        c2.SaveAs("UnfoldingPlots/TauScan_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+varFlag+suffix+".pdf")
+        c2.SaveAs("UnfoldingPlots/TauScan_"+options.toUnfold+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+varFlag+suffix+".pdf")
 
     elif options.tauMode == "ScanTau" :
         c2 = TCanvas("c2", "c2", 700, 700)
@@ -555,7 +676,7 @@ for var in variants:
         tl2.SetTextFont(42)
         legend = "log(#tau) = %.3e" % Tau
         tl2.DrawLatex(0.55,0.8,legend)
-        c2.SaveAs("UnfoldingPlots/TauScan_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+varFlag+suffix+".pdf")
+        c2.SaveAs("UnfoldingPlots/TauScan_"+options.toUnfold+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+varFlag+suffix+".pdf")
 
     else:
         unfold[var].DoUnfold(0)
@@ -580,7 +701,7 @@ h_TOT.Reset()
 
 #Get actual error matrices / hists
 hErrInput = unfold["Up"].GetEmatrixInput("mErrInput")
-hErrStat = unfold["Up"].GetEmatrixSysUncorr("mErrStat") #This might be buggy!!!
+hErrStat = unfold["Up"].GetEmatrixSysUncorr("mErrStat")
 
 if not options.doSys :
     hErrTot = unfold["Up"].GetEmatrixTotal("mErrTotalUp")
@@ -630,8 +751,8 @@ if options.doSys : #Doesn't seem necessary otherwise
     
     # Correct FSR
     if "FSR" in allsysnames:
-        hErrSys["FSR"].Scale(0.5); #Scale uncertainty by sqrt(2) -> scale covariance by 2?
-        hErrTot.Add(hCovSysFSR,-0.5)        
+        hErrSys["FSR"].Scale(1.0/math.sqrt(2.0)); #Scale uncertainty by sqrt(2)
+        hErrTot.Add(hCovSysFSR,1.0/math.sqrt(2.0)-1.0)        
     
     # Fill uncertainty histograms
     for ibin in xrange(1,nbinsTrue+1):
@@ -649,10 +770,14 @@ if options.doSys : #Doesn't seem necessary otherwise
     c6.SetRightMargin(0.05)
     c6.SetBottomMargin(0.14)
     c6.SetLeftMargin(0.16)
-    
-    h_TOT.GetXaxis().SetTitle("Top quark p_{T} (GeV)")
+
+    if options.toUnfold == "pt" :
+        h_TOT.GetXaxis().SetTitle("Top "+labelstring+" p_{T} (GeV)")
+        h_TOT.SetAxisRange(400,1199,"X")
+    else :
+        h_TOT.GetXaxis().SetTitle("Top "+labelstring+" rapidity")
+        
     h_TOT.GetYaxis().SetTitle("Uncertainty [%]")
-    h_TOT.SetAxisRange(400,1199,"X")
     
     h_TOT.GetYaxis().SetTitleSize(0.055)    
     h_TOT.GetYaxis().SetTitleOffset(1.1)
@@ -684,8 +809,9 @@ if options.doSys : #Doesn't seem necessary otherwise
     h_LUMI.SetMarkerColor(40)
     h_LUMI.SetMarkerStyle(22)
     
-    colors = [632,600,617,417,432,4,1,419,600,882]
-    markers = [20,21,22,23,33,26,24,25,27,32]
+    colors = [632,600,617,417,432,4,1,419,600,882,632,600,617]
+    markers = [20,21,22,23,33,26,24,25,27,32,23,33,26]
+
     for isys in xrange(0,len(allsysnames)):
         h_SYS[allsysnames[isys]].SetLineColor(colors[isys])
         h_SYS[allsysnames[isys]].SetLineWidth(2)
@@ -715,55 +841,55 @@ if options.doSys : #Doesn't seem necessary otherwise
 
     leg6.Draw(); 
 
-    c6.SaveAs("UnfoldingPlots/closure_relative_uncertainties_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
+    c6.SaveAs("UnfoldingPlots/closure_relative_uncertainties_"+options.toUnfold+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
 
     # -------------------------------------------------------------------------------------
     # Troubleshoot stat. unc.
     # -------------------------------------------------------------------------------------
     # Get inverse of Vyy
     # TUnfold method has bug for version 17.1 -- doing this manually
-    Vyy = TMatrixD(nbinsMeas,nbinsMeas)
-    for ibin in xrange(0,nbinsMeas): #rows
-        Vyy[ibin][ibin] = pow(thisMeas.GetBinError(ibin+1),2)
+    #Vyy = TMatrixD(nbinsMeas,nbinsMeas)
+    #for ibin in xrange(0,nbinsMeas): #rows
+    #    Vyy[ibin][ibin] = pow(thisMeas.GetBinError(ibin+1),2)
 
-    VyyInv = TMatrixD(Vyy)
-    VyyInv.Invert()
+    #VyyInv = TMatrixD(Vyy)
+    #VyyInv.Invert()
 
     #Get A (normalized response matrix)
-    A = TMatrixD(nbinsMeas,nbinsTrue)
-    for irow in xrange(0,nbinsMeas):
-        for icol in xrange(0,nbinsTrue):
-            A[irow][icol] = response.GetBinContent(irow+1,icol+1) / response.Integral(0,nbinsMeas+1,icol+1,icol+1)
+    #A = TMatrixD(nbinsMeas,nbinsTrue)
+    #for irow in xrange(0,nbinsMeas):
+    #    for icol in xrange(0,nbinsTrue):
+    #        A[irow][icol] = response.GetBinContent(irow+1,icol+1) / response.Integral(0,nbinsMeas+1,icol+1,icol+1)
 
     #Manually calculate Vxx
-    AT = TMatrixD(nbinsTrue,nbinsMeas)
-    AT.Transpose(A)
+    #AT = TMatrixD(nbinsTrue,nbinsMeas)
+    #AT.Transpose(A)
     
-    EInv1 = TMatrixD(nbinsTrue,nbinsMeas)
-    EInv1.Mult(AT,VyyInv)
-    EInv = TMatrixD(nbinsTrue,nbinsTrue)
-    EInv.Mult(EInv1,A)
-    E = TMatrixD(EInv)
-    E.Invert()
+    #EInv1 = TMatrixD(nbinsTrue,nbinsMeas)
+    #EInv1.Mult(AT,VyyInv)
+    #EInv = TMatrixD(nbinsTrue,nbinsTrue)
+    #EInv.Mult(EInv1,A)
+    #E = TMatrixD(EInv)
+    #E.Invert()
 
     # Plot relative stat. unc., and compare w/ data
-    relUnc1 = thisMeas.Clone()
-    for ibin in xrange(1,nbinsMeas+1): #rows
-        relUnc1.SetBinContent(ibin,thisMeas.GetBinError(ibin) / thisMeas.GetBinContent(ibin))
+    #relUnc1 = thisMeas.Clone()
+    #for ibin in xrange(1,nbinsMeas+1): #rows
+    #    relUnc1.SetBinContent(ibin,thisMeas.GetBinError(ibin) / thisMeas.GetBinContent(ibin))
 
-    c8 = TCanvas()
-    h_INPUT.SetTitle(";Top p_{T};Relative stat. unc.")
-    h_INPUT.SetMaximum(max(h_INPUT.GetMaximum(),relUnc1.GetMaximum())*1.2)
-    h_INPUT.Draw("hist")
-    relUnc1.SetLineColor(2)
-    relUnc1.Draw("hist,same")
-    leg8 = TLegend(0.2,0.6,0.5,0.8)
-    leg8.SetBorderSize(0)
-    leg8.SetTextSize(0.04)
-    leg8.AddEntry(relUnc1,"Stat. unc. on measurement","l")
-    leg8.AddEntry(h_INPUT,"Propagated stat. unc.","l")
-    leg8.Draw()
-    c8.SaveAs("UnfoldingPlots/compare_rel_unc_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
+    #c8 = TCanvas()
+    #h_INPUT.SetTitle(";Top p_{T};Relative stat. unc.")
+    #h_INPUT.SetMaximum(max(h_INPUT.GetMaximum(),relUnc1.GetMaximum())*1.2)
+    #h_INPUT.Draw("hist")
+    #relUnc1.SetLineColor(2)
+    #relUnc1.Draw("hist,same")
+    #leg8 = TLegend(0.2,0.6,0.5,0.8)
+    #leg8.SetBorderSize(0)
+    #leg8.SetTextSize(0.04)
+    #leg8.AddEntry(relUnc1,"Stat. unc. on measurement","l")
+    #leg8.AddEntry(h_INPUT,"Propagated stat. unc.","l")
+    #leg8.Draw()
+    #c8.SaveAs("UnfoldingPlots/compare_rel_unc_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
 
     # -------------------------------------------------------------------------------------
     # Plot covariance matrix
@@ -779,11 +905,12 @@ if options.doSys : #Doesn't seem necessary otherwise
             hErrTot.SetBinContent(ibinx,ibiny,tmp)
 
     c4 = TCanvas()
-    hErrTot.GetXaxis().SetRangeUser(400.,1199.)
-    hErrTot.GetYaxis().SetRangeUser(400.,1199.)
+    if options.toUnfold == "pt":
+        hErrTot.GetXaxis().SetRangeUser(400.,1199.)
+        hErrTot.GetYaxis().SetRangeUser(400.,1199.)
     hErrTot.GetZaxis().SetRangeUser(-1.0,1.0)
     hErrTot.Draw("colz")
-    c4.SaveAs("UnfoldingPlots/closure_covariance_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
+    c4.SaveAs("UnfoldingPlots/closure_covariance_"+options.toUnfold+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
 
 # -------------------------------------------------------------------------------------
 # Translate to cross section (not events) in bins of pt N/L/BR)
@@ -825,7 +952,10 @@ for ibin in range(1, nbinsMeas+1) :
 ## ratio of unfolded data to generator-level
 hFrac = thisReco.Clone()
 hFrac.SetName("hFrac")
-hFrac.SetTitle(";Top quark p_{T} (GeV);Unfolded/True")
+if options.toUnfold == "pt":
+    hFrac.SetTitle(";Top "+labelstring+" p_{T} (GeV);Unfolded/True")
+else :
+    hFrac.SetTitle(";Top "+labelstring+" rapidity;Unfolded/True")    
 hFrac.Divide(thisTrue)
 
 # Convert h_TOT, h_STAT into error bands
@@ -855,13 +985,14 @@ pad1.cd()
 thisReco.SetMarkerStyle(21)
 thisMeas.SetMarkerStyle(25)
 
-thisReco.GetXaxis().SetRangeUser(400.,1199.)
-thisTrue.GetXaxis().SetRangeUser(400.,1199.)
-thisMeas.GetXaxis().SetRangeUser(400.,1199.)
+if options.toUnfold == "pt":
+    thisReco.GetXaxis().SetRangeUser(400.,1199.)
+    thisTrue.GetXaxis().SetRangeUser(400.,1199.)
+    thisMeas.GetXaxis().SetRangeUser(400.,1199.)
+    thisReco.SetTitle(";;d#sigma/dp_{T} [fb/GeV]")
+else:
+    thisReco.SetTitle(";;d#sigma/dy [fb]")
 
-xsec_title = ";;d#sigma/dp_{T} [fb/GeV]"
-
-thisReco.SetTitle(xsec_title)
 thisReco.GetYaxis().SetTitleOffset(1.2)
 thisReco.SetMinimum(0.0)
 max = thisTrue.GetMaximum()
@@ -923,9 +1054,10 @@ hFrac.Draw("hist")
 h_TOT.Draw("same,e2")
 h_STAT.Draw("same,e2")
 hFrac.Draw("same,hist")
-hFrac.GetXaxis().SetRangeUser(400., 1199.)
+if options.toUnfold == "pt":
+    hFrac.GetXaxis().SetRangeUser(400., 1199.)
 
 c1.Update()
 
-c1.SaveAs("UnfoldingPlots/closure_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+"_result"+suffix+".pdf")
+c1.SaveAs("UnfoldingPlots/closure_"+options.toUnfold+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+"_result"+suffix+".pdf")
 
