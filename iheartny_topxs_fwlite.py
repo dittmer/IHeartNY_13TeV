@@ -1391,7 +1391,7 @@ for event in events :
                     partMu.append(p4)
                 # electrons
                 if abs(partLepton.eta()) < MAX_EL_ETA and partLepton.pt() > MIN_EL_PT and abs(partLepton.pdgId()) == 11:
-                    partMu.append(p4)
+                    partEl.append(p4)
 
 
             # -------------------------------------------------------------------------------
