@@ -223,8 +223,8 @@ void runMakeHists(TString toMake = "prefit"){
   if (toMake == "unfoldParticle") {
     
     bool postTopTagSF = true;
-
     for (int ii = 0; ii < nSYS; ii++){
+      
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],0,postTopTagSF,true); //Signal
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],1,postTopTagSF,true); //Odd
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],2,postTopTagSF,true); //Even
@@ -239,22 +239,20 @@ void runMakeHists(TString toMake = "prefit"){
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL_p2","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],1,postTopTagSF,true);
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL_p2","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],2,postTopTagSF,true);
 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],0,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],1,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],2,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],0,postTopTagSF);
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],1,postTopTagSF);
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],2,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],0,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],1,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],2,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],0,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],1,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],2,postTopTagSF);
 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],0,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],1,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],2,postTopTagSF); 
-
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],0,postTopTagSF);
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],1,postTopTagSF);
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],2,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],0,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],1,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],2,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],0,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],1,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],2,postTopTagSF);
     }
-
 
     for (int ii = 0; ii < nTHSYS; ii++){
 
@@ -272,21 +270,41 @@ void runMakeHists(TString toMake = "prefit"){
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL_p2","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],1,postTopTagSF,true);
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL_p2","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],2,postTopTagSF,true);
 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],0,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],1,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],2,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],0,postTopTagSF);
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],1,postTopTagSF);
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],2,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],0,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],1,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],2,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],0,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],1,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],2,postTopTagSF);
 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],0,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],1,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],2,postTopTagSF); 
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],0,postTopTagSF);
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],1,postTopTagSF);
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],2,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],0,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],1,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsysnames[ii],2,postTopTagSF); 
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],0,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],1,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],2,postTopTagSF);
     }
+    // NOTE: will need to add theory variant samples here
 
+    //Data, nominal
+    makeHists("skimTrees_full2016/","histfiles_full2016","Data_mu","mu",true,false,"Medium","MiniIso10",true,35.0,false,false,"nom",0,false);
+    makeHists("skimTrees_full2016/","histfiles_full2016","Data_el","el",true,false,"Tight","MiniIso10",true,50.0,true,false,"nom",0,false);
+
+    //Data for QCD
+    makeHists("skimTrees_full2016/","histfiles_full2016","Data_mu","mu",true,false,"Medium","MiniIso10",true,35.0,false,true,"nom",0,false);
+    makeHists("skimTrees_full2016/","histfiles_full2016","Data_el","el",true,false,"Medium","MiniIso10",true,50.0,true,true,"nom",0,false);
+    
+    // TTbar for QCD
+    makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth","mu",false,false,"Medium","MiniIso10",true,35.0,false,true,"nom",0,postTopTagSF);
+    makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth","el",false,false,"Medium","MiniIso10",true,50.0,true,true,"nom",0,postTopTagSF);
+
+    // Backgrounds
+    for (int jj = 0; jj < nBKG; jj++){
+      makeHists("skimTrees_full2016/","histfiles_full2016",bkgMCnames[jj],"mu",false,false,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF); //Signal
+      makeHists("skimTrees_full2016/","histfiles_full2016",bkgMCnames[jj],"el",false,false,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF);    
+      makeHists("skimTrees_full2016/","histfiles_full2016",bkgMCnames[jj],"mu",false,false,"Medium","MiniIso10",true,35.0,false,true,"nom",0,postTopTagSF); //QCD
+      makeHists("skimTrees_full2016/","histfiles_full2016",bkgMCnames[jj],"el",false,false,"Medium","MiniIso10",true,50.0,true,true,"nom",0,postTopTagSF);    
+    }
   }
 
   // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -316,21 +334,21 @@ void runMakeHists(TString toMake = "prefit"){
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL_p2","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF,true);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL_p2","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",1,postTopTagSF,true);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL_p2","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",2,postTopTagSF,true);
+
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",1,postTopTagSF);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m700to1000_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",2,postTopTagSF);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",1,postTopTagSF);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",2,postTopTagSF);
-
     
   }
 
   // ------------------------------------------------------------------------------------------------------------------------------------------
 
   if (toMake == "test") {
-    //bool postTopTagSF = true;
-    bool postTopTagSF = false;
+    bool postTopTagSF = true;
+    //bool postTopTagSF = false;
 
     /*
     makeHists("skimTrees_full2016/","histfiles_full2016_debug","PowhegPythia8_fullTruth_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF,true);
@@ -341,7 +359,7 @@ void runMakeHists(TString toMake = "prefit"){
 
     //makeHists("skimTrees_full2016/","histfiles_full2016_debug","PowhegPythia8_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",1,postTopTagSF); 
     //makeHists("skimTrees_full2016/","histfiles_full2016_debug","PowhegPythia8_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",2,postTopTagSF); 
-    makeHists("skimTrees_full2016/","histfiles_full2016_debug","PowhegPythia8_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF); 
+    makeHists("skimTrees_full2016/","histfiles_full2016_debug","PowhegPythia8_fullTruth_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF); 
 
   }
 

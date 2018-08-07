@@ -74,6 +74,13 @@ if options.toUnfold != "pt" and options.fullRange :
     print 'Full range option only works with pt unfolding! Exiting...'
     exit(0)
 
+if options.level == "part" and options.lepType == "ele" :
+    print 'Particle level does not work for electrons yet! Exiting...'
+    exit(0)
+if options.toUnfold == "y" and options.toy != "nom" :
+    print 'Not doing pt reweighting for y unfolding! Exiting...'
+    exit(0)
+    
 # -------------------------------------------------------------------------------------
 # set plot style
 # -------------------------------------------------------------------------------------
@@ -137,7 +144,7 @@ def convertForTUnfold(h_response):
 # Subtract fakes from input
 def removeFakes(h_input, h_response):
     for ii in xrange(1,h_response.GetNbinsX()+1):
-        if h_response.Integral(ii,ii,0,response.GetNbinsY()+1) > 0.0 :
+        if h_response.Integral(ii,ii,0,h_response.GetNbinsY()+1) > 0.0 :
             fakefraction = h_response.GetBinContent(ii,0) / h_response.Integral(ii,ii,0,h_response.GetNbinsY()+1)
             print 'Bin [' + str(h_response.GetXaxis().GetBinLowEdge(ii)) + ',' + str(h_response.GetXaxis().GetBinUpEdge(ii)) + '] fakefraction ' + str(fakefraction)
             h_input.SetBinContent(ii,h_input.GetBinContent(ii)*(1.0-fakefraction))
@@ -158,18 +165,21 @@ hTrue_name    = options.toUnfold+"GenTop"
 
 if options.level == "part":
     response_name += "_PL"
-    hTrue_name.replace("Gen","Part")
+    hTrue_name = hTrue_name.replace("Gen","Part")
 
 if options.fullRange:
-    response_name.replace("response","response2")
-    hMeas_name.replace("Top","Top2")
-    hTrue_name.replace("Top","Top2")
+    response_name = response_name.replace("response","response2")
+    hMeas_name = hMeas_name.replace("Top","Top2")
+    hTrue_name = hTrue_name.replace("Top","Top2")
+
+print 'Response matrix: ' + response_name
+print 'Measured dist:   ' + hMeas_name
+print 'True dist:       ' + hTrue_name
 
 labelstring = "quark" if (options.level == "gen") else "jet"
 
 theRegMode = TUnfold.kRegModeCurvature
 if options.regMode == "derivative" :
-    print 'Doing derivative regularization'
     theRegMode = TUnfold.kRegModeDerivative
 
 theAreaConstraint = TUnfold.kEConstraintNone
@@ -249,9 +259,11 @@ variants = ['Up']
 
 if options.doSys:
     sysnames = ['JEC','JER','BTag','TopTag','lep','pu','PDF','Q2']
-    thsysnames = ['ISR','FSR','Tune','Hdamp','ErdOn']
+    #thsysnames = ['ISR','FSR','Tune','Hdamp','ErdOn']
+    thsysnames = []
     allsysnames = sysnames+thsysnames
-    longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection"]
+    #longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection"]
+    longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales"]
     variants = ['Up','Down']
 
     for sysname in sysnames:
@@ -544,7 +556,7 @@ hBias.Draw("e")
 hErr_stat.Draw("e,same")
 hErr_tot.Draw("e,same")
 hBias.Draw("e,same")
-leg4 = TLegend(0.65, 0.25, 0.9, 0.45)
+leg4 = TLegend(0.2, 0.19, 0.5, 0.38)
 leg4.SetFillStyle(0)
 leg4.SetTextFont(42)
 leg4.SetTextSize(0.045)
@@ -751,8 +763,8 @@ if options.doSys : #Doesn't seem necessary otherwise
     
     # Correct FSR
     if "FSR" in allsysnames:
-        hErrSys["FSR"].Scale(1.0/math.sqrt(2.0)); #Scale uncertainty by sqrt(2)
-        hErrTot.Add(hCovSysFSR,1.0/math.sqrt(2.0)-1.0)        
+        hErrSys["FSR"].Scale(0.5); #Scale uncertainty by sqrt(2) --> scale uncertainty squared / covariance by 0.5
+        hErrTot.Add(hCovSysFSR,-0.5)        
     
     # Fill uncertainty histograms
     for ibin in xrange(1,nbinsTrue+1):
@@ -823,7 +835,7 @@ if options.doSys : #Doesn't seem necessary otherwise
     leg6.AddEntry(h_INPUT,"Input stat. unc.","lp")
     leg6.AddEntry(h_MATRIX,"Response stat. unc.","lp")
     leg6.AddEntry(h_LUMI,"Int. luminosity","lp")
-    for isys in xrange(0,9):
+    for isys in xrange(0,len(allsysnames)):
         leg6.AddEntry(h_SYS[allsysnames[isys]],longnames[isys],"lp")
 
     leg6.SetFillStyle(0);
@@ -1008,23 +1020,25 @@ thisTrue.SetLineColor(4)
 thisTrue.GetYaxis().SetTitleSize(25)
 thisTrue.GetXaxis().SetLabelSize(0)
 
-leg = TLegend(0.5, 0.5, 0.9, 0.75)
+xmin = 0.5 if options.toUnfold == "pt" else 0.365
+ymin = 0.5 if options.toUnfold == "pt" else 0.13
+leg = TLegend(xmin, ymin, xmin+0.39, ymin+0.25)
 leg.SetFillStyle(0)
 leg.SetTextFont(42)
-leg.SetTextSize(0.045)
+leg.SetTextSize(0.044)
 leg.SetBorderSize(0)
-
-tt = TLatex()
-tt.SetNDC()
-tt.SetTextFont(42)
 leg.AddEntry( thisReco, 'Unfolded MC (Powheg)', 'p')
 leg.AddEntry( thisTrue, 'Generated (Powheg)', 'l')
 leg.AddEntry( thisMeas, 'Reco-level (Powheg)', 'p')
 leg.AddEntry( h_STAT, 'Stat. uncertainty','f');
 leg.AddEntry( h_TOT, 'Stat. #oplus syst. uncertainties','f');
-
-tt.DrawLatex(0.55,0.45, "MC closure test")
 leg.Draw()
+
+tt = TLatex()
+tt.SetNDC()
+tt.SetTextFont(42)
+tt.SetTextSize(0.044)
+tt.DrawLatex(0.7,0.8, "MC closure test")
 
 # write histograms to file
 thisReco.SetName("UnfoldedMC")
@@ -1032,7 +1046,8 @@ thisReco.SetName("UnfoldedMC")
 text1 = TLatex()
 text1.SetNDC()
 text1.SetTextFont(42)
-text1.DrawLatex(0.55,0.8, "#scale[1.0]{L = 35.9 fb^{-1}, #sqrt{s} = 13 TeV}")
+text1.SetTextSize(0.044)
+text1.DrawLatex(0.57,0.87, "#scale[1.0]{L = 35.9 fb^{-1}, #sqrt{s} = 13 TeV}")
 
 c1.cd()
 pad2 =  TPad("pad2","pad2",0,0.0,1,0.28)

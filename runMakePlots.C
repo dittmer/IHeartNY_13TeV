@@ -202,6 +202,11 @@ void runMakePlots(TString toPlot = "final"){
     makePlots("histfiles_full2016/","histfiles_full2016/","mu","muMiniIsoRaw_e","",true,true,true);
     
     cout << endl << "Finished with postfit plots!" << endl << endl;
+
+    makeTable("histfiles_full2016/","histfiles_full2016/","mu",false,false,true,true);
+    cout << endl;
+    makeTable("histfiles_full2016/","histfiles_full2016/","el",false,false,true,true);
+
   }
 
   if (toPlot == "combine"){

@@ -122,7 +122,7 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   std::vector<float> v_stat_unc;
   
   if (which == "pt") binedges.push_back(400.0);
-  else binedges.push_back(h_response->GetXaxis()->GetBinLowEdge(1)); //Should be -2.6
+  else binedges.push_back(h_response->GetXaxis()->GetBinLowEdge(1)); //Should be -2.4
 
   int lastbin = (which == "pt") ? get400bin(h_response) - 1 : 0;
   for (int ib = lastbin+1; ib < h_response->GetNbinsX()+1; ib++){
@@ -149,8 +149,8 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
 
     // Quality condition: we want bins with purity / stability > 0.5, resolution < binwidth
     //if ((ib%5 == 0 && purity > 0.5 && stability > 0.5 && res_gaus < binwidth && res_RMS < binwidth) || ib == h_response->GetNbinsX()){
-    //if (ib == 20 || ib == 35 || ib == 50 || ib == 70 || ib == 90 || ib == 115 || ib == 170 || ib == 330){ //hardcoded combined bin edges, pt unfolding
-    if (ib == 25 || ib == 45 || ib == 65 || ib == 85 || ib == 100 || ib == 110 || ib == 120 || ib == 130 || ib == 140 || ib == 150 || ib == 160 || ib == 175 || ib == 195 || ib == 215 || ib == 235 || ib == 260){ //hardcoded combined bin edges
+    if (ib == 20 || ib == 35 || ib == 50 || ib == 70 || ib == 90 || ib == 115 || ib == 170 || ib == 330){ //hardcoded combined bin edges, pt unfolding
+    //if (ib == 20 || ib == 40 || ib == 60 || ib == 75 || ib == 90 || ib == 100 || ib == 110 || ib == 120 || ib == 130 || ib == 140 || ib == 150 || ib == 165 || ib == 180 || ib == 200 || ib == 220 || ib == 240){ //hardcoded combined bin edges
       binedges.push_back(h_response->GetXaxis()->GetBinUpEdge(ib));
       v_stability.push_back(stability);
       v_purity.push_back(purity);

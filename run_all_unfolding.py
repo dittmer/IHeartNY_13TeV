@@ -64,19 +64,19 @@ if options.closureTests :
         "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=dn --tauMode=LCurve --regMode=derivative --toUnfold="+options.toUnfold+" --level="+options.level,
         "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=dn --tauMode=LCurve --regMode=derivative --toUnfold="+options.toUnfold+" --level="+options.level,
         # Curvature regularization, [400,1200], area constraint, ScanTau
-        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=nom --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=nom --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=up --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=up --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=dn --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=dn --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=nom --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=nom --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=up --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=up --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=dn --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=dn --tauMode=ScanTau --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
         # Curvature regularization, [400,1200], area constraint, LCurve
-        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=nom --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=nom --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=up --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=up --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=dn --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
-        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=dn --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold=pt"+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=nom --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=nom --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=up --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=up --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=dn --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=dn --tauMode=LCurve --regMode=curvature --areaConstraint --toUnfold="+options.toUnfold+" --level="+options.level,
         # Non-regularized unfolding
         "python closureTestTUnfold_v2.py --lepType=muon --type=half --toy=nom --tauMode=Tau0 --regMode=curvature --toUnfold="+options.toUnfold+" --level="+options.level,
         "python closureTestTUnfold_v2.py --lepType=ele --type=half --toy=nom --tauMode=Tau0 --regMode=curvature --toUnfold="+options.toUnfold+" --level="+options.level,
@@ -113,7 +113,7 @@ if options.closureTests :
 
 else :
     path = [
-        "python unfoldTopPt.py"
+        "python unfoldTopPt.py --toUnfold="+options.toUnfold+" --level="+options.level
     ]
 
 ## run actual unfolding
