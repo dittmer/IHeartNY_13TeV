@@ -49,7 +49,7 @@ void getPurityStabilityEfficiency(TH2D* h_response, TString which, int ibinlow, 
   stability = nrecgen/ngen;
   purity = nrecgen/nrec;
   efficiency = nrecfull/ngenfull;
-
+  
   return;
 }
 
@@ -111,7 +111,25 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   TH2D* h_response = (TH2D*) h_response_m0to700->Clone();
   h_response->Add(h_response_m700to1000);
   h_response->Add(h_response_m1000toInf);
+
+  //TEMP fold y response to produce |y| response
+  /*
+  if (which == "y"){
+    int nbx = h_response->GetXaxis()->GetNbins() / 2;
+    int nby = h_response->GetYaxis()->GetNbins() / 2;
+    TH2D* h_response_abs = new TH2D(h_response->GetName(), h_response->GetTitle(),
+				    nbx, 0.0, h_response->GetXaxis()->GetBinUpEdge(nbx*2),
+				    nby, 0.0, h_response->GetYaxis()->GetBinUpEdge(nby*2));
+    for (int ix = 0; ix < nbx; ix++){
+      for (int iy = 0; iy < nby; iy++){
+	float bincontent = h_response->GetBinContent(nbx+ix,nby+iy) + h_response->GetBinContent(nbx+ix,nby-iy) + h_response->GetBinContent(nbx-ix,nby+iy) + h_response->GetBinContent(nbx-ix,nby-iy);
+	h_response_abs->SetBinContent(ix,iy,bincontent);
+      }
+    }
+    h_response = h_response_abs;
+  }
     
+  */
   //Find optimal binning
   std::vector<float> binedges;
   std::vector<float> v_stability;
@@ -148,8 +166,8 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
     float stat_unc = (float) err_stat / stat;
 
     // Quality condition: we want bins with purity / stability > 0.5, resolution < binwidth
-    //if ((ib%5 == 0 && purity > 0.5 && stability > 0.5 && res_gaus < binwidth && res_RMS < binwidth) || ib == h_response->GetNbinsX()){
-    if (ib == 20 || ib == 35 || ib == 50 || ib == 70 || ib == 90 || ib == 115 || ib == 170 || ib == 330){ //hardcoded combined bin edges, pt unfolding
+    if ((ib%2 == 0 && purity > 0.5 && stability > 0.5 && res_gaus < binwidth && res_RMS < binwidth) || ib == h_response->GetNbinsX()){
+    //if (ib == 20 || ib == 35 || ib == 50 || ib == 70 || ib == 90 || ib == 115 || ib == 170 || ib == 330){ //hardcoded combined bin edges, pt unfolding
     //if (ib == 20 || ib == 40 || ib == 60 || ib == 75 || ib == 90 || ib == 100 || ib == 110 || ib == 120 || ib == 130 || ib == 140 || ib == 150 || ib == 165 || ib == 180 || ib == 200 || ib == 220 || ib == 240){ //hardcoded combined bin edges
       binedges.push_back(h_response->GetXaxis()->GetBinUpEdge(ib));
       v_stability.push_back(stability);

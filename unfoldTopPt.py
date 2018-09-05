@@ -198,15 +198,11 @@ Hres_sys = {}
 backgrounds = {}
 
 channels = ["mu","el"]
-if options.level == "part" : #TEMP
-    channels = ["mu"]
 sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
-#thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn"]
-thsysnames = []
+thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]
 allsysnames = sysnames+thsysnames
 
-#longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection"]
-longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales"]
+longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
 variants = ["Up","Down"]
 
 for channel in channels:
@@ -340,7 +336,7 @@ for channel in channels:
             Hres_sys[thsysname+var+"_"+channel] = response_sys
 
     for thsysname in thsysnames:
-        if thsysname is "ErdOn":
+        if thsysname is "ErdOn" or thsysname is "Herwig":
             f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+"_fullTruth_"+channel+"_"+thsysname+"_post.root")
             response_sys = f_ttbar_sys.Get(response_name)
             response_sys.Sumw2()
@@ -759,40 +755,37 @@ for channel in channels:
 # -------------------------------------------------------------------------------------
 # Construct combined response matrices / inputs
 # -------------------------------------------------------------------------------------
-if options.level == "gen" :
-    thisMeas["comb"] = thisMeas["mu"].Clone()
-    thisMeas["comb"].Add(thisMeas["el"])
+thisMeas["comb"] = thisMeas["mu"].Clone()
+thisMeas["comb"].Add(thisMeas["el"])
 
-    thisTrue["comb"] = thisTrue["mu"].Clone()
-    thisTrue["comb"].Add(thisTrue["el"])
+thisTrue["comb"] = thisTrue["mu"].Clone()
+thisTrue["comb"].Add(thisTrue["el"])
 
-    thisExpect["comb"] = thisExpect["mu"].Clone()
-    thisExpect["comb"].Add(thisExpect["el"])
+thisExpect["comb"] = thisExpect["mu"].Clone()
+thisExpect["comb"].Add(thisExpect["el"])
 
-    backgrounds["comb"] = []
-    for ibkg in xrange(0,len(backgrounds["mu"])-1):
-        bkg_comb = Background(backgrounds["mu"][ibkg].name, backgrounds["mu"][ibkg].norm, backgrounds["mu"][ibkg].err, backgrounds["mu"][ibkg].color)
-        bkg_comb.addHist(backgrounds["mu"][ibkg].hist)
-        bkg_comb.addHist(backgrounds["el"][ibkg].hist)
-        backgrounds["comb"].append(bkg_comb)
-    backgrounds["comb"].append(backgrounds["mu"][len(backgrounds["mu"])-1])
-    backgrounds["comb"].append(backgrounds["el"][len(backgrounds["el"])-1])
+backgrounds["comb"] = []
+for ibkg in xrange(0,len(backgrounds["mu"])-1):
+    bkg_comb = Background(backgrounds["mu"][ibkg].name, backgrounds["mu"][ibkg].norm, backgrounds["mu"][ibkg].err, backgrounds["mu"][ibkg].color)
+    bkg_comb.addHist(backgrounds["mu"][ibkg].hist)
+    bkg_comb.addHist(backgrounds["el"][ibkg].hist)
+    backgrounds["comb"].append(bkg_comb)
+backgrounds["comb"].append(backgrounds["mu"][len(backgrounds["mu"])-1])
+backgrounds["comb"].append(backgrounds["el"][len(backgrounds["el"])-1])
 
-    response["comb"] = response["mu"].Clone()
-    response["comb"].Add(response["el"])
+response["comb"] = response["mu"].Clone()
+response["comb"].Add(response["el"])
 
-    for sysname in allsysnames:
-        for var in variants:
-            Hres_sys[sysname+var+"_comb"] = Hres_sys[sysname+var+"_mu"].Clone()
-            Hres_sys[sysname+var+"_comb"].Add(Hres_sys[sysname+var+"_el"])
+for sysname in allsysnames:
+    for var in variants:
+        Hres_sys[sysname+var+"_comb"] = Hres_sys[sysname+var+"_mu"].Clone()
+        Hres_sys[sysname+var+"_comb"].Add(Hres_sys[sysname+var+"_el"])
 
 # -------------------------------------------------------------------------------------
 # Do unfolding
 # -------------------------------------------------------------------------------------
 
 channels = ["mu","el","comb"]
-if options.level == "part" :
-    channels = ["mu"]
 
 for channel in channels:
     unfold = {}
@@ -802,7 +795,7 @@ for channel in channels:
 
         # Add systematic uncertainties
         for sysname in allsysnames:
-            if sysname == "ErdOn":
+            if sysname == "ErdOn" or sysname == "Herwig":
                 unfold[var].AddSysError(Hres_sys[sysname+"_"+channel],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
             else :
                 unfold[var].AddSysError(Hres_sys[sysname+var+"_"+channel],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
@@ -921,8 +914,7 @@ for channel in channels:
         tot_th = 0.0
         for sysname in allsysnames:
             h_SYS[sysname].SetBinContent(ibin,math.sqrt(hErrSys[sysname].GetBinContent(ibin))/thisReco.GetBinContent(ibin))
-        #for sysname in ["PDF","Q2","ISR","FSR","Tune","Hdamp","ErdOn"]:
-        for sysname in ["PDF","Q2"]:
+        for sysname in ["PDF","Q2","ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]:
             tot_th += hErrSys[sysname].GetBinContent(ibin)
         for sysname in ["JEC","JER","BTag","TopTag","lep","pu"]:
             tot_exp += hErrSys[sysname].GetBinContent(ibin)
@@ -976,8 +968,8 @@ for channel in channels:
     h_LUMI.SetMarkerColor(40)
     h_LUMI.SetMarkerStyle(34)
 
-    colors = [632,600,617,417,432,4,1,419,600,882,632,600,617]
-    markers = [20,21,22,23,33,26,24,25,27,32,23,33,26]
+    colors = [632,600,617,417,432,4,1,419,600,882,632,600,617,2]
+    markers = [20,21,22,23,33,26,24,25,27,32,23,33,26,24]
     for isys in xrange(0,len(allsysnames)):
         h_SYS[allsysnames[isys]].SetLineColor(colors[isys])
         h_SYS[allsysnames[isys]].SetLineWidth(2)

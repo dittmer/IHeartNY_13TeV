@@ -46,8 +46,8 @@ void runMakeHists(TString toMake = "prefit"){
   TString sysnames[nSYS] = {"nom","puUp","puDown","JECUp","JECDown","JERUp","JERDown","lepUp","lepDown","BTagUp","BTagDown","TopTagUp","TopTagDown"};
   const int nTHSYS = 4;
   TString thsysnames[nTHSYS] = {"PDFUp","PDFDown","Q2Up","Q2Down"};
-  const int nSAMPLES = 4;
-  TString thsamples[nSAMPLES] = {"ISRUp","ISRDown","FSRUp","FSRDown"};
+  const int nSAMPLES = 10;
+  TString thsamples[nSAMPLES] = {"ISRUp","ISRDown","FSRUp","FSRDown","TuneUp","TuneDown","HdampUp","HdampDown","ErdOn","Herwig"};
   const int nISO = 7;
   TString isoWPs[nISO] = {"MiniIso10","MiniIso20","2DisoPt25","2DisoPt45","2DisoB2G","2DisoIHNY","Loose"};
 
@@ -284,7 +284,11 @@ void runMakeHists(TString toMake = "prefit"){
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],1,postTopTagSF);
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],2,postTopTagSF);
     }
-    // NOTE: will need to add theory variant samples here
+    // Theory variant samples
+    for (int ii = 0; ii < nSAMPLES; ii++){
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+thsamples[ii]+"_fullTruth_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsamples[ii],0,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+thsamples[ii]+"_fullTruth_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsamples[ii],0,postTopTagSF);
+    }
 
     //Data, nominal
     makeHists("skimTrees_full2016/","histfiles_full2016","Data_mu","mu",true,false,"Medium","MiniIso10",true,35.0,false,false,"nom",0,false);
@@ -327,7 +331,6 @@ void runMakeHists(TString toMake = "prefit"){
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",1,postTopTagSF); 
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",2,postTopTagSF); 
 
-
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF,true);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",1,postTopTagSF,true);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",2,postTopTagSF,true);
@@ -341,7 +344,6 @@ void runMakeHists(TString toMake = "prefit"){
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",1,postTopTagSF);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_fullTruth_m1000toInf_PL","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",2,postTopTagSF);
-    
   }
 
   // ------------------------------------------------------------------------------------------------------------------------------------------

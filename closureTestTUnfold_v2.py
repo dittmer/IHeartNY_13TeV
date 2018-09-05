@@ -74,9 +74,6 @@ if options.toUnfold != "pt" and options.fullRange :
     print 'Full range option only works with pt unfolding! Exiting...'
     exit(0)
 
-if options.level == "part" and options.lepType == "ele" :
-    print 'Particle level does not work for electrons yet! Exiting...'
-    exit(0)
 if options.toUnfold == "y" and options.toy != "nom" :
     print 'Not doing pt reweighting for y unfolding! Exiting...'
     exit(0)
@@ -259,11 +256,9 @@ variants = ['Up']
 
 if options.doSys:
     sysnames = ['JEC','JER','BTag','TopTag','lep','pu','PDF','Q2']
-    #thsysnames = ['ISR','FSR','Tune','Hdamp','ErdOn']
-    thsysnames = []
+    thsysnames = ['ISR','FSR','Tune','Hdamp','ErdOn','Herwig']
     allsysnames = sysnames+thsysnames
-    #longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection"]
-    longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales"]
+    longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
     variants = ['Up','Down']
 
     for sysname in sysnames:
@@ -325,7 +320,7 @@ if options.doSys:
             Hres_sys[sysname+var] = response_sys
 
     for thsysname in thsysnames:
-        if thsysname is "ErdOn":
+        if thsysname is "ErdOn" or thsysname is "Herwig":
             f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_fullTruth_"+muOrEl+"_"+thsysname+"_post.root")
             response_sys = f_ttbar_sys.Get(response_name)
             response_sys.Sumw2()
@@ -489,7 +484,7 @@ for itoy in xrange(0,ntoys) :
     unfold_tmp.SetInput(hToy_i[itoy])
     if options.doSys:
         for sysname in allsysnames:
-            if sysname == "ErdOn" :
+            if sysname == "ErdOn" or sysname == "Herwig":
                 unfold_tmp.AddSysError(Hres_sys[sysname],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
             else :
                 unfold_tmp.AddSysError(Hres_sys[sysname+"Up"],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
@@ -580,7 +575,7 @@ for var in variants:
     unfold[var].SetInput(thisMeas)
     if options.doSys:
         for sysname in allsysnames:
-            if sysname == "ErdOn" :
+            if sysname == "ErdOn" or sysname == "Herwig" :
                 unfold[var].AddSysError(Hres_sys[sysname],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
             else :
                 unfold[var].AddSysError(Hres_sys[sysname+var],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
@@ -821,8 +816,8 @@ if options.doSys : #Doesn't seem necessary otherwise
     h_LUMI.SetMarkerColor(40)
     h_LUMI.SetMarkerStyle(22)
     
-    colors = [632,600,617,417,432,4,1,419,600,882,632,600,617]
-    markers = [20,21,22,23,33,26,24,25,27,32,23,33,26]
+    colors = [632,600,617,417,432,4,1,419,600,882,632,600,617,2]
+    markers = [20,21,22,23,33,26,24,25,27,32,23,33,26,24]
 
     for isys in xrange(0,len(allsysnames)):
         h_SYS[allsysnames[isys]].SetLineColor(colors[isys])
@@ -1020,9 +1015,7 @@ thisTrue.SetLineColor(4)
 thisTrue.GetYaxis().SetTitleSize(25)
 thisTrue.GetXaxis().SetLabelSize(0)
 
-xmin = 0.5 if options.toUnfold == "pt" else 0.365
-ymin = 0.5 if options.toUnfold == "pt" else 0.13
-leg = TLegend(xmin, ymin, xmin+0.39, ymin+0.25)
+leg = TLegend(0.5, 0.5, 0.89, 0.75)
 leg.SetFillStyle(0)
 leg.SetTextFont(42)
 leg.SetTextSize(0.044)
