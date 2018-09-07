@@ -1095,6 +1095,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     tree->SetBranchAddress("partElPt"              , &partElPt              , &b_partElPt              );
     tree->SetBranchAddress("partElEta"             , &partElEta             , &b_partElEta             );
     tree->SetBranchAddress("partElPhi"             , &partElPhi             , &b_partElPhi             );
+    tree->SetBranchAddress("partElMass"            , &partElMass            , &b_partElMass            );
 
   }
 
