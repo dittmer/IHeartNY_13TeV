@@ -205,14 +205,20 @@ allsysnames = sysnames+thsysnames
 longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
 variants = ["Up","Down"]
 
+name_TTbarNom = "PLnew"
+name_TTbarNom_p2 = "v2_PLnew"
+name_TTbar_m700to1000 = "m700to1000_PLnew"
+name_TTbar_m1000toInf = "m1000toInf_PLnew"
+
+
 for channel in channels:
     f_data = TFile("histfiles_full2016/hists_Data_"+channel+".root")
     f_QCD  = TFile("histfiles_full2016/hists_Data_"+channel+"_qcd.root")
 
-    f_ttbar_m0to700_p1 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_PL_"+channel+"_nom_post.root")
-    f_ttbar_m0to700_p2 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_PL_p2_"+channel+"_nom_post.root")
-    f_ttbar_m700to1000 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_PL_"+channel+"_nom_post.root")
-    f_ttbar_m1000toInf = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_PL_"+channel+"_nom_post.root")
+    f_ttbar_m0to700_p1 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_post.root")
+    f_ttbar_m0to700_p2 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_nom_post.root")
+    f_ttbar_m700to1000 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_nom_post.root")
+    f_ttbar_m1000toInf = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_nom_post.root")
     
     f_ttbar_nonsemilep   = TFile("histfiles_full2016/hists_PowhegPythia8_nonsemilep_"+channel+"_nom_post.root")
     f_T_t                = TFile("histfiles_full2016/hists_SingleTop_t_t_"+channel+"_nom_post.root")
@@ -232,7 +238,7 @@ for channel in channels:
     f_WZ                 = TFile("histfiles_full2016/hists_WZ_"+channel+"_nom_post.root")
     f_ZZ                 = TFile("histfiles_full2016/hists_ZZ_"+channel+"_nom_post.root")
     
-    f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+channel+"_nom_qcd_post.root")
+    f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_qcd_post.root")
     f_qcd_ttbar_nonsemilep   = TFile("histfiles_full2016/hists_PowhegPythia8_nonsemilep_"+channel+"_nom_qcd_post.root")
     f_qcd_T_t                = TFile("histfiles_full2016/hists_SingleTop_t_t_"+channel+"_nom_qcd_post.root")
     f_qcd_Tbar_t             = TFile("histfiles_full2016/hists_SingleTop_tbar_t_"+channel+"_nom_qcd_post.root")
@@ -276,10 +282,10 @@ for channel in channels:
     # -------------------------------------------------------------------------------------
     for sysname in sysnames:
         for var in variants:
-            f_ttbar_sys_m0to700_p1 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_PL_"+channel+"_"+sysname+var+"_post.root")
-            f_ttbar_sys_m0to700_p2 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_PL_p2_"+channel+"_"+sysname+var+"_post.root")
-            f_ttbar_sys_m700to1000 = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_PL_"+channel+"_"+sysname+var+"_post.root")
-            f_ttbar_sys_m1000toInf = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_PL_"+channel+"_"+sysname+var+"_post.root")    
+            f_ttbar_sys_m0to700_p1 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_"+sysname+var+"_post.root")
+            f_ttbar_sys_m0to700_p2 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_"+sysname+var+"_post.root")
+            f_ttbar_sys_m700to1000 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_"+sysname+var+"_post.root")
+            f_ttbar_sys_m1000toInf = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_"+sysname+var+"_post.root")    
 
             response_sys_m0to700_p1 = f_ttbar_sys_m0to700_p1.Get(response_name)
             response_sys_m0to700_p2 = f_ttbar_sys_m0to700_p2.Get(response_name)
@@ -323,21 +329,22 @@ for channel in channels:
                 
             Hres_sys[sysname+var+"_"+channel] = response_sys
             
-    for thsysname in thsysnames:
-        for var in variants:
-            f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+channel+"_"+thsysname+var+"_post.root")
-            response_sys = f_ttbar_sys.Get(response_name)
-            response_sys.Sumw2()
-            
-            for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
-                response_sys.SetBinContent(ibin,0,0)
-                response_sys.SetBinContent(ibin,0,0)
-
-            Hres_sys[thsysname+var+"_"+channel] = response_sys
+    # louise: why is the below (that I commented out) needed?? 
+    #for thsysname in thsysnames:
+    #    for var in variants:
+    #        f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+var+"_"+name_TTbarNom+"_"+channel+"_"+thsysname+var+"_post.root")
+    #        response_sys = f_ttbar_sys.Get(response_name)
+    #        response_sys.Sumw2()
+    #        
+    #        for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
+    #            response_sys.SetBinContent(ibin,0,0)
+    #            response_sys.SetBinContent(ibin,0,0)
+    #
+    #        Hres_sys[thsysname+var+"_"+channel] = response_sys
 
     for thsysname in thsysnames:
         if thsysname is "ErdOn" or thsysname is "Herwig":
-            f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+"_fullTruth_"+channel+"_"+thsysname+"_post.root")
+            f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+"_"+name_TTbarNom+"_"+channel+"_"+thsysname+"_post.root")
             response_sys = f_ttbar_sys.Get(response_name)
             response_sys.Sumw2()
             true_sys = f_ttbar_sys.Get(hTrue_name)
@@ -351,7 +358,7 @@ for channel in channels:
 
         else :
             for var in variants:
-                f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+channel+"_"+thsysname+var+"_post.root")
+                f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+var+"_"+name_TTbarNom+"_"+channel+"_"+thsysname+var+"_post.root")
                 response_sys = f_ttbar_sys.Get(response_name)
                 response_sys.Sumw2()
                 true_sys = f_ttbar_sys.Get(hTrue_name)
@@ -591,7 +598,7 @@ for channel in channels:
     f_QCD_HT1000to1500 = TFile("histfiles_full2016/hists_QCD_HT1000to1500_"+channel+"_nom_post.root")
     f_QCD_HT1500to2000 = TFile("histfiles_full2016/hists_QCD_HT1500to2000_"+channel+"_nom_post.root")
     f_QCD_HT2000toInf  = TFile("histfiles_full2016/hists_QCD_HT2000toInf_"+channel+"_nom_post.root")
-
+    
     hNorm_QCD_HT500to700   = f_QCD_HT500to700.Get(hMeas_name)
     hNorm_QCD_HT700to1000  = f_QCD_HT700to1000.Get(hMeas_name)
     hNorm_QCD_HT1000to1500 = f_QCD_HT1000to1500.Get(hMeas_name)
@@ -777,9 +784,13 @@ response["comb"] = response["mu"].Clone()
 response["comb"].Add(response["el"])
 
 for sysname in allsysnames:
-    for var in variants:
-        Hres_sys[sysname+var+"_comb"] = Hres_sys[sysname+var+"_mu"].Clone()
-        Hres_sys[sysname+var+"_comb"].Add(Hres_sys[sysname+var+"_el"])
+    if sysname == "ErdOn" or sysname == "Herwig":
+        Hres_sys[sysname+"_comb"] = Hres_sys[sysname+"_mu"].Clone()
+        Hres_sys[sysname+"_comb"].Add(Hres_sys[sysname+"_el"])
+    else :
+        for var in variants:
+            Hres_sys[sysname+var+"_comb"] = Hres_sys[sysname+var+"_mu"].Clone()
+            Hres_sys[sysname+var+"_comb"].Add(Hres_sys[sysname+var+"_el"])
 
 # -------------------------------------------------------------------------------------
 # Do unfolding

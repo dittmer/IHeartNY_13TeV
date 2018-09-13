@@ -39,7 +39,7 @@ parser.add_option('--toy', metavar='F', type='string', action='store',
                   help='')
 
 parser.add_option('--tauMode', metavar='F', type='string', action='store',
-                  default='scanTau',
+                  default='Tau0',
                   dest='tauMode',
                   help='ScanTau, LCurve, or Tau0')
 
@@ -195,6 +195,9 @@ else :
 
 if options.doSys:
     suffix += "_sys"
+
+
+
 # -------------------------------------------------------------------------------------
 #  read histogram files
 # -------------------------------------------------------------------------------------
@@ -202,28 +205,33 @@ if options.doSys:
 DIR="histfiles_full2016"
 PL="_PL"
 
+name_TTbarNom = "PLnew"
+name_TTbarNom_p2 = "v2_PLnew"
+name_TTbar_m700to1000 = "m700to1000_PLnew"
+name_TTbar_m1000toInf = "m1000toInf_PLnew"
+
 muOrEl = "mu"
 if options.lepType=="ele":
     muOrEl = "el"
 
 if options.type == "full":
-    f_ttbar_m0to700_p1_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_post.root")
-    f_ttbar_m0to700_p2_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_post.root")
-    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_nom_post.root")
-    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_nom_post.root")
-    f_ttbar_m0to700_p1_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_post.root")
-    f_ttbar_m0to700_p2_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_post.root")
-    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_nom_post.root")
-    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_nom_post.root")    
+    f_ttbar_m0to700_p1_input    = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m0to700_p2_input    = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m0to700_p1_response = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m0to700_p2_response = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+muOrEl+"_nom_post.root")
+    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+muOrEl+"_nom_post.root")    
 else:
-    f_ttbar_m0to700_p1_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m0to700_p2_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_nom_even_post.root")
-    f_ttbar_m0to700_p1_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_nom_odd_post.root")
-    f_ttbar_m0to700_p2_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_nom_odd_post.root")
-    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_nom_odd_post.root")
-    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m0to700_p1_input    = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m0to700_p2_input    = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m700to1000_input    = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m1000toInf_input    = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+muOrEl+"_nom_even_post.root")
+    f_ttbar_m0to700_p1_response = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m0to700_p2_response = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m700to1000_response = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+muOrEl+"_nom_odd_post.root")
+    f_ttbar_m1000toInf_response = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+muOrEl+"_nom_odd_post.root")
     
 
 # -------------------------------------------------------------------------------------
@@ -264,15 +272,15 @@ if options.doSys:
     for sysname in sysnames:
         for var in variants:
             if options.type == "full":
-                f_ttbar_m0to700_p1_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
-                f_ttbar_m0to700_p2_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_"+sysname+var+"_post.root")
-                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
-                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m0to700_p1_sys = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m0to700_p2_sys = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+muOrEl+"_"+sysname+var+"_post.root")
+                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+muOrEl+"_"+sysname+var+"_post.root")
             else:
-                f_ttbar_m0to700_p1_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-                f_ttbar_m0to700_p2_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth"+PL+"_p2_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m700to1000"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
-                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_fullTruth_m1000toInf"+PL+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m0to700_p1_sys = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m0to700_p2_sys = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m700to1000_sys = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
+                f_ttbar_m1000toInf_sys = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+muOrEl+"_"+sysname+var+"_odd_post.root")
                 
             response_sys_m0to700_p1 = f_ttbar_m0to700_p1_sys.Get(response_name)
             response_sys_m0to700_p2 = f_ttbar_m0to700_p2_sys.Get(response_name)
