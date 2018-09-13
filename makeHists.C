@@ -380,7 +380,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     treeTO->SetBranchAddress("genTopEta"             , &genTopEta_TO             , &b_genTopEta_TO             );
     treeTO->SetBranchAddress("genTopPhi"             , &genTopPhi_TO             , &b_genTopPhi_TO             );
     treeTO->SetBranchAddress("genTTbarMass"          , &genTTbarMass_TO          , &b_genTTbarMass_TO          );
-    if (sample.Contains("PowhegPythia8_fullTruth")) treeTO->SetBranchAddress("hardTTbarMass"         , &hardTTbarMass_TO         , &b_hardTTbarMass_TO);
+    if (sample.Contains("PowhegPythia8_fullTruth") || sample.Contains("_PLnew")) treeTO->SetBranchAddress("hardTTbarMass"         , &hardTTbarMass_TO         , &b_hardTTbarMass_TO);
     treeTO->SetBranchAddress("eventWeight_nom"       , &eventWeight_nom_TO       , &b_eventWeight_nom_TO       );
     treeTO->SetBranchAddress("eventWeight_puUp"      , &eventWeight_puUp_TO      , &b_eventWeight_puUp_TO      );
     treeTO->SetBranchAddress("eventWeight_puDown"    , &eventWeight_puDown_TO    , &b_eventWeight_puDown_TO    );
@@ -444,7 +444,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       if (truthChannel_TO->at(0) == 1 && channel == "mu") continue;
 
       h_genTTbarMass_full->Fill(genTTbarMass_TO->at(0),weight);
-      if (sample.Contains("PowhegPythia8_fullTruth")) h_hardTTbarMass->Fill(hardTTbarMass_TO->at(0),weight);
+      if (sample.Contains("PowhegPythia8_fullTruth") || sample.Contains("_PLnew")) h_hardTTbarMass->Fill(hardTTbarMass_TO->at(0),weight);
 
       // pt reweighting
       float w_ptup = (1.0 + 0.0004*genTopPt_TO->at(0));
@@ -2999,7 +2999,9 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   // -------------------------------------------------------------------------------------------
 
   TString outname = sample + "_" + channel;
-  if ((sample == "PowhegPythia8_fullTruth" || sample == "PowhegPythia8_fullTruth_p2") && !MttCut && usePost && !isQCD) outname = sample + "_mInc_" + channel;
+  if ((sample == "PowhegPythia8_fullTruth" || sample == "PowhegPythia8_fullTruth_p2" || 
+       sample == "PowhegPythia8_PLnew" || sample == "PowhegPythia8_v2_PLnew") && !MttCut && usePost && !isQCD) 
+    outname = sample + "_mInc_" + channel;
   if (sample.Contains("Data")) outname = sample;
   if (!isData) outname = outname + "_" + systematic;
   if (isQCD) outname = outname + "_qcd";
@@ -3025,7 +3027,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     h_genTopPhi->Write();
     h_genTTbarMass->Write();
     h_genTTbarMass_full->Write();
-    if (sample.Contains("PowhegPythia8_fullTruth")) h_hardTTbarMass->Write();
+    if (sample.Contains("PowhegPythia8_fullTruth") || sample.Contains("_PLnew")) h_hardTTbarMass->Write();
     h_genLepPt->Write();
     h_genLepEta->Write();
     h_genLepPhi->Write();
