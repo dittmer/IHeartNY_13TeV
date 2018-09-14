@@ -329,19 +329,6 @@ for channel in channels:
                 
             Hres_sys[sysname+var+"_"+channel] = response_sys
             
-    # louise: why is the below (that I commented out) needed?? 
-    #for thsysname in thsysnames:
-    #    for var in variants:
-    #        f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+var+"_"+name_TTbarNom+"_"+channel+"_"+thsysname+var+"_post.root")
-    #        response_sys = f_ttbar_sys.Get(response_name)
-    #        response_sys.Sumw2()
-    #        
-    #        for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
-    #            response_sys.SetBinContent(ibin,0,0)
-    #            response_sys.SetBinContent(ibin,0,0)
-    #
-    #        Hres_sys[thsysname+var+"_"+channel] = response_sys
-
     for thsysname in thsysnames:
         if thsysname is "ErdOn" or thsysname is "Herwig":
             f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+"_"+name_TTbarNom+"_"+channel+"_"+thsysname+"_post.root")
@@ -592,7 +579,7 @@ for channel in channels:
     # -------------------------------
     # Normalize QCD to MC prediction
     # -------------------------------
-
+    
     f_QCD_HT500to700   = TFile("histfiles_full2016/hists_QCD_HT500to700_"+channel+"_nom_post.root")
     f_QCD_HT700to1000  = TFile("histfiles_full2016/hists_QCD_HT700to1000_"+channel+"_nom_post.root")
     f_QCD_HT1000to1500 = TFile("histfiles_full2016/hists_QCD_HT1000to1500_"+channel+"_nom_post.root")
@@ -622,7 +609,7 @@ for channel in channels:
         QCD_norm += hist.Integral()
     
     hMeas_QCD.Scale(QCD_norm / hMeas_QCD.Integral())
-
+    
     if channel is "mu":
         bkg_QCD = Background("muQCD",0.71,0.75,400)
     else:
