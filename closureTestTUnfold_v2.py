@@ -77,7 +77,7 @@ if options.toUnfold != "pt" and options.fullRange :
 if options.toUnfold == "y" and options.toy != "nom" :
     print 'Not doing pt reweighting for y unfolding! Exiting...'
     exit(0)
-    
+
 # -------------------------------------------------------------------------------------
 # set plot style
 # -------------------------------------------------------------------------------------
@@ -118,22 +118,24 @@ def noNegBins( hist ):
 # Reweight response underflow (effective anti-tag SF)
 def antiTagWeight(h_true, h_response):
     for ii in xrange(1,h_response.GetNbinsY()+1):
-        rowsum = h_response.Integral(1,h_response.GetNbinsX()+1,ii,ii)
-        binweight = (h_true.GetBinContent(ii) - rowsum)/h_response.GetBinContent(0,ii)
-        h_response.SetBinContent(0,ii,h_response.GetBinContent(0,ii)*binweight)
+        taggedsum = h_response.Integral(1,h_response.GetNbinsX()+1,ii,ii)
+        untagged = h_true.GetBinContent(ii) - taggedsum
+        h_response.SetBinContent(0,ii,untagged)
             
 # Combine underflow / overflow
 def convertForTUnfold(h_response):
-    h_response.SetBinContent(0,0,0)
-    h_response.SetBinContent(h_response.GetNbinsX()+1,h_response.GetNbinsY()+1,0)
-    for ii in xrange(1,h_response.GetNbinsY()+1):
+    for ii in xrange(0,h_response.GetNbinsY()+2):
         underflow = h_response.GetBinContent(0,                       ii)
         overflow  = h_response.GetBinContent(h_response.GetNbinsX()+1,ii)
         h_response.SetBinContent(0,ii,underflow+overflow)
-    for jj in xrange(1,h_response.GetNbinsX()+1):
+        h_response.SetBinContent(h_response.GetNbinsX()+1,ii,0)
+    for jj in xrange(0,h_response.GetNbinsX()+2):
         underflow = h_response.GetBinContent(jj,0)
         overflow  = h_response.GetBinContent(jj,h_response.GetNbinsY()+1)
         h_response.SetBinContent(jj,0,underflow+overflow)
+        h_response.SetBinContent(jj,h_response.GetNbinsY()+1,0)
+    h_response.SetBinContent(0,0,0)
+    h_response.SetBinError(0,0,0)
 
 # Subtract fakes from input
 def removeFakes(h_input, h_response):
@@ -497,7 +499,6 @@ for itoy in xrange(0,ntoys) :
     noNegBins(hToy_tmp)
     hToy_i.append(hToy_tmp)
 
-
 # -------------------------------------------------------------------------------------
 # UNFOLDING FOR TOYS
 # -------------------------------------------------------------------------------------
@@ -637,10 +638,11 @@ for var in variants:
                 totalUnc += math.sqrt(unfold[var].GetEmatrixTotal("totUnc").GetBinContent(ibin,ibin))/thisReco_tmp.GetBinContent(ibin)
             else :
                 statUnc += math.sqrt(unfold[var].GetEmatrixInput("inUnc").GetBinContent(ibin,ibin))/thisReco_tmp.GetBinContent(ibin)
-                totalUnc += math.sqrt(unfold[var].GetEmatrixSysUncorr("totUnc").GetBinContent(ibin,ibin))/thisReco_tmp.GetBinContent(ibin)                
-        h_BiasVsTau.SetBinContent(ii+1,bias/float(nbinsTrue))
-        h_StatUncVsTau.SetBinContent(ii+1,statUnc/float(nbinsTrue))
-        h_TotUncVsTau.SetBinContent(ii+1,totalUnc/float(nbinsTrue))
+                totalUnc += math.sqrt(unfold[var].GetEmatrixSysUncorr("totUnc").GetBinContent(ibin,ibin))/thisReco_tmp.GetBinContent(ibin)
+        h_BiasVsTau.SetBinContent(ii+1,bias/float(nbinsTrue-2*npad))
+        h_StatUncVsTau.SetBinContent(ii+1,statUnc/float(nbinsTrue-2*npad))
+        h_TotUncVsTau.SetBinContent(ii+1,totalUnc/float(nbinsTrue-2*npad))
+
     c5 = TCanvas()
     h_BiasVsTau.SetLineColor(1)
     h_StatUncVsTau.SetLineColor(2)
@@ -743,10 +745,9 @@ h_TOT.Reset()
 #Get actual error matrices / hists
 hErrInput = unfold["Up"].GetEmatrixInput("mErrInput")
 hErrStat = unfold["Up"].GetEmatrixSysUncorr("mErrStat")
+hErrTot = unfold["Up"].GetEmatrixTotal("mErrTotalUp") # Will overwrite when using systematics
 
 if not options.doSys :
-    hErrTot = unfold["Up"].GetEmatrixTotal("mErrTotalUp")
-
     for ibin in xrange(1,nbinsTrue+1):
         h_STAT.SetBinContent(ibin,math.sqrt(hErrInput.GetBinContent(ibin,ibin)+hErrStat.GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
         h_TOT.SetBinContent (ibin,math.sqrt(hErrTot.GetBinContent(ibin,ibin))/thisReco.GetBinContent(ibin))
@@ -884,74 +885,26 @@ if options.doSys : #Doesn't seem necessary otherwise
 
     c6.SaveAs("UnfoldingPlots/closure_relative_uncertainties_"+options.toUnfold+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
 
-    # -------------------------------------------------------------------------------------
-    # Troubleshoot stat. unc.
-    # -------------------------------------------------------------------------------------
-    # Get inverse of Vyy
-    # TUnfold method has bug for version 17.1 -- doing this manually
-    #Vyy = TMatrixD(nbinsMeas,nbinsMeas)
-    #for ibin in xrange(0,nbinsMeas): #rows
-    #    Vyy[ibin][ibin] = pow(thisMeas.GetBinError(ibin+1),2)
+# -------------------------------------------------------------------------------------
+# Plot covariance matrix
+# -------------------------------------------------------------------------------------
 
-    #VyyInv = TMatrixD(Vyy)
-    #VyyInv.Invert()
+diags = []
+for ibin in xrange(0,nbinsTrue):
+    tmp = math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) if (math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) is not 0) else 1.0
+    diags.append(tmp)
+for ibinx in xrange(1,nbinsTrue+1):
+    for ibiny in xrange(1,nbinsTrue+1):
+        tmp = hErrTot.GetBinContent(ibinx,ibiny) / diags[ibinx-1] / diags[ibiny-1]
+        hErrTot.SetBinContent(ibinx,ibiny,tmp)
 
-    #Get A (normalized response matrix)
-    #A = TMatrixD(nbinsMeas,nbinsTrue)
-    #for irow in xrange(0,nbinsMeas):
-    #    for icol in xrange(0,nbinsTrue):
-    #        A[irow][icol] = response.GetBinContent(irow+1,icol+1) / response.Integral(0,nbinsMeas+1,icol+1,icol+1)
-
-    #Manually calculate Vxx
-    #AT = TMatrixD(nbinsTrue,nbinsMeas)
-    #AT.Transpose(A)
-    
-    #EInv1 = TMatrixD(nbinsTrue,nbinsMeas)
-    #EInv1.Mult(AT,VyyInv)
-    #EInv = TMatrixD(nbinsTrue,nbinsTrue)
-    #EInv.Mult(EInv1,A)
-    #E = TMatrixD(EInv)
-    #E.Invert()
-
-    # Plot relative stat. unc., and compare w/ data
-    #relUnc1 = thisMeas.Clone()
-    #for ibin in xrange(1,nbinsMeas+1): #rows
-    #    relUnc1.SetBinContent(ibin,thisMeas.GetBinError(ibin) / thisMeas.GetBinContent(ibin))
-
-    #c8 = TCanvas()
-    #h_INPUT.SetTitle(";Top p_{T};Relative stat. unc.")
-    #h_INPUT.SetMaximum(max(h_INPUT.GetMaximum(),relUnc1.GetMaximum())*1.2)
-    #h_INPUT.Draw("hist")
-    #relUnc1.SetLineColor(2)
-    #relUnc1.Draw("hist,same")
-    #leg8 = TLegend(0.2,0.6,0.5,0.8)
-    #leg8.SetBorderSize(0)
-    #leg8.SetTextSize(0.04)
-    #leg8.AddEntry(relUnc1,"Stat. unc. on measurement","l")
-    #leg8.AddEntry(h_INPUT,"Propagated stat. unc.","l")
-    #leg8.Draw()
-    #c8.SaveAs("UnfoldingPlots/compare_rel_unc_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
-
-    # -------------------------------------------------------------------------------------
-    # Plot covariance matrix
-    # -------------------------------------------------------------------------------------
-    
-    diags = []
-    for ibin in xrange(0,nbinsTrue):
-        tmp = math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) if (math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) is not 0) else 1.0
-        diags.append(tmp)
-    for ibinx in xrange(1,nbinsTrue+1):
-        for ibiny in xrange(1,nbinsTrue+1):
-            tmp = hErrTot.GetBinContent(ibinx,ibiny) / diags[ibinx-1] / diags[ibiny-1]
-            hErrTot.SetBinContent(ibinx,ibiny,tmp)
-
-    c4 = TCanvas()
-    if options.toUnfold == "pt":
-        hErrTot.GetXaxis().SetRangeUser(400.,1199.)
-        hErrTot.GetYaxis().SetRangeUser(400.,1199.)
-    hErrTot.GetZaxis().SetRangeUser(-1.0,1.0)
-    hErrTot.Draw("colz")
-    c4.SaveAs("UnfoldingPlots/closure_covariance_"+options.toUnfold+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
+c4 = TCanvas()
+if options.toUnfold == "pt":
+    hErrTot.GetXaxis().SetRangeUser(400.,1199.)
+    hErrTot.GetYaxis().SetRangeUser(400.,1199.)
+hErrTot.GetZaxis().SetRangeUser(-1.0,1.0)
+hErrTot.Draw("colz")
+c4.SaveAs("UnfoldingPlots/closure_covariance_"+options.toUnfold+"_"+options.level+"_"+options.tauMode+"_"+options.lepType+"_"+options.toy+"_"+options.type+suffix+".pdf")
 
 # -------------------------------------------------------------------------------------
 # Translate to cross section (not events) in bins of pt N/L/BR)
