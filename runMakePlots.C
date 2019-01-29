@@ -81,6 +81,10 @@ void runMakePlots(TString toPlot = "final"){
     */
   }
 
+  if (toPlot=="louise") {
+    makePlots("histfiles_full2016/","histfiles_full2016/","mu","ak8jetPt","1t1b",false,true,true);
+  }
+
   if (toPlot == "all" || toPlot == "final"){
 
     bool unBlind = true;

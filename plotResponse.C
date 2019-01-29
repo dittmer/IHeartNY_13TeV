@@ -49,7 +49,7 @@ void drawCMS(Double_t x,Double_t y, bool prel) {
 }
 
 
-void plotResponse_quick() {
+void plotResponse(TString which="pt") {
 
   gStyle->SetPadRightMargin(0.12);
   gStyle->SetPadLeftMargin(0.15);
@@ -68,13 +68,27 @@ void plotResponse_quick() {
   TCanvas c;
 
   TString channels[2] = {"mu","el"};
-  TString matrices[2] = {"response_pt_split_TH2","response2_pt_split_TH2"};
-  
+  //TString matrices[2] = {"response_pt_split_TH2","response2_pt_split_TH2"};
+  if (which!="pt" && which!="y") return;
+  TString matrices[2] = {"response_"+which+"_TH2","response_"+which+"_TH2_PL"};
+
+  // Louise version
+  TString name_TTbarNom = "PLnew";
+  TString name_TTbarNom_p2 = "v2_PLnew";
+  TString name_TTbar_m700to1000 = "m700to1000_PLnew";
+  TString name_TTbar_m1000toInf = "m1000toInf_PLnew";
+  // Susan version
+  //TString name_TTbarNom = "fullTruth_PLnew";
+  //TString name_TTbarNom_p2 = "fullTruth_PLnew_p2";
+  //TString name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew";
+  //TString name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew";
+
+
   for (int ich = 0; ich < 2; ich++){
-    TFile* f_m0to700_p1 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+channels[ich]+"_nom_post.root");
-    TFile* f_m0to700_p2 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_p2_"+channels[ich]+"_nom_post.root");
-    TFile* f_m700to1000 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000_"+channels[ich]+"_nom_post.root");
-    TFile* f_m1000toInf = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf_"+channels[ich]+"_nom_post.root");
+    TFile* f_m0to700_p1 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channels[ich]+"_nom_post.root");
+    TFile* f_m0to700_p2 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channels[ich]+"_nom_post.root");
+    TFile* f_m700to1000 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channels[ich]+"_nom_post.root");
+    TFile* f_m1000toInf = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channels[ich]+"_nom_post.root");
 
     for (int im = 0; im < 2; im++){
       TH2F* h_m0to700_p1 = (TH2F*) f_m0to700_p1->Get(matrices[im]);
@@ -95,8 +109,11 @@ void plotResponse_quick() {
       // Plot response matrix
       h_sum->Draw("colz");
 
-      TString append = (matrices[im].Contains("response2")) ? "_ptFull" : "";
-      c.SaveAs("UnfoldingPlots/unfold_responseMatrix_pt_"+channels[ich]+append+".pdf");  
+      //TString append = (matrices[im].Contains("response2")) ? "_ptFull" : "";
+      TString append = "";
+      if (matrices[im].Contains("response2")) append="_ptFull";
+      if (matrices[im].Contains("PL")) append="_PL";
+      //c.SaveAs("UnfoldingPlots/unfold_responseMatrix_"+which+"_"+channels[ich]+append+".pdf");  
 
       // Plot normalized response matrix
       for (int ir = 1; ir < h_sum->GetNbinsY()+1; ir++){
@@ -107,10 +124,10 @@ void plotResponse_quick() {
 	}
       }
 
-      float maxZ = (matrices[im].Contains("response2")) ? 85.0 : 60.0;
-      h_sum->SetMaximum(maxZ);
+      //float maxZ = (matrices[im].Contains("response2")) ? 85.0 : 60.0;
+      //h_sum->SetMaximum(maxZ);
       h_sum->Draw("colz");
-      c.SaveAs("UnfoldingPlots/unfold_responseMatrix_pt_"+channels[ich]+append+"_norm.pdf");  
+      c.SaveAs("UnfoldingPlots/unfold_responseMatrix_"+which+"_"+channels[ich]+append+"_norm.pdf");  
     }
   }
 }

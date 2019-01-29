@@ -87,13 +87,28 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   TH1::AddDirectory(kFALSE);
   gStyle->SetOptStat(0);
 
-  TString append = (doPL) ? "_PL" : ""; // particle level response matrix 
-  TString sample = "_PL";               // use sample w/ particle level info -- hardcoded default for now
+  
+  bool drawAll = false; // if set to true, this script will draw also response matrices with fine binning, full pt range, etc. else just final one
 
-  TFile* f_ttbar_m0to700_p1 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth"+sample+"_"+channel+"_nom_post.root");
-  TFile* f_ttbar_m0to700_p2 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth"+sample+"_p2_"+channel+"_nom_post.root");
-  TFile* f_ttbar_m700to1000 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_m700to1000"+sample+"_"+channel+"_nom_post.root");
-  TFile* f_ttbar_m1000toInf = TFile::Open("histfiles_full2016/hists_PowhegPythia8_fullTruth_m1000toInf"+sample+"_"+channel+"_nom_post.root");   	
+
+  TString append = (doPL) ? "_PL" : ""; // particle level response matrix 
+
+  // Louise version
+  TString name_TTbarNom = "PLnew";
+  TString name_TTbarNom_p2 = "v2_PLnew";
+  TString name_TTbar_m700to1000 = "m700to1000_PLnew";
+  TString name_TTbar_m1000toInf = "m1000toInf_PLnew";
+  // Susan version
+  //TString name_TTbarNom = "fullTruth_PLnew";
+  //TString name_TTbarNom_p2 = "fullTruth_PLnew_p2";
+  //TString name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew";
+  //TString name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew";
+
+
+  TFile* f_ttbar_m0to700_p1 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_post.root");
+  TFile* f_ttbar_m0to700_p2 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_nom_post.root");
+  TFile* f_ttbar_m700to1000 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_nom_post.root");
+  TFile* f_ttbar_m1000toInf = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_nom_post.root");   	
 
   TH2D* h_response_m0to700_p1 = (TH2D*) f_ttbar_m0to700_p1->Get("response_fine_"+which+"_TH2"+append);
   TH2D* h_response_m0to700_p2 = (TH2D*) f_ttbar_m0to700_p2->Get("response_fine_"+which+"_TH2"+append);
@@ -112,24 +127,7 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   h_response->Add(h_response_m700to1000);
   h_response->Add(h_response_m1000toInf);
 
-  //TEMP fold y response to produce |y| response
-  /*
-  if (which == "y"){
-    int nbx = h_response->GetXaxis()->GetNbins() / 2;
-    int nby = h_response->GetYaxis()->GetNbins() / 2;
-    TH2D* h_response_abs = new TH2D(h_response->GetName(), h_response->GetTitle(),
-				    nbx, 0.0, h_response->GetXaxis()->GetBinUpEdge(nbx*2),
-				    nby, 0.0, h_response->GetYaxis()->GetBinUpEdge(nby*2));
-    for (int ix = 0; ix < nbx; ix++){
-      for (int iy = 0; iy < nby; iy++){
-	float bincontent = h_response->GetBinContent(nbx+ix,nby+iy) + h_response->GetBinContent(nbx+ix,nby-iy) + h_response->GetBinContent(nbx-ix,nby+iy) + h_response->GetBinContent(nbx-ix,nby-iy);
-	h_response_abs->SetBinContent(ix,iy,bincontent);
-      }
-    }
-    h_response = h_response_abs;
-  }
-    
-  */
+
   //Find optimal binning
   std::vector<float> binedges;
   std::vector<float> v_stability;
@@ -165,10 +163,12 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
     double stat = h_slice->IntegralAndError(1,h_response->GetNbinsX(),err_stat);
     float stat_unc = (float) err_stat / stat;
 
+
     // Quality condition: we want bins with purity / stability > 0.5, resolution < binwidth
-    if ((ib%2 == 0 && purity > 0.5 && stability > 0.5 && res_gaus < binwidth && res_RMS < binwidth) || ib == h_response->GetNbinsX()){
-    //if (ib == 20 || ib == 35 || ib == 50 || ib == 70 || ib == 90 || ib == 115 || ib == 170 || ib == 330){ //hardcoded combined bin edges, pt unfolding
-    //if (ib == 20 || ib == 40 || ib == 60 || ib == 75 || ib == 90 || ib == 100 || ib == 110 || ib == 120 || ib == 130 || ib == 140 || ib == 150 || ib == 165 || ib == 180 || ib == 200 || ib == 220 || ib == 240){ //hardcoded combined bin edges
+    bool condition = false;
+    if ( (which=="y") && ( (ib%2 == 0 && purity > 0.5 && stability > 0.5 && res_gaus < binwidth && res_RMS < binwidth) || ib == h_response->GetNbinsX()) ) condition=true;
+    if ( (which=="pt") && (ib == 20 || ib == 35 || ib == 50 || ib == 70 || ib == 90 || ib == 115 || ib == 170 || ib == 330) ) condition=true;
+    if (condition) { 
       binedges.push_back(h_response->GetXaxis()->GetBinUpEdge(ib));
       v_stability.push_back(stability);
       v_purity.push_back(purity);
@@ -212,6 +212,7 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
     h_stat_unc->SetBinContent(ib, v_stat_unc.at(ib-1));
   }
 
+
   // ----------------------------------------------------------------------------------------------------------------
   // Plot purity / stability / efficiency
   // ----------------------------------------------------------------------------------------------------------------
@@ -235,7 +236,9 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   h_efficiency->SetLineWidth(2);
   h_efficiency->Draw("same,hist");
 
-  TLegend* leg = new TLegend(0.62,0.4,0.87,0.6);
+  TLegend* leg;
+  if (which=="y") leg = new TLegend(0.62,0.4,0.87,0.6);
+  else leg = new TLegend(0.62,0.7,0.87,0.9);
   leg->SetBorderSize(0);
   leg->SetFillStyle(0);
   leg->SetTextFont(42);
@@ -246,6 +249,7 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   leg->Draw();
 
   c.SaveAs("UnfoldingPlots/purity-stability_"+channel+"_"+which+append+".pdf");
+
 
   // ------------------------------------------------------------------------------------
   //Plot resolution / statistical uncertainty
@@ -282,6 +286,7 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
 
   c2.SaveAs("UnfoldingPlots/resolution_"+channel+"_"+which+append+".pdf");
 
+
   // -------------------------------------------------------------------------------------
   // plot response matrices 
   // -------------------------------------------------------------------------------------
@@ -304,7 +309,7 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   h_response->GetXaxis()->SetTitleOffset(0.8);
   h_response->GetYaxis()->SetTitleOffset(0.8);
   h_response->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_full_"+which+"_"+channel+"_nom"+append+".pdf");
+  if (drawAll) cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_full_"+which+"_"+channel+"_nom"+append+".pdf");
 
   // normalize so that for each bin of true top quark pt(eta), the bins in measured top pt(eta) add up to 100%
   for (int ir = 1; ir < h_response->GetNbinsY()+1; ir++){
@@ -315,21 +320,28 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
     }
   }
   
-  h_response->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_"+which+"_"+channel+"_nom"+append+".pdf");
-  
-  if (which == "pt"){
-    h_response->SetAxisRange(401.0,1199.0,"X");
-    h_response->SetAxisRange(401.0,1199.0,"Y");
-    h_response->Draw("colz");
-    cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_zoom_"+which+"_"+channel+"_nom"+append+".pdf");
+
+  if (drawAll) {
+    if (which == "pt"){
+      h_response->SetAxisRange(401.0,1199.0,"X");
+      h_response->SetAxisRange(401.0,1199.0,"Y");
+      h_response->Draw("colz");
+      cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_zoom_"+which+"_"+channel+"_nom"+append+".pdf");
+    }
+    else {
+      h_response->Draw("colz");
+      cr.SaveAs("UnfoldingPlots/unfold_fine_responseMatrix_"+which+"_"+channel+"_nom"+append+".pdf");
+    }
   }
+
     
-  //Draw final binning response matrix
-  //h_response_final->GetXaxis()->SetTitleOffset(0.8);
-  //h_response_final->GetYaxis()->SetTitleOffset(1.2);
-  h_response_final->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_full_"+which+"_"+channel+"_nom"+append+".pdf");
+  // draw final binning response matrix
+  if (drawAll) {
+    //h_response_final->GetXaxis()->SetTitleOffset(0.8);
+    //h_response_final->GetYaxis()->SetTitleOffset(1.2);
+    h_response_final->Draw("colz");
+    cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_full_"+which+"_"+channel+"_nom"+append+".pdf");
+  }
 
   // normalize so that for each bin of true top quark pt(eta), the bins in measured top pt(eta) add up to 100%
   for (int ir = 1; ir < nbins_final+1; ir++){
@@ -340,8 +352,6 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
     }
   }
 
-  h_response_final->Draw("colz");
-  cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_"+which+"_"+channel+"_nom"+append+".pdf");
 
   if (which == "pt"){
     h_response_final->SetAxisRange(401.0,1199.0,"X");
@@ -349,4 +359,9 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
     h_response_final->Draw("colz");
     cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_zoom_"+which+"_"+channel+"_nom"+append+".pdf");
   }
+  else {
+    h_response_final->Draw("colz");
+    cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_"+which+"_"+channel+"_nom"+append+".pdf");
+  }
+
 }
