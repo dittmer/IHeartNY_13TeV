@@ -29,6 +29,7 @@ int get400bin(TH1* pt_hist){
   }
   return -1;
 }
+void mySmallText(Double_t x,Double_t y,Color_t color,Double_t tsize,char *text); 
 
 void getPurityStabilityEfficiency(TH2D* h_response, TString which, int ibinlow, int ibinhigh, double &purity, double &stability, double &efficiency){
 
@@ -248,6 +249,9 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   leg->AddEntry(h_efficiency, " Efficiency", "l");
   leg->Draw();
 
+  if (doPL) mySmallText(0.2,0.8,1,0.04,"Particle level");
+  else mySmallText(0.2,0.8,1,0.04,"Parton level");
+
   c.SaveAs("UnfoldingPlots/purity-stability_"+channel+"_"+which+append+".pdf");
 
 
@@ -283,6 +287,9 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   leg2->AddEntry(h_res_rms, "Resolution (RMS)", "l");
   leg2->AddEntry(h_stat_unc, "Stat. Unc.", "l");
   leg2->Draw();
+
+  if (doPL) mySmallText(0.2,0.8,1,0.04,"Particle level");
+  else mySmallText(0.2,0.8,1,0.04,"Parton level");
 
   c2.SaveAs("UnfoldingPlots/resolution_"+channel+"_"+which+append+".pdf");
 
@@ -364,4 +371,11 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
     cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_"+which+"_"+channel+"_nom"+append+".pdf");
   }
 
+}
+void mySmallText(Double_t x,Double_t y,Color_t color,Double_t tsize, char *text) {
+  TLatex l;
+  l.SetTextSize(tsize); 
+  l.SetNDC();
+  l.SetTextColor(color);
+  l.DrawLatex(x,y,text);
 }
