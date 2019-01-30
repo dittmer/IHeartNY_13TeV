@@ -193,15 +193,15 @@ DIR="histfiles_full2016"
 PL="_PL"
 
 #Louise version
-#name_TTbarNom = "PLnew"
-#name_TTbarNom_p2 = "v2_PLnew"
-#name_TTbar_m700to1000 = "m700to1000_PLnew"
-#name_TTbar_m1000toInf = "m1000toInf_PLnew"
+name_TTbarNom = "PLnew"
+name_TTbarNom_p2 = "v2_PLnew"
+name_TTbar_m700to1000 = "m700to1000_PLnew"
+name_TTbar_m1000toInf = "m1000toInf_PLnew"
 #Susan version
-name_TTbarNom = "fullTruth_PLnew"
-name_TTbarNom_p2 = "fullTruth_PLnew_p2"
-name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew"
-name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew"
+#name_TTbarNom = "fullTruth_PLnew"
+#name_TTbarNom_p2 = "fullTruth_PLnew_p2"
+#name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew"
+#name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew"
 
 muOrEl = "mu"
 if options.lepType=="ele":
@@ -247,10 +247,10 @@ response = response_m0to700.Clone()
 response.Add(response_m700to1000)
 response.Add(response_m1000toInf)
 
-if options.toUnfold == "y":
-    response.RebinX(2)
-    response.RebinY(2)
-    print 'Rebinned y response matrix has ' + str(response.GetNbinsX()) + ' x bins and ' + str(response.GetNbinsY()) + ' y bins'
+#if options.toUnfold == "y":
+#    response.RebinX(2)
+#    response.RebinY(2)
+#    print 'Rebinned y response matrix has ' + str(response.GetNbinsX()) + ' x bins and ' + str(response.GetNbinsY()) + ' y bins'
 
 TH1.AddDirectory(0)
 
@@ -323,16 +323,16 @@ if options.doSys:
             if options.type == "half":
                 response_sys.Scale(2.0)
 
-            if options.toUnfold == "y":
-                response_sys.RebinX(2)
-                response_sys.RebinY(2)
+            #if options.toUnfold == "y":
+            #    response_sys.RebinX(2)
+            #    response_sys.RebinY(2)
                 
             Hres_sys[sysname+var] = response_sys
 
     for thsysname in thsysnames:
         if thsysname is "ErdOn" or thsysname is "Herwig":
             #f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_fullTruth_"+muOrEl+"_"+thsysname+"_post.root")
-            f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_fullTruth_PLnew_"+muOrEl+"_"+thsysname+"_post.root")
+            f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_"+name_TTbarNom+"_"+muOrEl+"_"+thsysname+"_post.root")
             response_sys = f_ttbar_sys.Get(response_name)
             response_sys.Sumw2()
             true_sys = f_ttbar_sys.Get(hTrue_name)
@@ -342,16 +342,16 @@ if options.doSys:
                 response_sys.SetBinContent(ibin,0,0)
                 response_sys.SetBinError(ibin,0,0)
 
-            if options.toUnfold == "y":
-                response_sys.RebinX(2)
-                response_sys.RebinY(2)
+            #if options.toUnfold == "y":
+            #    response_sys.RebinX(2)
+            #    response_sys.RebinY(2)
             
             Hres_sys[thsysname] = response_sys
 
         else :
             for var in variants:
                 #f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+muOrEl+"_"+thsysname+var+"_post.root")
-                f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_PLnew_"+muOrEl+"_"+thsysname+var+"_post.root")
+                f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_"+name_TTbarNom+"_"+muOrEl+"_"+thsysname+var+"_post.root")
                 response_sys = f_ttbar_sys.Get(response_name)
                 response_sys.Sumw2()
                 true_sys = f_ttbar_sys.Get(hTrue_name)
@@ -361,9 +361,9 @@ if options.doSys:
                     response_sys.SetBinContent(ibin,0,0)
                     response_sys.SetBinError(ibin,0,0)
 
-                if options.toUnfold == "y":
-                    response_sys.RebinX(2)
-                    response_sys.RebinY(2)
+                #if options.toUnfold == "y":
+                #    response_sys.RebinX(2)
+                #    response_sys.RebinY(2)
 
                 Hres_sys[thsysname+var] = response_sys
 
@@ -430,9 +430,9 @@ noNegBins(thisTrue)
 thisMeas.SetName("recolevel") 
 thisTrue.SetName("truthlevel")
 
-if options.toUnfold == "y":
-    thisMeas.Rebin(2)
-    thisTrue.Rebin(2)
+#if options.toUnfold == "y":
+#    thisMeas.Rebin(2)
+#    thisTrue.Rebin(2)
 
 nbinsMeas = thisMeas.GetNbinsX()
 nbinsTrue = thisTrue.GetNbinsX()
@@ -458,8 +458,8 @@ refTrue = refTrue_m0to700.Clone()
 refTrue.Add(refTrue_m700to1000)
 refTrue.Add(refTrue_m1000toInf)
 
-if options.toUnfold == "y":
-    refTrue.Rebin(2)
+#if options.toUnfold == "y":
+#    refTrue.Rebin(2)
 
 antiTagWeight(refTrue,response)
 convertForTUnfold(response)

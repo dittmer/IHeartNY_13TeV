@@ -351,7 +351,8 @@ SummedHist * getTTbar( TString DIR, TString histname, TString region, TString ch
   int ich = 0;
   if (channel == "el") ich = 1;
 
-  TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_fullTruth_mInc" : "PowhegPythia8_fullTruth";
+  //TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_fullTruth_mInc" : "PowhegPythia8_fullTruth";
+  TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_PLnew_mInc" : "PowhegPythia8_PLnew";
   double ttbar_norm = 831.76 * LUM[ich] / 77229341.;
   
   SummedHist* ttbar = new SummedHist( histname, kRed+1);

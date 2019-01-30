@@ -70,7 +70,7 @@ void plotResponse(TString which="pt") {
   TString channels[2] = {"mu","el"};
   //TString matrices[2] = {"response_pt_split_TH2","response2_pt_split_TH2"};
   if (which!="pt" && which!="y") return;
-  TString matrices[2] = {"response_"+which+"_TH2","response_"+which+"_TH2_PL"};
+  TString matrices[2] = {"response_"+which+"_split_TH2","response_"+which+"_split_TH2_PL"};
 
   // Louise version
   TString name_TTbarNom = "PLnew";
@@ -124,8 +124,8 @@ void plotResponse(TString which="pt") {
 	}
       }
 
-      //float maxZ = (matrices[im].Contains("response2")) ? 85.0 : 60.0;
-      //h_sum->SetMaximum(maxZ);
+      float maxZ = (matrices[im].Contains("response2")) ? 85.0 : 60.0;
+      h_sum->SetMaximum(maxZ);
       h_sum->Draw("colz");
       c.SaveAs("UnfoldingPlots/unfold_responseMatrix_"+which+"_"+channels[ich]+append+"_norm.pdf");  
     }

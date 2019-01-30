@@ -308,10 +308,11 @@ void runMakeHists(TString toMake = "prefit"){
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+name_TTbar_m1000toInf,"el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],1,postTopTagSF);
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+name_TTbar_m1000toInf,"el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsysnames[ii],2,postTopTagSF);
     }
+
     // Theory variant samples
     for (int ii = 0; ii < nSAMPLES; ii++){
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+thsamples[ii]+name_TTbarNom,"mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsamples[ii],0,postTopTagSF);
-      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+thsamples[ii]+name_TTbarNom,"el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsamples[ii],0,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+thsamples[ii]+"_"+name_TTbarNom,"mu",false,true,"Medium","MiniIso10",true,35.0,false,false,thsamples[ii],0,postTopTagSF);
+      makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+thsamples[ii]+"_"+name_TTbarNom,"el",false,true,"Tight","MiniIso10",true,50.0,true,false,thsamples[ii],0,postTopTagSF);
     }
 
     //Data, nominal

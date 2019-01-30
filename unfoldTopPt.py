@@ -206,15 +206,15 @@ longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","
 variants = ["Up","Down"]
 
 #Louise version
-#name_TTbarNom = "PLnew"
-#name_TTbarNom_p2 = "v2_PLnew"
-#name_TTbar_m700to1000 = "m700to1000_PLnew"
-#name_TTbar_m1000toInf = "m1000toInf_PLnew"
+name_TTbarNom = "PLnew"
+name_TTbarNom_p2 = "v2_PLnew"
+name_TTbar_m700to1000 = "m700to1000_PLnew"
+name_TTbar_m1000toInf = "m1000toInf_PLnew"
 #Susan version
-name_TTbarNom = "fullTruth_PLnew"
-name_TTbarNom_p2 = "fullTruth_PLnew_p2"
-name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew"
-name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew"
+#name_TTbarNom = "fullTruth_PLnew"
+#name_TTbarNom_p2 = "fullTruth_PLnew_p2"
+#name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew"
+#name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew"
 
 for channel in channels:
     f_data = TFile("histfiles_full2016/hists_Data_"+channel+".root")
@@ -243,8 +243,8 @@ for channel in channels:
     f_WZ                 = TFile("histfiles_full2016/hists_WZ_"+channel+"_nom_post.root")
     f_ZZ                 = TFile("histfiles_full2016/hists_ZZ_"+channel+"_nom_post.root")
     
-    #f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_qcd_post.root")
-    f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+channel+"_nom_qcd_post.root")
+    f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_qcd_post.root")
+    #f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+channel+"_nom_qcd_post.root")
     f_qcd_ttbar_nonsemilep   = TFile("histfiles_full2016/hists_PowhegPythia8_nonsemilep_"+channel+"_nom_qcd_post.root")
     f_qcd_T_t                = TFile("histfiles_full2016/hists_SingleTop_t_t_"+channel+"_nom_qcd_post.root")
     f_qcd_Tbar_t             = TFile("histfiles_full2016/hists_SingleTop_tbar_t_"+channel+"_nom_qcd_post.root")
@@ -283,9 +283,9 @@ for channel in channels:
     response[channel].Add(response_m700to1000)
     response[channel].Add(response_m1000toInf)
 
-    if options.toUnfold == "y":
-      response[channel].RebinX(2)
-      response[channel].RebinY(2)
+    #if options.toUnfold == "y":
+    #  response[channel].RebinX(2)
+    #  response[channel].RebinY(2)
 
     # -------------------------------------------------------------------------------------
     # Get systematic variations
@@ -337,9 +337,9 @@ for channel in channels:
                 response_sys.SetBinContent(ibin,0,0)
                 response_sys.SetBinError(ibin,0,0)
 
-            if options.toUnfold == "y":
-                response_sys.RebinX(2)
-                response_sys.RebinY(2)
+            #if options.toUnfold == "y":
+            #    response_sys.RebinX(2)
+            #    response_sys.RebinY(2)
                 
             Hres_sys[sysname+var+"_"+channel] = response_sys
             
@@ -356,9 +356,9 @@ for channel in channels:
                 response_sys.SetBinContent(ibin,0,0)
                 response_sys.SetBinContent(ibin,0,0)
 
-            if options.toUnfold == "y":
-                response_sys.RebinX(2)
-                response_sys.RebinY(2)
+            #if options.toUnfold == "y":
+            #    response_sys.RebinX(2)
+            #    response_sys.RebinY(2)
 
             Hres_sys[thsysname+"_"+channel] = response_sys
 
@@ -375,9 +375,9 @@ for channel in channels:
                     response_sys.SetBinContent(ibin,0,0)
                     response_sys.SetBinContent(ibin,0,0)
 
-                if options.toUnfold == "y":
-                  response_sys.RebinX(2)
-                  response_sys.RebinY(2)
+                #if options.toUnfold == "y":
+                #  response_sys.RebinX(2)
+                #  response_sys.RebinY(2)
 
                 Hres_sys[thsysname+var+"_"+channel] = response_sys
 
@@ -423,10 +423,10 @@ for channel in channels:
     thisExpect[channel].Add(thisExpect_m700to1000)
     thisExpect[channel].Add(thisExpect_m1000toInf)    
 
-    if options.toUnfold == "y":
-      thisMeas[channel].Rebin(2)
-      thisTrue[channel].Rebin(2)
-      thisExpect[channel].Rebin(2)
+    #if options.toUnfold == "y":
+    #  thisMeas[channel].Rebin(2)
+    #  thisTrue[channel].Rebin(2)
+    #  thisExpect[channel].Rebin(2)
     
     noNegBins(thisMeas[channel])
     noNegBins(thisTrue[channel])
@@ -513,31 +513,31 @@ for channel in channels:
     hMeas_WZ.Scale(WZ_norm)
     hMeas_ZZ.Scale(ZZ_norm)
 
-    if options.toUnfold == "y":
-      hMeas_tt_nonsemi         .Rebin(2)
-      hMeas_T_t                .Rebin(2)
-      hMeas_Tbar_t             .Rebin(2)
-      hMeas_T_tW               .Rebin(2)
-      hMeas_Tbar_tW            .Rebin(2)
-      hMeas_T_s                .Rebin(2)
-      hMeas_WJets_HT100to200   .Rebin(2)
-      hMeas_WJets_HT200to400   .Rebin(2)
-      hMeas_WJets_HT400to600   .Rebin(2)
-      hMeas_WJets_HT600to800   .Rebin(2)
-      hMeas_WJets_HT800to1200  .Rebin(2)
-      hMeas_WJets_HT1200to2500 .Rebin(2)
-      hMeas_WJets_HT2500toInf  .Rebin(2)
-      hMeas_WJetsL_HT100to200  .Rebin(2)
-      hMeas_WJetsL_HT200to400  .Rebin(2)
-      hMeas_WJetsL_HT400to600  .Rebin(2)
-      hMeas_WJetsL_HT600to800  .Rebin(2)
-      hMeas_WJetsL_HT800to1200 .Rebin(2)
-      hMeas_WJetsL_HT1200to2500.Rebin(2)
-      hMeas_WJetsL_HT2500toInf .Rebin(2)
-      hMeas_ZJets              .Rebin(2)
-      hMeas_WW                 .Rebin(2)
-      hMeas_WZ                 .Rebin(2)
-      hMeas_ZZ                 .Rebin(2)
+    #if options.toUnfold == "y":
+    #  hMeas_tt_nonsemi         .Rebin(2)
+    #  hMeas_T_t                .Rebin(2)
+    #  hMeas_Tbar_t             .Rebin(2)
+    #  hMeas_T_tW               .Rebin(2)
+    #  hMeas_Tbar_tW            .Rebin(2)
+    #  hMeas_T_s                .Rebin(2)
+    #  hMeas_WJets_HT100to200   .Rebin(2)
+    #  hMeas_WJets_HT200to400   .Rebin(2)
+    #  hMeas_WJets_HT400to600   .Rebin(2)
+    #  hMeas_WJets_HT600to800   .Rebin(2)
+    #  hMeas_WJets_HT800to1200  .Rebin(2)
+    #  hMeas_WJets_HT1200to2500 .Rebin(2)
+    #  hMeas_WJets_HT2500toInf  .Rebin(2)
+    #  hMeas_WJetsL_HT100to200  .Rebin(2)
+    #  hMeas_WJetsL_HT200to400  .Rebin(2)
+    #  hMeas_WJetsL_HT400to600  .Rebin(2)
+    #  hMeas_WJetsL_HT600to800  .Rebin(2)
+    #  hMeas_WJetsL_HT800to1200 .Rebin(2)
+    #  hMeas_WJetsL_HT1200to2500.Rebin(2)
+    #  hMeas_WJetsL_HT2500toInf .Rebin(2)
+    #  hMeas_ZJets              .Rebin(2)
+    #  hMeas_WW                 .Rebin(2)
+    #  hMeas_WZ                 .Rebin(2)
+    #  hMeas_ZZ                 .Rebin(2)
     
     hMeas_qcd                    = f_QCD.Get(hMeas_name)
     hMeas_qcd_tt                 = f_qcd_ttbar.Get(hMeas_name)
@@ -630,8 +630,8 @@ for channel in channels:
     for hist in [hMeas_qcd_tt, hMeas_qcd_tt_nonsemi, hMeas_qcd_T_t,hMeas_qcd_Tbar_t,hMeas_qcd_T_tW,hMeas_qcd_Tbar_tW, hMeas_qcd_T_s, hMeas_qcd_WJets_HT100to200,hMeas_qcd_WJets_HT200to400,hMeas_qcd_WJets_HT400to600, hMeas_qcd_WJets_HT600to800,hMeas_qcd_WJets_HT800to1200,hMeas_qcd_WJets_HT1200to2500,hMeas_qcd_WJets_HT2500toInf, hMeas_qcd_ZJets, hMeas_qcd_WW, hMeas_qcd_WZ, hMeas_qcd_ZZ] :
         hMeas_QCD.Add(hist,-1.0)
     noNegBins(hMeas_QCD)
-    if options.toUnfold == "y":
-      hMeas_QCD.Rebin(2)
+    #if options.toUnfold == "y":
+    #  hMeas_QCD.Rebin(2)
     
     # -------------------------------
     # Normalize QCD to MC prediction
@@ -1431,6 +1431,7 @@ for channel in channels:
 
     c5.SaveAs("UnfoldingPlots/responseMatrix_"+options.toUnfold+"_"+options.level+"_"+channel+"_nom.pdf")
 
+      
     '''
     xvec.Print()
     yvec.Print()
