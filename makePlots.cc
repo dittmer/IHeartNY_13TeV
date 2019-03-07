@@ -115,7 +115,7 @@ void drawCMS(Double_t x,Double_t y, bool prel) {
   ll.SetTextAngle(0);
   ll.SetNDC();
   ll.SetTextColor(1);
-  ll.DrawLatex(0.69,0.94,"35.9 fb^{-1} (13 TeV)");
+  ll.DrawLatex(0.72,y,"35.9 fb^{-1} (13 TeV)");
 
 }
 
@@ -132,24 +132,75 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
   TString hist = var+region;
   
   // get histograms
-  SummedHist* diboson = getDiboson( DIR, var, region, channel, false, "nom", usePost, split );
-  SummedHist* zjets = getZJets( DIR, var, region, channel, false, "nom", usePost, split );
-  SummedHist* wjets  = getWJets( DIR, var, region, channel, false, "nom", usePost, split );
-  SummedHist* singletop = getSingleTop( DIR, var, region, channel, false, "nom", usePost, split );
-  SummedHist* ttbar = getTTbar( DIR, var, region, channel, false, "nom", usePost, split );
-  SummedHist* ttbar_nonSemiLep = getTTbarNonSemiLep( DIR, var, region, channel, false, "nom", usePost, split );
-  SummedHist* data = getData( DIR, var, region, channel, false, split);
+  SummedHist* diboson; 
+  SummedHist* zjets;
+  SummedHist* wjets;
+  SummedHist* singletop;
+  SummedHist* ttbar;
+  SummedHist* ttbar_nonSemiLep;
+  SummedHist* data;
+
+  SummedHist* diboson2; 
+  SummedHist* zjets2;
+  SummedHist* wjets2;
+  SummedHist* singletop2;
+  SummedHist* ttbar2;
+  SummedHist* ttbar_nonSemiLep2;
+  SummedHist* data2;
+
+  if (channel=="comb") {
+    diboson = getDiboson( DIR, var, region, "mu", false, "nom", usePost, split );
+    zjets = getZJets( DIR, var, region, "mu", false, "nom", usePost, split );
+    wjets  = getWJets( DIR, var, region, "mu", false, "nom", usePost, split );
+    singletop = getSingleTop( DIR, var, region, "mu", false, "nom", usePost, split );
+    ttbar = getTTbar( DIR, var, region, "mu", false, "nom", usePost, split );
+    ttbar_nonSemiLep = getTTbarNonSemiLep( DIR, var, region, "mu", false, "nom", usePost, split );
+    data = getData( DIR, var, region, "mu", false, split);
+
+    diboson2 = getDiboson( DIR, var, region, "el", false, "nom", usePost, split );
+    zjets2 = getZJets( DIR, var, region, "el", false, "nom", usePost, split );
+    wjets2  = getWJets( DIR, var, region, "el", false, "nom", usePost, split );
+    singletop2 = getSingleTop( DIR, var, region, "el", false, "nom", usePost, split );
+    ttbar2 = getTTbar( DIR, var, region, "el", false, "nom", usePost, split );
+    ttbar_nonSemiLep2 = getTTbarNonSemiLep( DIR, var, region, "el", false, "nom", usePost, split );
+    data2 = getData( DIR, var, region, "el", false, split);
+  }
+  else {
+    diboson = getDiboson( DIR, var, region, channel, false, "nom", usePost, split );
+    zjets = getZJets( DIR, var, region, channel, false, "nom", usePost, split );
+    wjets  = getWJets( DIR, var, region, channel, false, "nom", usePost, split );
+    singletop = getSingleTop( DIR, var, region, channel, false, "nom", usePost, split );
+    ttbar = getTTbar( DIR, var, region, channel, false, "nom", usePost, split );
+    ttbar_nonSemiLep = getTTbarNonSemiLep( DIR, var, region, channel, false, "nom", usePost, split );
+    data = getData( DIR, var, region, channel, false, split);
+  }
 
   // -------------------------------------------------------------------------------------
   // get the TH1F versions
   
   TH1F* h_qcd;
+  TH1F* h_qcd2;
+
   if (useQCDMC) {
-    SummedHist* qcd = getQCDMC(DIR, var, region, channel, false, "nom", usePost, split);
-    h_qcd = (TH1F*) qcd->hist();
+    if (channel=="comb") {
+      SummedHist* qcd = getQCDMC(DIR, var, region, "mu", false, "nom", usePost, split);
+      h_qcd = (TH1F*) qcd->hist();
+      SummedHist* qcd2 = getQCDMC(DIR, var, region, "el", false, "nom", usePost, split);
+      h_qcd2 = (TH1F*) qcd2->hist();
+    }
+    else {
+      SummedHist* qcd = getQCDMC(DIR, var, region, channel, false, "nom", usePost, split);
+      h_qcd = (TH1F*) qcd->hist();
+    }
   }
   else {
-    h_qcd = (TH1F*) getQCDData( DIR, DIRqcd, var, region, channel, "nom", usePost, split); // Currently taking QCD from data sideband with normalization from MC in signal region
+    if (channel=="comb") {
+      h_qcd = (TH1F*) getQCDData( DIR, DIRqcd, var, region, "mu", "nom", usePost, split);
+      h_qcd2 = (TH1F*) getQCDData( DIR, DIRqcd, var, region, "el", "nom", usePost, split);
+    }
+    else {
+      h_qcd = (TH1F*) getQCDData( DIR, DIRqcd, var, region, channel, "nom", usePost, split); // Currently taking QCD from data sideband with normalization from MC in signal region
+    }
   }
   TH1F* h_diboson = (TH1F*) diboson->hist();
   TH1F* h_zjets = (TH1F*) zjets->hist();
@@ -159,29 +210,104 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
   TH1F* h_singletop = (TH1F*) singletop->hist();
   TH1F* h_data = (TH1F*) data->hist();
 
+  TH1F* h_diboson2;
+  TH1F* h_zjets2;
+  TH1F* h_wjets2;
+  TH1F* h_ttbar2;
+  TH1F* h_ttbar_nonSemiLep2;
+  TH1F* h_singletop2;
+  TH1F* h_data2;
+
+  if (channel=="comb") {
+    h_diboson2 = (TH1F*) diboson2->hist();
+    h_zjets2 = (TH1F*) zjets2->hist();
+    h_wjets2 = (TH1F*) wjets2->hist();
+    h_ttbar2 = (TH1F*) ttbar2->hist();
+    h_ttbar_nonSemiLep2 = (TH1F*) ttbar_nonSemiLep2->hist();
+    h_singletop2 = (TH1F*) singletop2->hist();
+    h_data2 = (TH1F*) data2->hist();
+  }
+
+
   // -----------------------------------------------------------------------------------------------------
   // Apply post-fit normalizations if desired
   // The scale factors are determined from the post-fit nuisance parameters, not the post-fit event yields
 
   if (usePost && !(var.Contains("Raw"))){
-    if (channel == "mu") h_qcd->Scale(0.71);
+    if (channel == "comb") {
+      h_qcd->Scale(0.71);
+      h_qcd2->Scale(0.91);
+    }
+    else if (channel == "mu") h_qcd->Scale(0.71);
     else h_qcd->Scale(0.91);                 
     h_diboson->Scale(0.99);
     h_zjets->Scale(0.67);
     h_singletop->Scale(1.32);
     h_ttbar->Scale(0.80);
     h_ttbar_nonSemiLep->Scale(0.80);
+    if (channel=="comb") {
+      h_diboson2->Scale(0.99);
+      h_zjets2->Scale(0.67);
+      h_singletop2->Scale(1.32);
+      h_ttbar2->Scale(0.80);
+      h_ttbar_nonSemiLep2->Scale(0.80);
+    }
 
     if (var == "ak8jetPt" && region == "1t1b") {
-      SummedHist* wjetsL = getWJets( DIR, var, region, channel, false, "nom", usePost, "l");
-      TH1F* h_wjetsL = (TH1F*) wjetsL->hist();
-      h_wjets->Add(h_wjetsL,-1.0);
-      h_wjets->Scale(1.05);
-      h_wjetsL->Scale(0.78);
-      h_wjets->Add(h_wjetsL);
+      if (channel=="comb") {
+	SummedHist* wjetsL = getWJets( DIR, var, region, "mu", false, "nom", usePost, "l");
+	TH1F* h_wjetsL = (TH1F*) wjetsL->hist();
+	h_wjets->Add(h_wjetsL,-1.0);
+	h_wjets->Scale(1.05);
+	h_wjetsL->Scale(0.78);
+	h_wjets->Add(h_wjetsL);
+
+	SummedHist* wjetsL2 = getWJets( DIR, var, region, "el", false, "nom", usePost, "l");
+	TH1F* h_wjetsL2 = (TH1F*) wjetsL2->hist();
+	h_wjets2->Add(h_wjetsL2,-1.0);
+	h_wjets2->Scale(1.05);
+	h_wjetsL2->Scale(0.78);
+	h_wjets2->Add(h_wjetsL2);
+      }
+      else {
+	SummedHist* wjetsL = getWJets( DIR, var, region, channel, false, "nom", usePost, "l");
+	TH1F* h_wjetsL = (TH1F*) wjetsL->hist();
+	h_wjets->Add(h_wjetsL,-1.0);
+	h_wjets->Scale(1.05);
+	h_wjetsL->Scale(0.78);
+	h_wjets->Add(h_wjetsL);
+      }
     }
-    else h_wjets->Scale(0.97);
+    else {
+      h_wjets->Scale(0.97);
+      if (channel=="comb") h_wjets2->Scale(0.97);
+    }
   }
+
+
+  // -------------------------------------------------------------------------------------
+  // for combined electron+muon channel, merge the two histograms here
+
+  if (channel=="comb") {
+    h_data->Add(h_data2);
+    h_qcd->Add(h_qcd2);
+    h_diboson->Add(h_diboson2);
+    h_zjets->Add(h_zjets2);
+    h_wjets->Add(h_wjets2);
+    h_singletop->Add(h_singletop2);
+    h_ttbar_nonSemiLep->Add(h_ttbar_nonSemiLep2);
+    h_ttbar->Add(h_ttbar2);
+
+    h_data2->Delete();
+    h_qcd2->Delete();
+    h_diboson2->Delete();
+    h_zjets2->Delete();
+    h_wjets2->Delete();
+    h_singletop2->Delete();
+    h_ttbar_nonSemiLep2->Delete();
+    h_ttbar2->Delete();
+  }
+
 
   // -------------------------------------------------------------------------------------
   // various hist plotting edits
@@ -257,7 +383,7 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
   }
 
   if (hist.Contains("ak8jetPt")) h_data->GetXaxis()->SetRangeUser(400.,1200.);
-  if (hist.Contains("met") && channel == "mu") h_data->GetXaxis()->SetRangeUser(30.,250.);
+  if (hist.Contains("met") && (channel == "mu" || channel == "comb")) h_data->GetXaxis()->SetRangeUser(30.,250.);
   if (hist.Contains("met") && channel == "el") h_data->GetXaxis()->SetRangeUser(50.,250.);
   
   TH1F* h_ratio;
@@ -327,7 +453,7 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
   if (region == "Pre" || unBlind) h_data->Draw("LE0P,same");
 
   float xmin = 0.71;
-  float ymin = 0.52;
+  float ymin = 0.48;
 
   float xwidth = 0.20;
   float ywidth = 0.40;
@@ -377,8 +503,9 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
   leg->AddEntry(h_ratio2, "MC Stat. Unc.","f");
   leg->Draw();
 
-  myText(0.10,0.94,1,"#intLdt = 35.9 fb^{-1}");
-  myText(0.80,0.94,1,"#sqrt{s} = 13 TeV");
+  //myText(0.10,0.94,1,"#intLdt = 35.9 fb^{-1}");
+  //myText(0.80,0.94,1,"#sqrt{s} = 13 TeV");
+  drawCMS(0.15,0.93, false);
 
   // plot ratio part
   if (region == "Pre" || unBlind){
