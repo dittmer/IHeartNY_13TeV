@@ -438,6 +438,9 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
     h_data->GetYaxis()->SetTitleOffset(1.4);
     h_data->GetXaxis()->SetTitle("");
     
+    if (hist.Contains("ak8jetY")) h_data->GetYaxis()->SetTitle("Events / 0.2");
+    else if (hist.Contains("ak8jetPt")) h_data->GetYaxis()->SetTitle("Events / 20 GeV");
+
     h_data->Draw("LE0P");
   }
 
@@ -1701,6 +1704,16 @@ void combineResults(TString channel, TString fit) {
       else mymax = hists[ff][ncats-1]->GetMaximum();
 
       h_data->SetAxisRange(0,mymax*1.4,"Y");
+
+
+      // -------------------------------------------------------------------------------------
+      // fix axis labels
+
+      if (what[ih].Contains("ak4jetEta")) 
+	h_data->GetYaxis()->SetTitle("Events / 0.5");
+      else if (what[ih].Contains("ak8jetSDmass1t1b"))
+	h_data->GetYaxis()->SetTitle("Events / 10 GeV");
+
 
       // -------------------------------------------------------------------------------------
       // plotting!
