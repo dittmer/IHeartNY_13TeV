@@ -87,8 +87,8 @@ void mySmallText(Double_t x,Double_t y,Color_t color,char const *text) {
 
 void drawCMS(Double_t x,Double_t y, bool prel) {
 
-  float cmsTextSize = 0.07;
-  float extraOverCmsTextSize = 0.76;
+  float cmsTextSize = 0.08;
+  float extraOverCmsTextSize = 0.68;
   float extraTextSize = extraOverCmsTextSize*cmsTextSize;
 
   TLatex l;
@@ -115,7 +115,7 @@ void drawCMS(Double_t x,Double_t y, bool prel) {
   ll.SetTextAngle(0);
   ll.SetNDC();
   ll.SetTextColor(1);
-  ll.DrawLatex(0.72,y,"35.9 fb^{-1} (13 TeV)");
+  ll.DrawLatex(0.71,y,"35.9 fb^{-1} (13 TeV)");
 
 }
 
@@ -314,7 +314,7 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
 
   int rebinby = 1;
   if ((hist.Contains("ht") && !hist.Contains("htLep")) || hist.Contains("ak4jetPt")) rebinby = 3;
-  else if (hist.Contains("ak8jetPt")) rebinby = 4;
+  else if (hist.Contains("ak8jetPt")) rebinby = 2; //4;
   else if (hist.Contains("ak8jetTau") || hist.Contains("ak4jetEta") || hist.Contains("Phi") || hist.Contains("dR")) rebinby = 5;
   else if (!(hist.Contains("nAK4jet") || hist.Contains("nAK8jet") || hist.Contains("nBjet") || hist.Contains("nTjet"))) rebinby = 2;
   
@@ -401,7 +401,8 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
   }
 
   float mymax = max(h_data->GetMaximum(),h_totalbkg->GetMaximum());
-  h_data->SetAxisRange(0,mymax*1.3,"Y");
+  if (hist.Contains("Pt")) h_data->SetAxisRange(0,mymax*1.1,"Y");
+  else h_data->SetAxisRange(0,mymax*1.4,"Y");
 
   // -------------------------------------------------------------------------------------
   // plotting!
@@ -410,13 +411,13 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
   TPad* p1;
   TPad* p2;
   if (region == "Pre" || unBlind){
-    p1 = new TPad("datamcp1_"+hist,"datamcp1_"+hist,0,0.3,1,1);
-    p1->SetTopMargin(0.08);
-    p1->SetBottomMargin(0.05);
+    p1 = new TPad("datamcp1_"+hist,"datamcp1_"+hist,0,0.28,1,1);
+    p1->SetTopMargin(0.1);
+    p1->SetBottomMargin(0.02);
     p1->SetNumber(1);
-    p2 = new TPad("datamcp2_"+hist,"datamcp2_"+hist,0,0,1,0.3);
+    p2 = new TPad("datamcp2_"+hist,"datamcp2_"+hist,0,0,1,0.28);
     p2->SetNumber(2);
-    p2->SetTopMargin(0.05);
+    p2->SetTopMargin(0.02);
     p2->SetBottomMargin(0.35);
     
     p1->Draw();
@@ -431,12 +432,11 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
     
     h_ratio->GetXaxis()->SetTitle(h_data->GetXaxis()->GetTitle());
     
-    //h_data->GetXaxis()->SetLabelSize(26);
+    h_data->GetXaxis()->SetLabelSize(0);
     h_data->GetYaxis()->SetLabelSize(26);
     h_data->GetYaxis()->SetTitleSize(32);
     h_data->GetYaxis()->SetTitleOffset(1.4);
     h_data->GetXaxis()->SetTitle("");
-    if (hist.Contains("Pt")) h_data->SetMinimum(0.1);
     
     h_data->Draw("LE0P");
   }
@@ -451,8 +451,9 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
   
   h_stack->Draw("hist,same");
   if (region == "Pre" || unBlind) h_data->Draw("LE0P,same");
+  h_data->Draw("axis,same");
 
-  float xmin = 0.71;
+  float xmin = 0.73;
   float ymin = 0.48;
 
   float xwidth = 0.20;
@@ -505,7 +506,9 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
 
   //myText(0.10,0.94,1,"#intLdt = 35.9 fb^{-1}");
   //myText(0.80,0.94,1,"#sqrt{s} = 13 TeV");
-  drawCMS(0.15,0.93, false);
+  drawCMS(0.15,0.92, false);
+  if (channel=="comb") myLargeText(0.6,0.82,1,"l+jets");
+  
 
   // plot ratio part
   if (region == "Pre" || unBlind){
@@ -517,14 +520,14 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
     h_ratio->Draw("le0p");
     h_ratio2->Draw("same,e2");
     h_ratio->Draw("le0p,same");
-    h_ratio->SetMaximum(1.8);
-    h_ratio->SetMinimum(0.2);
-    h_ratio->GetYaxis()->SetNdivisions(2,4,0,false);
+    h_ratio->SetMaximum(1.75);
+    h_ratio->SetMinimum(0.25);
+    h_ratio->GetYaxis()->SetNdivisions(4,4,0,true);
     h_ratio->GetYaxis()->SetTitle("Data / MC");
-    h_ratio->GetXaxis()->SetLabelSize(26);
+    h_ratio->GetXaxis()->SetLabelSize(28);
     h_ratio->GetYaxis()->SetLabelSize(26);
-    h_ratio->GetXaxis()->SetTitleOffset(2.8);
-    h_ratio->GetYaxis()->SetTitleOffset(1.4);
+    h_ratio->GetXaxis()->SetTitleOffset(3.5);
+    h_ratio->GetYaxis()->SetTitleOffset(1.2);
     h_ratio->GetXaxis()->SetTitleSize(32);
     h_ratio->GetYaxis()->SetTitleSize(32);
   }
@@ -1561,10 +1564,10 @@ void combineResults(TString channel, TString fit) {
   setStyle();
 
   const int nhist = 3;
-  //TString what[nhist] = {"ak4jetEta0t","ak4jetEta1t0b","ak8jetSDmass1t1b"};
+  TString what[nhist] = {"ak4jetEta0t","ak4jetEta1t0b","ak8jetSDmass1t1b"};
   //TString what[nhist] = {"ak4jetEta0t_barrel","ak4jetEta0t_endcap","ak4jetEta1t0b_barrel","ak4jetEta1t0b_endcap","ak8jetSDmass1t1b_barrel","ak8jetSDmass1t1b_endcap"};
   //TString what[nhist] = {"ak4jetCSV0t","ak4jetEta1t0b","ak8jetSDmass1t1b"};
-  TString what[nhist] = {"ak4jetAbsEta0t","ak4jetAbsEta1t0b","ak8jetSDmass1t1b"};
+  //TString what[nhist] = {"ak4jetAbsEta0t","ak4jetAbsEta1t0b","ak8jetSDmass1t1b"};
   //TString what[nhist] = {"ak4jetAbsEta0t_barrel","ak4jetAbsEta0t_endcap","ak4jetAbsEta1t0b_barrel","ak4jetAbsEta1t0b_endcap","ak8jetSDmass1t1b_barrel","ak8jetSDmass1t1b_endcap"};
   //TString what[nhist] = {"lepEta0t","lepEta1t0b","ak8jetSDmass1t1b"};
   //TString what[nhist] = {"lepEta0t_barrel","lepEta0t_endcap","lepEta1t0b_barrel","lepEta1t0b_endcap","ak8jetSDmass1t1b_barrel","ak8jetSDmass1t1b_endcap"};
@@ -1693,20 +1696,23 @@ void combineResults(TString channel, TString fit) {
 	else h_ratio2->SetBinError(ib+1,tmperr/tmpcount);
       }
 
-      float mymax = max(h_data->GetMaximum(),hists[ff][ncats-1]->GetMaximum());
-      h_data->SetAxisRange(0,mymax*1.3,"Y");
-      
+      float mymax = 0;
+      if (ff==0) mymax = max(h_data->GetMaximum(),hists[ff][ncats-1]->GetMaximum());
+      else mymax = hists[ff][ncats-1]->GetMaximum();
+
+      h_data->SetAxisRange(0,mymax*1.4,"Y");
+
       // -------------------------------------------------------------------------------------
       // plotting!
 
       TCanvas* c = new TCanvas("c_"+what[ih]+"_"+channel,"c_"+what[ih]+"_"+channel,900,800);
-      TPad* p1 = new TPad("datamcp1_"+what[ih]+"_"+channel,"datamcp1_"+what[ih]+"_"+channel,0,0.3,1,1);
-      p1->SetTopMargin(0.08);
-      p1->SetBottomMargin(0.05);
+      TPad* p1 = new TPad("datamcp1_"+what[ih]+"_"+channel,"datamcp1_"+what[ih]+"_"+channel,0,0.28,1,1);
+      p1->SetTopMargin(0.1);
+      p1->SetBottomMargin(0.02);
       p1->SetNumber(1);
-      TPad* p2 = new TPad("datamcp2_"+what[ih]+"_"+channel,"datamcp2_"+what[ih]+"_"+channel,0,0,1,0.3);
+      TPad* p2 = new TPad("datamcp2_"+what[ih]+"_"+channel,"datamcp2_"+what[ih]+"_"+channel,0,0,1,0.28);
       p2->SetNumber(2);
-      p2->SetTopMargin(0.05);
+      p2->SetTopMargin(0.02);
       p2->SetBottomMargin(0.35);
       
       p1->Draw();
@@ -1729,6 +1735,7 @@ void combineResults(TString channel, TString fit) {
       h_data->SetMarkerColor(1);
       h_data->SetMarkerStyle(8);
       h_data->SetMarkerSize(1);
+      h_data->GetXaxis()->SetLabelSize(0);
       h_data->GetYaxis()->SetLabelSize(26);
       h_data->GetYaxis()->SetTitleSize(32);
       h_data->GetYaxis()->SetTitleOffset(1.4);
@@ -1739,12 +1746,12 @@ void combineResults(TString channel, TString fit) {
       h_stack->Draw("hist,same");
       h_data->Draw("LE0P,same");
 
-      float xmin = 0.71;
-      float ymin = 0.57;
-      float xwidth = 0.18;
-      float ywidth = 0.32;
+      float xmin = 0.73;
+      float ymin = 0.48;
+      float xwidth = 0.20;
+      float ywidth = 0.40;
       
-      if (what[ih] == "ak8jetSDmass1t1b" || what[ih].Contains("ak8jetTau")) xmin = 0.16;
+      if (what[ih] == "ak8jetSDmass1t1b" || what[ih].Contains("ak8jetTau")) xmin = 0.18;
 
       // legend
       TLegend* leg;
@@ -1763,9 +1770,16 @@ void combineResults(TString channel, TString fit) {
       leg->AddEntry(h_ratio2, "MC Stat. Unc.","f");
       leg->Draw();
 
-      myText(0.10,0.94,1,"#intLdt = 35.9 fb^{-1}");
-      myText(0.80,0.94,1,"#sqrt{s} = 13 TeV");
-      
+      //myText(0.10,0.94,1,"#intLdt = 35.9 fb^{-1}");
+      //myText(0.80,0.94,1,"#sqrt{s} = 13 TeV");
+      drawCMS(0.15,0.92, false);
+
+      float whereput=0.2;
+      if (what[ih] == "ak8jetSDmass1t1b") whereput=0.82;
+      if (channel=="el") myLargeText(whereput,0.82,1,"e+jets");
+      else myLargeText(whereput,0.82,1,"#mu+jets");
+
+
       // plot ratio part
       p2->cd();
       p2->SetGridy();
@@ -1775,14 +1789,14 @@ void combineResults(TString channel, TString fit) {
       h_ratio->Draw("le0p");
       h_ratio2->Draw("same,e2");
       h_ratio->Draw("le0p,same");
-      h_ratio->SetMaximum(1.8);
-      h_ratio->SetMinimum(0.2);
-      h_ratio->GetYaxis()->SetNdivisions(2,4,0,false);
+      h_ratio->SetMaximum(1.75);
+      h_ratio->SetMinimum(0.25);
+      h_ratio->GetYaxis()->SetNdivisions(4,4,0,true);
       h_ratio->GetYaxis()->SetTitle("Data / MC");
-      h_ratio->GetXaxis()->SetLabelSize(26);
+      h_ratio->GetXaxis()->SetLabelSize(28);
       h_ratio->GetYaxis()->SetLabelSize(26);
-      h_ratio->GetXaxis()->SetTitleOffset(3.0);
-      h_ratio->GetYaxis()->SetTitleOffset(1.4);
+      h_ratio->GetXaxis()->SetTitleOffset(3.5);
+      h_ratio->GetYaxis()->SetTitleOffset(1.2);
       h_ratio->GetXaxis()->SetTitleSize(32);
       h_ratio->GetYaxis()->SetTitleSize(32);
 
