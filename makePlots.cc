@@ -1745,6 +1745,7 @@ void combineResults(TString channel, TString fit) {
       hists[ff][ncats-1]->Draw("hist,same");
       h_stack->Draw("hist,same");
       h_data->Draw("LE0P,same");
+      h_data->Draw("axis,same");
 
       float xmin = 0.73;
       float ymin = 0.48;
