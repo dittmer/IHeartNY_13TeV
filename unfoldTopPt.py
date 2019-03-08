@@ -113,7 +113,7 @@ def removeFakes(h_input, h_response):
             
 def drawCMS( x1, y1, size = 0.056, status = "Work In Progress") :
     cmsTextSize = size
-    extraTextSize = 0.76 * size
+    extraTextSize = 0.68 * size
     
     l = TLatex()
     l.SetTextSize(cmsTextSize)
@@ -131,6 +131,15 @@ def drawCMS( x1, y1, size = 0.056, status = "Work In Progress") :
     l.DrawLatex(x1,y1,"CMS")
     if status is not None:
         lp.DrawLatex(x1+0.1,y1,status)
+
+    l2 = TLatex()
+    l2.SetTextSize(extraTextSize)
+    l2.SetTextFont(42)
+    l2.SetTextAngle(0)
+    l2.SetNDC()
+    l2.SetTextColor(1)
+    l2.DrawLatex(0.68,y1,"35.9 fb^{-1} (13 TeV)")
+
 
 class Background :
     def __init__(self, name, norm, err, color=1):
@@ -1051,6 +1060,68 @@ for channel in channels:
     
     c6.SaveAs("UnfoldingPlots/unfold_relative_uncertainties_"+options.toUnfold+"_"+options.level+"_"+channel+".pdf")
 
+
+    ##################################################################################################
+    # prettified paper version of uncertainty plot 
+    ##################################################################################################
+    
+    cerr = TCanvas("cerr", "cerr", 800, 600)
+    cerr.SetTopMargin(1.0)
+    cerr.SetRightMargin(0.05)
+    cerr.SetBottomMargin(0.12)
+    cerr.SetLeftMargin(0.16)
+    cerr.cd()
+
+    # h_TOT    => total uncertainty shaded band     
+    # h_STAT   => statistical uncertainty
+    # h_LUMI   => lum 
+    # h_BKG    => backgrounds 
+
+    #sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
+    #thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]
+    #longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
+
+    # h_sys_jet     : JEC, JER, BTag
+    # h_sys_toptag  : TopTag 
+    # h_sys_bkg     : h_BKG
+    # ???
+    # h_sys_other   : lep, pu, lumi
+    # h_sys_theory  : PDF, 
+    # leaving creating merged categories for later... 
+    
+    sysleg = TLegend(0.2,0.39,0.45,0.88)
+    sysleg.AddEntry(h_TOT,"Total syst. uncertainty","f")
+    sysleg.AddEntry(h_STAT,"Input stat. unc.","lp")
+    sysleg.AddEntry(h_LUMI,"Int. luminosity","lp")
+    for isys in xrange(0,len(allsysnames)):
+        sysleg.AddEntry(h_SYS[allsysnames[isys]],longnames[isys],"lp")
+    sysleg.AddEntry(h_BKG,"Backgrounds","lp")
+        
+    sysleg.SetFillStyle(0)
+    sysleg.SetBorderSize(0)
+    sysleg.SetTextSize(0.03)
+    sysleg.SetTextFont(42)
+
+    h_TOT.GetXaxis().SetTitleOffset(1.0)
+
+    h_TOT.GetYaxis().SetRangeUser(0.0,1.0)
+    h_TOT.Draw("hist")
+    h_STAT.Draw("ep,same")
+    h_LUMI.Draw("ep,same")
+    for sysname in allsysnames:
+        h_SYS[sysname].Draw("ep,same")
+    h_BKG.Draw("ep,same")
+        
+    sysleg.Draw() 
+
+    drawCMS(0.17,0.92,0.065,"")
+    
+    cerr.SaveAs("UnfoldingPlots/xsec_uncertainties_"+options.toUnfold+"_"+options.level+"_"+channel+".pdf")
+
+    
+    ##################################################################################################
+
+    
     # -------------------------------------------------------------------------------------
     # Troubleshoot stat. unc.
     # -------------------------------------------------------------------------------------
@@ -1346,9 +1417,9 @@ for channel in channels:
         thisMeas[channel].GetXaxis().SetRangeUser(400.,1199.)
     
     if options.toUnfold == "pt":
-        xsec_title = ";;d#sigma/dp_{T} [fb/GeV]"
+        xsec_title = ";;d#sigma/dp_{T} [pb/GeV]"
     else:
-        xsec_title = ";;d#sigma/dy [fb]"        
+        xsec_title = ";;d#sigma/dy [pb]"        
     
     thisReco.SetTitle(xsec_title)
     thisReco.GetYaxis().SetTitleOffset(1.2)
@@ -1412,6 +1483,89 @@ for channel in channels:
     
     c1.SaveAs("UnfoldingPlots/closure_"+options.toUnfold+"_"+options.level+"_"+channel+"_data.pdf")
 
+
+    ##################################################################################################
+    # pretty unfolded plot for paper
+    ##################################################################################################
+    
+    # histos 
+    # hFrac              => ratio 
+    # h_TOT, h_STAT      => error bands for ratio 
+    # thisReco           => measurement
+    # thisTrue[channel]  => powheg+pythia
+
+    # canvas
+    paper_c = TCanvas("paper_c", "paper_c", 700, 700)
+    paper_pad1 =  TPad("pad1","pad1",0,0.28,1,1)
+    paper_pad1.SetTopMargin(0.1)
+    paper_pad1.SetBottomMargin(0.02)
+    paper_pad1.Draw()
+    paper_pad1.cd()
+
+    # title etc
+    thisReco.GetXaxis().SetLabelSize(0)
+    thisReco.GetYaxis().SetTitleSize(32)
+    thisReco.GetYaxis().SetTitleOffset(1.4)
+    thisReco.SetMarkerColor(1)
+    thisReco.SetMarkerStyle(8)
+    thisReco.SetLineColor(1)
+    
+    thisTrue[channel].SetLineColor(2) 
+    thisTrue[channel].SetLineWidth(2) 
+
+    # draw
+    thisReco.Draw()
+    thisTrue[channel].Draw('hist, same')
+    thisReco.Draw("axis,same")
+    
+    # legend
+    paper_leg = TLegend(0.5, 0.6, 0.9, 0.85)
+    paper_leg.SetFillStyle(0)
+    paper_leg.SetTextFont(42)
+    paper_leg.SetTextSize(0.045)
+    paper_leg.SetBorderSize(0)
+    
+    paper_tt = TLatex()
+    paper_tt.SetNDC()
+    paper_tt.SetTextFont(42)
+    paper_leg.AddEntry( thisReco, 'Data', 'lep')
+    paper_leg.AddEntry( thisTrue[channel], 'Powheg+Pythia8', 'l')
+    paper_leg.AddEntry( h_STAT, 'Stat. uncertainty','f')
+    paper_leg.AddEntry( h_TOT, 'Stat. #oplus syst. uncertainties','f')
+    paper_leg.Draw()
+
+    drawCMS(0.18,0.92,0.08,"")
+
+    # ratio part of plot
+    paper_c.cd()
+    paper_pad2 =  TPad("pad2","pad2",0,0.0,1,0.28)
+    paper_pad2.SetTopMargin(0.02)
+    paper_pad2.SetBottomMargin(0.35)
+    paper_pad2.Draw()
+    paper_pad2.cd()
+    paper_pad2.SetGridy()
+
+    hFrac.SetLineColor(2)
+    hFrac.SetLineWidth(2)
+    hFrac.GetYaxis().SetTitleSize(26)
+    hFrac.GetYaxis().SetTitleOffset(1.4)
+    hFrac.GetXaxis().SetTitleOffset(3.3)
+    hFrac.SetMaximum(1.9)
+    hFrac.SetMinimum(0.1)
+    hFrac.GetYaxis().SetNdivisions(4,4,0,True)
+
+    hFrac.Draw("hist")
+    h_TOT.Draw("same,e2")
+    h_STAT.Draw("same,e2")
+    hFrac.Draw("same,hist")
+    hFrac.Draw("axis,same")
+    
+    paper_c.SaveAs("UnfoldingPlots/xsec_"+options.toUnfold+"_"+options.level+"_"+channel+".pdf")
+
+    
+    ##################################################################################################
+
+    
     # Finally, plot response matrices
     gStyle.SetPadRightMargin(0.15)
     gStyle.SetPadLeftMargin(0.15)
