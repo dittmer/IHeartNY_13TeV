@@ -888,6 +888,8 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
   TH1F* h_wjetsHF[nchannels][nhist][nbins][nsys];
   TH1F* h_ttbar[nchannels][nhist][nbins][nsys];
   TH1F* h_singletop[nchannels][nhist][nbins][nsys];
+  TH1F* h_singletop_tW[nchannels][nhist][nbins][nsys];
+  TH1F* h_singletop_other[nchannels][nhist][nbins][nsys];
   TH1F* h_data[nchannels][nhist][nbins];
   
   for (int ii = 0; ii < nchannels; ii++){
@@ -903,6 +905,7 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 	  SummedHist* wjets = getWJets( DIR, histnames[jj], regions[jj], channels[ii], false, sysnames[kk], false, binnames[ib]);
 	  SummedHist* wjetsL  = getWJets( DIR, histnames[jj], regions[jj], channels[ii], false, sysnames[kk], false, "l"+(binnames[ib] == "" ? "" : "_"+binnames[ib]));
 	  SummedHist* singletop = getSingleTop( DIR, histnames[jj], regions[jj], channels[ii], false, sysnames[kk], false, binnames[ib] );
+	  SummedHist* singletop_tW = getSingleTop_tW( DIR, histnames[jj], regions[jj], channels[ii], false, sysnames[kk], false, binnames[ib] );
 	  SummedHist* ttbar = getTTbar( DIR, histnames[jj], regions[jj], channels[ii], false, sysnames[kk], false, binnames[ib] );
 	  SummedHist* ttbar_nonSemiLep = getTTbarNonSemiLep( DIR, histnames[jj], regions[jj], channels[ii], false, sysnames[kk], false, binnames[ib] );
 
@@ -918,7 +921,10 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 	  TH1F* tmp_ttbar = (TH1F*) ttbar->hist()->Clone("TTbar"+append);
 	  tmp_ttbar->Add((TH1F*) ttbar_nonSemiLep->hist());
 	  TH1F* tmp_singletop = (TH1F*) singletop->hist()->Clone("SingleTop"+append);
-
+	  TH1F* tmp_singletop_tW = (TH1F*) singletop_tW->hist()->Clone("ST_tW"+append);
+	  TH1F* tmp_singletop_other = (TH1F*) tmp_singletop->Clone("ST_other"+append);
+	  tmp_singletop_other->Add(tmp_singletop_tW,-1.0);
+	  
 	  // Get QCD
 	  TH1F* tmp_qcd;
 	  if (whichQCD == "MC"){
@@ -937,6 +943,8 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 	  tmp_wjetsHF->Rebin(rebinby[jj]);
 	  tmp_ttbar->Rebin(rebinby[jj]);
 	  tmp_singletop->Rebin(rebinby[jj]);
+	  tmp_singletop_tW->Rebin(rebinby[jj]);
+	  tmp_singletop_other->Rebin(rebinby[jj]);
 	  
 	  h_qcd[ii][jj][ib][kk] = adjustRange(tmp_qcd,lowbounds[jj],highbounds[jj]);
 	  h_diboson[ii][jj][ib][kk] = adjustRange(tmp_diboson,lowbounds[jj],highbounds[jj]);
@@ -945,6 +953,8 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 	  h_wjetsL[ii][jj][ib][kk] = adjustRange(tmp_wjetsL,lowbounds[jj],highbounds[jj]);
 	  h_wjetsHF[ii][jj][ib][kk] = adjustRange(tmp_wjetsHF,lowbounds[jj],highbounds[jj]);
 	  h_singletop[ii][jj][ib][kk] = adjustRange(tmp_singletop,lowbounds[jj],highbounds[jj]);
+	  h_singletop_tW[ii][jj][ib][kk] = adjustRange(tmp_singletop_tW,lowbounds[jj],highbounds[jj]);
+	  h_singletop_other[ii][jj][ib][kk] = adjustRange(tmp_singletop_other,lowbounds[jj],highbounds[jj]);
 	  h_ttbar[ii][jj][ib][kk] = adjustRange(tmp_ttbar,lowbounds[jj],highbounds[jj]);
 	  
 	  tmp_qcd->Delete();
@@ -954,6 +964,8 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 	  tmp_wjetsL->Delete();
 	  tmp_wjetsHF->Delete();
 	  tmp_singletop->Delete();
+	  tmp_singletop_tW->Delete();
+	  tmp_singletop_other->Delete();
 	  tmp_ttbar->Delete();
 	  
 	  h_qcd[ii][jj][ib][kk]->SetName(((TString)h_qcd[ii][jj][ib][kk]->GetName()).ReplaceAll("TopTag","TopMisTag"));
@@ -962,6 +974,7 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 	  h_wjets[ii][jj][ib][kk]->SetName(((TString)h_wjets[ii][jj][ib][kk]->GetName()).ReplaceAll("TopTag","TopMisTag"));
 	  h_wjetsL[ii][jj][ib][kk]->SetName(((TString)h_wjetsL[ii][jj][ib][kk]->GetName()).ReplaceAll("TopTag","TopMisTag"));
 	  h_wjetsHF[ii][jj][ib][kk]->SetName(((TString)h_wjetsHF[ii][jj][ib][kk]->GetName()).ReplaceAll("TopTag","TopMisTag"));
+	  h_singletop_other[ii][jj][ib][kk]->SetName(((TString)h_singletop_other[ii][jj][ib][kk]->GetName()).ReplaceAll("TopTag","TopMisTag"));
 	}
 
 	// Get data
@@ -991,6 +1004,8 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 	  h_wjetsL[ii][jj][ib][kk]->Write();
 	  h_wjetsHF[ii][jj][ib][kk]->Write();
 	  h_singletop[ii][jj][ib][kk]->Write();
+	  h_singletop_tW[ii][jj][ib][kk]->Write();
+	  h_singletop_other[ii][jj][ib][kk]->Write();
 	  h_ttbar[ii][jj][ib][kk]->Write();
 	}
 	h_data[ii][jj][ib]->Write();
@@ -1049,6 +1064,8 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 	  h_wjetsL[ii][jj][ib][kk]->Delete();
 	  h_wjetsHF[ii][jj][ib][kk]->Delete();
 	  h_singletop[ii][jj][ib][kk]->Delete();
+	  h_singletop_tW[ii][jj][ib][kk]->Delete();
+	  h_singletop_other[ii][jj][ib][kk]->Delete();
 	  h_ttbar[ii][jj][ib][kk]->Delete();
 	}
 	h_data[ii][jj][ib]->Delete();
@@ -1582,6 +1599,7 @@ void combineResults(TString channel, TString fit) {
   const int ncats = 7;
   TString cats[ncats] = {"TTbar","SingleTop","WJets","ZJets","Diboson","QCD","total"};
   bool mergewjets = true;
+  bool mergeST = false;
   TString whichQCD = "MC";
 
   // counts and errors for cutflow
@@ -1591,7 +1609,7 @@ void combineResults(TString channel, TString fit) {
 
   // Get prefit hists and counts
   TFile* f_prefit = TFile::Open("combineInputs_"+whichQCD+".root");
-  TFile* f_postfit = TFile::Open( "mlfit_"+fit+".root" );
+  TFile* f_postfit = TFile::Open( "fitDiagnostics"+fit+".root" );
   RooArgSet* norm_post = (RooArgSet*) f_postfit->Get("norm_fit_s");
 
   for (int ih = 0; ih < nhist; ih++){
@@ -1616,6 +1634,10 @@ void combineResults(TString channel, TString fit) {
 	h_tmp = (TH1F*) f_postfit->Get("shapes_fit_s/"+what[ih]+"_"+channel+"/"+cats[ic]+"L");
 	h_tmp->Add((TH1F*) f_postfit->Get("shapes_fit_s/"+what[ih]+"_"+channel+"/"+cats[ic]+"HF"));
       }
+      else if (mergeST && cats[ic] == "SingleTop") {
+	h_tmp = (TH1F*) f_postfit->Get("shapes_fit_s/"+what[ih]+"_"+channel+"/ST_tW");
+	h_tmp->Add((TH1F*) f_postfit->Get("shapes_fit_s/"+what[ih]+"_"+channel+"/ST_other"));
+      }
       else h_tmp = (TH1F*) f_postfit->Get("shapes_fit_s/"+what[ih]+"_"+channel+"/"+cats[ic]);
 
       counts[0][ih][ic] = hists[0][ic]->GetSum();
@@ -1626,6 +1648,11 @@ void combineResults(TString channel, TString fit) {
 	if (mergewjets && cats[ic] == "WJets"){
 	  RooRealVar* thisnorm1 = (RooRealVar*) norm_post->find(what[ih]+"_"+channel+"/"+cats[ic]+"L");
 	  RooRealVar* thisnorm2 = (RooRealVar*) norm_post->find(what[ih]+"_"+channel+"/"+cats[ic]+"HF");
+	  errs[1][ih][ic] = std::pow(thisnorm1->getError(),2)+std::pow(thisnorm2->getError(),2);
+	}
+	else if (mergeST && cats[ic] == "SingleTop"){
+	  RooRealVar* thisnorm1 = (RooRealVar*) norm_post->find(what[ih]+"_"+channel+"/ST_tW");
+	  RooRealVar* thisnorm2 = (RooRealVar*) norm_post->find(what[ih]+"_"+channel+"/ST_other");
 	  errs[1][ih][ic] = std::pow(thisnorm1->getError(),2)+std::pow(thisnorm2->getError(),2);
 	}
 	else {
@@ -1824,7 +1851,30 @@ void combineResults(TString channel, TString fit) {
   } // End histogram loop
 
   // Now plot correlation matrix
-  TH2F* h_mcorr = (TH2F*) f_postfit->Get("covariance_fit_s");
+  TH2F* h_mcorr_raw = (TH2F*) f_postfit->Get("covariance_fit_s"); //Note that this has the per-bin stat uncertainties if autoMCStats is on
+  int countnuis = 0;
+  for (int ibin = 1; ibin < h_mcorr_raw->GetNbinsX()+1; ibin++){
+    TString binlabel = h_mcorr_raw->GetXaxis()->GetBinLabel(ibin);
+    if (!(binlabel.Contains("bin"))) countnuis++;
+  }
+  TH2F* h_mcorr = new TH2F("covariance_final","",countnuis,0,countnuis,countnuis,0,countnuis);
+  int mybinx = 0;
+  for (int ibinx = 1; ibinx < h_mcorr_raw->GetNbinsX()+1; ibinx++){
+    TString binlabelx = h_mcorr_raw->GetXaxis()->GetBinLabel(ibinx);
+    if (binlabelx.Contains("bin")) continue;
+    h_mcorr->GetXaxis()->SetBinLabel(mybinx+1,binlabelx);
+    h_mcorr->GetYaxis()->SetBinLabel(h_mcorr->GetNbinsX()-mybinx,binlabelx);
+    int mybiny = 0;
+    for (int ibiny = 1; ibiny < h_mcorr_raw->GetNbinsY()+1; ibiny++){
+      TString binlabely = h_mcorr_raw->GetYaxis()->GetBinLabel(ibiny);
+      if (binlabely.Contains("bin")) continue;
+      std::cout << "Correlation between " << binlabelx << " and " << binlabely << " is " << h_mcorr_raw->GetBinContent(ibinx,ibiny) << ", filling new bin (" << mybinx+1 << "," << mybiny+1 << ")" << std::endl;
+      h_mcorr->SetBinContent(mybinx+1,mybiny+1,h_mcorr_raw->GetBinContent(ibinx,ibiny));
+      mybiny++;
+    }
+    mybinx++;
+  }
+    
   TCanvas* c2 = new TCanvas("c2","c2",900,700);
   c2->SetLeftMargin(0.18);
   c2->SetRightMargin(0.12);

@@ -313,6 +313,44 @@ SummedHist * getSingleTop( TString DIR, TString histname, TString region, TStrin
 
 
 // -------------------------------------------------------------------------------------
+// single top, tW channel only
+// -------------------------------------------------------------------------------------
+
+SummedHist * getSingleTop_tW( TString DIR, TString histname, TString region, TString channel, bool isQCD, TString syst, bool usePost, TString split = "") {
+
+  TString append = "";
+  if (isQCD) append = "_qcd";
+  if (usePost) append += "_post";
+
+  int ich = 0;
+  if (channel == "el") ich = 1;
+
+  const int nsingletop_tW = 2;
+  
+  TString singletop_tW_names[nsingletop_tW] = { 
+    "SingleTop_t_tW",
+    "SingleTop_tbar_tW",
+  };
+  
+  double singletop_tW_norms[nsingletop_tW] = {
+    19.3 * LUM[ich] / 8629641., //Event counts from Louise, xsec from AN-16-020 -- NoFullyHadronicDecays
+    19.3 * LUM[ich] / 8681541.,
+  };
+  
+  SummedHist* singletop_tW = new SummedHist( histname, 6 );
+  
+  for (int i=0; i<nsingletop_tW; i++) {
+    TString iname = DIR + "hists_" + singletop_tW_names[i] + "_" + channel + "_" + syst + append + ".root";
+    TH1* hist = (TH1*) getHist(iname,histname,region,split);
+    singletop_tW->push_back( hist, singletop_tW_norms[i] );
+  }
+  
+  return singletop_tW;
+  
+}
+
+
+// -------------------------------------------------------------------------------------
 // non-semileptonic ttbar
 // -------------------------------------------------------------------------------------
 
@@ -351,8 +389,7 @@ SummedHist * getTTbar( TString DIR, TString histname, TString region, TString ch
   int ich = 0;
   if (channel == "el") ich = 1;
 
-  //TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_fullTruth_mInc" : "PowhegPythia8_fullTruth";
-  TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_PLnew_mInc" : "PowhegPythia8_PLnew";
+  TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_fullTruth_mInc" : "PowhegPythia8_fullTruth";
   double ttbar_norm = 831.76 * LUM[ich] / 77229341.;
   
   SummedHist* ttbar = new SummedHist( histname, kRed+1);
@@ -380,7 +417,6 @@ SummedHist * getQCDMC( TString DIR, TString histname, TString region, TString ch
   const int nqcd = 5;
   
   TString qcd_names[nqcd] = {
-    //"QCD_HT300to500", //Empty currently
     "QCD_HT500to700",
     "QCD_HT700to1000",
     "QCD_HT1000to1500",
@@ -389,9 +425,8 @@ SummedHist * getQCDMC( TString DIR, TString histname, TString region, TString ch
   };
   
   double qcd_norms[nqcd] = {
-    //347700. * LUM[ich] / 17035891., // Cross sections are from AN-15-136, which is a bit random and not actually correct for the samples I use
-    32100. * LUM[ich] / 18929951.,  // Technically part of this is missing, but can't tell which part -- ~1% though
-    6831. * LUM[ich] / 15629253.,  
+    32100. * LUM[ich] / 18929951.,  // Cross sections are from AN-15-136, which is a bit random and not actually correct for the samples I use
+    6831. * LUM[ich] / 15629253.,   // Technically part of this is missing, but can't tell which part -- ~1% though
     1207. * LUM[ich] / 4767100., 
     119.9 * LUM[ich] / 3970819.,
     25.24 * LUM[ich] / 1991645.,
@@ -501,7 +536,6 @@ TObject * getBackground( TString DIR, TString histname, TString region, TString 
     "WJets_HT800to1200",
     "WJets_HT1200to2500",
     "WJets_HT2500toInf",
-    //"QCD_HT300to500",
     "QCD_HT500to700",
     "QCD_HT700to1000",
     "QCD_HT1000to1500",
@@ -527,8 +561,7 @@ TObject * getBackground( TString DIR, TString histname, TString region, TString 
     5.501 * 1.21 * LUM[ich] / 6200954.,
     1.329 * 1.21 * LUM[ich] / 6324934.,
     0.03216 * 1.21 * LUM[ich] / 2384260.,
-    //347700. * LUM[ich] / 17035891.,       // QCD
-    32100. * LUM[ich] / 18929951.,  
+    32100. * LUM[ich] / 18929951., //QCD 
     6831. * LUM[ich] / 15629253.,  
     1207. * LUM[ich] / 4767100., 
     119.9 * LUM[ich] / 3970819.,

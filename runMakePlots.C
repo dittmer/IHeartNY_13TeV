@@ -100,41 +100,34 @@ void runMakePlots(TString toPlot = "final"){
     for (int ii = 0; ii < 2; ii++){
       for (int jj = 0; jj < nregion; jj++){
 	for (int kk = 0; kk < nhist; kk++){
-	  makePlots("histfiles_full2016/","histfiles_full2016/",channels[ii],hists[kk],regions[jj],false,unBlind,false);
+	  makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/",channels[ii],hists[kk],regions[jj],false,unBlind,false);
 	}
       }
-      //plotWJetsSplit("ak4jetEta","0t",channels[ii]);
-      //plotWJetsSplit("ak4jetEta","1t0b",channels[ii]);
-      //plotWJetsSplit("lepEta","0t",channels[ii]);
-      //plotWJetsSplit("lepEta","1t0b",channels[ii]);
-      //plotWJetsSplit("ak8jetTau21","0t",channels[ii]);
-      //plotWJetsSplit("ak8jetTau32","1t0b",channels[ii]);
-      //plotWJetsSplit("ak8jetSDmass","1t1b",channels[ii]);
     }
     
-    makePlots("histfiles_full2016/","histfiles_full2016/","mu","nAK4jet","Pre",false,unBlind,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","nAK4jet","Pre",false,unBlind,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","mu","nBjet","Pre",false,unBlind,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","nBjet","Pre",false,unBlind,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","mu","nAK8jet","Pre",false,unBlind,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","nAK8jet","Pre",false,unBlind,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","mu","nTjet","Pre",false,unBlind,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","nTjet","Pre",false,unBlind,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","mu","nAK4jet","Pre",false,unBlind,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","nAK4jet","Pre",false,unBlind,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","mu","nBjet","Pre",false,unBlind,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","nBjet","Pre",false,unBlind,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","mu","nAK8jet","Pre",false,unBlind,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","nAK8jet","Pre",false,unBlind,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","mu","nTjet","Pre",false,unBlind,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","nTjet","Pre",false,unBlind,false);
 
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","elPtRaw","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","elEtaRaw","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","elMiniIsoRaw","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","elMiniIsoRaw_b","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","elMiniIsoRaw_e","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","mu","muPtRaw","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","mu","muEtaRaw","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","mu","muMiniIsoRaw","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","mu","muMiniIsoRaw_b","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","mu","muMiniIsoRaw_e","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","elPtRaw","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","elEtaRaw","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","elMiniIsoRaw","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","elMiniIsoRaw_b","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","elMiniIsoRaw_e","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","mu","muPtRaw","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","mu","muEtaRaw","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","mu","muMiniIsoRaw","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","mu","muMiniIsoRaw_b","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","mu","muMiniIsoRaw_e","",true,true,false);
 
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","lepMETdPhiRaw","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","ak4METdPhiRaw","",true,true,false);
-    makePlots("histfiles_full2016/","histfiles_full2016/","el","ak8METdPhiRaw","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","lepMETdPhiRaw","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","ak4METdPhiRaw","",true,true,false);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","el","ak8METdPhiRaw","",true,true,false);
 
     //plot2D("ttbar","bTagSFvsPt");
     //plot2D("qcd","bTagSFvsPt");
@@ -143,7 +136,7 @@ void runMakePlots(TString toPlot = "final"){
     
     cout << endl << "Finished with regular plots!" << endl << endl;
 
-    for (int ii = 0; ii < 2; ii++){
+    /*    for (int ii = 0; ii < 2; ii++){
       for (int jj = 0; jj < nhist; jj++){
 	makeQCDComp("histfiles_full2016/","histfiles_full2016/",channels[ii],hists[jj]);
       }
@@ -152,14 +145,14 @@ void runMakePlots(TString toPlot = "final"){
       makeQCDComp("histfiles_full2016/","histfiles_full2016/",channels[ii],"nAK8jet");
       makeQCDComp("histfiles_full2016/","histfiles_full2016/",channels[ii],"nTjet");
     }
-
+    */
     //for (int ii = 0; ii < nhist; ii++){
     //  compLepQCD("histfiles_full2016/",hists[ii],true);
     //  compLepQCD("histfiles_full2016/",hists[ii],false);
     //}
     
-    cout << endl << "Finished with QCD comparison plots!" << endl << endl;
-    
+    //cout << endl << "Finished with QCD comparison plots!" << endl << endl;
+    /*
     for (int ii = 0; ii < 2; ii++){
       for (int jj = 0; jj < nregion; jj++){
 	for (int kk = 0; kk < nhist; kk++){
@@ -167,21 +160,21 @@ void runMakePlots(TString toPlot = "final"){
 	}
       }
     }
-
-    cout << endl << "Finished making shape comparisons!" << endl << endl;
+    */
+    //cout << endl << "Finished making shape comparisons!" << endl << endl;
     
-    makeCombineInputs("histfiles_full2016/","histfiles_full2016/","MC");
-    makeCombineInputs("histfiles_full2016/","histfiles_full2016/","data");
+    makeCombineInputs("histfiles_full2016_latest/","histfiles_full2016_latest/","MC");
+    makeCombineInputs("histfiles_full2016_latest/","histfiles_full2016_latest/","data");
     
     cout << endl << "Finished making combine inputs!" << endl << endl;
 
-    makeTable("histfiles_full2016/","histfiles_full2016/","mu",true,true,unBlind);
+    makeTable("histfiles_full2016_latest/","histfiles_full2016_latest/","mu",true,true,unBlind);
     cout << endl;
-    makeTable("histfiles_full2016/","histfiles_full2016/","el",true,true,unBlind);
+    makeTable("histfiles_full2016_latest/","histfiles_full2016_latest/","el",true,true,unBlind);
     cout << endl;
-    makeTable("histfiles_full2016/","histfiles_full2016/","mu",false,false,unBlind);
+    makeTable("histfiles_full2016_latest/","histfiles_full2016_latest/","mu",false,false,unBlind);
     cout << endl;
-    makeTable("histfiles_full2016/","histfiles_full2016/","el",false,false,unBlind);
+    makeTable("histfiles_full2016_latest/","histfiles_full2016_latest/","el",false,false,unBlind);
   }
 
   if (toPlot == "post"){
@@ -221,6 +214,12 @@ void runMakePlots(TString toPlot = "final"){
 
   }
 
+  if (toPlot == "tablepost"){
+    makeTable("histfiles_full2016/","histfiles_full2016/","mu",false,false,true,true);
+    cout << endl;
+    makeTable("histfiles_full2016/","histfiles_full2016/","el",false,false,true,true);
+  }
+
   if (toPlot == "combine"){
     //makeCombineInputs("histfiles_full2016/","histfiles_full2016/");
     combineResults("mu","mu26");
@@ -254,5 +253,18 @@ void runMakePlots(TString toPlot = "final"){
       plot2D("qcd","elEtaVs"+vars[ii]+"Nm1");
     }
     checkElID();
+  }
+
+  if (toPlot == "test"){
+    //makeCombineInputs("histfiles_full2016_latest/","histfiles_full2016_latest/","MC");
+    //makeCombineInputs("histfiles_full2016_latest/","histfiles_full2016_latest/","data");
+    combineResults("mu","mu26");
+    combineResults("el","el26");
+    combineResults("mu","comb26");
+    combineResults("el","comb26");
+    //combineResults("mu","mu1");
+    //combineResults("el","el1");
+    //combineResults("mu","comb1");
+    //combineResults("el","comb1");
   }
 }

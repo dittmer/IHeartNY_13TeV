@@ -91,17 +91,17 @@ float getMuonSF( double eta, double pt, TH2F* h_muID, TH1F* h_muTrig, TString sy
   float SF_tot = SF_muReco * SF_muID * SF_muTrig;
   
   if (usePost){
-    // Posterior nuisance parameter: -0.68 +- 0.96
-    // Relative err. on SF is a roughly constant 2%, so dominant effect in interpolation is lognormal
-    // However, since effect was initially implemented linearly, will use asymmetric lognormal
-    if (syst == "up")        return SF_tot * pow(1.0 + err_tot, 0.28);
-    else if (syst == "down") return SF_tot * pow(1.0 - err_tot, 1.64);
-    else                     return SF_tot * pow(1.0 - err_tot, 0.68);
+    // Posterior nuisance parameter: -0.43 +- 0.76
+    // Up/down templates have basically same shape, only vary in normalization
+    // Normalization interpolated using asymmetric lognormal --> interpolate SFs themselves with asymmetric lognormal
+    if (syst == "up")        return SF_tot * pow(1.0 + err_tot, 0.33);
+    else if (syst == "down") return SF_tot * pow(1.0 - err_tot, 1.19);
+    else                     return SF_tot * pow(1.0 - err_tot, 0.43);
   }
   else{
-    if (syst == "up") return SF_tot * (1 + err_tot);
+    if (syst == "up")        return SF_tot * (1 + err_tot);
     else if (syst == "down") return SF_tot * (1 - err_tot);
-    else return SF_tot;
+    else                     return SF_tot;
   }
 };
 
@@ -147,17 +147,17 @@ double getElectronSF(double eta, double pt, TH2F* h_elReco, TH2F* h_elID, TH2F* 
   float SF_tot = SF_elReco * SF_elID * SF_elIso * SF_elTrig;
 
   if (usePost){
-    // Posterior nuisance parameter: 0.54 +- 0.89
-    // Relative err. on SF is roughly constant, so dominant effect in interpolation is lognormal
-    // However, since effect was initially implemented linearly, will use asymmetric lognormal
-    if (syst == "up")        return SF_tot * pow(1.0 + err_tot, 1.43);
-    else if (syst == "down") return SF_tot * pow(1.0 - err_tot, 0.35);
-    else                     return SF_tot * pow(1.0 + err_tot, 0.54);
+    // Posterior nuisance parameter: 0.38 +- 0.88
+    // Up/down templates have basically same shape, only vary in normalization
+    // Normalization interpolated using asymmetric lognormal --> interpolate SFs themselves with asymmetric lognormal
+    if (syst == "up")        return SF_tot * pow(1.0 + err_tot, 1.26);
+    else if (syst == "down") return SF_tot * pow(1.0 - err_tot, 0.50);
+    else                     return SF_tot * pow(1.0 + err_tot, 0.38);
   }
   else{
-    if (syst == "up") return SF_tot * (1 + err_tot);
+    if (syst == "up")        return SF_tot * (1 + err_tot);
     else if (syst == "down") return SF_tot * (1 - err_tot);
-    else return SF_tot;
+    else                     return SF_tot;
   }
 };
 
@@ -173,11 +173,6 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   
   // minimum top pt cut
   float MINTOPPT = 400.0;
-
-  bool isNewSample = false;
-  if (sample.Contains("fullTruth") || sample.Contains("_PL") || sample.Contains("ZJets") || sample.Contains("WW") || sample.Contains("WZ") || sample.Contains("ZZ") || sample.Contains("SingleTop")) isNewSample = true;
-  if (isNewSample) cout << "Sample w/ el con veto bit" << endl;
-
 
   //--------------------------
   // Setup for response matrix
@@ -302,7 +297,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   // If running on signal, load truth information for events not passing reco, in order to fill response matrix
   // ----------------------------------------------------------------------------------------------------------
 
-  if (isSignal && sample.Contains("_PL")){
+  if (isSignal){
     TChain* treeTO = new TChain("trueTree");
     treeTO->Add(INDIR + sample + ".root");
     
@@ -939,7 +934,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
   tree->SetBranchAddress("eldRPt40"               , &eldRPt40            , &b_eldRPt40            );
   tree->SetBranchAddress("eldRPt45"               , &eldRPt45            , &b_eldRPt45            );
   tree->SetBranchAddress("elTight"                , &elTight             , &b_elTight             );
-  if (isNewSample) tree->SetBranchAddress("elPassConVeto"          , &elPassConVeto       , &b_elPassConVeto       );
+  if (!isData) tree->SetBranchAddress("elPassConVeto"          , &elPassConVeto       , &b_elPassConVeto       );
   tree->SetBranchAddress("elCharge"               , &elCharge            , &b_elCharge            );
   tree->SetBranchAddress("ak4jetPt"               , &ak4jetPt            , &b_ak4jetPt            );
   tree->SetBranchAddress("ak4jetEta"              , &ak4jetEta           , &b_ak4jetEta           );
@@ -1901,7 +1896,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     if ((int)elPt->size() != 0) {
       for (int iel = 0; iel < (int)elPt->size(); iel++){
 	if (abs(elEta->at(iel)) > 2.1) continue;
-	if (isNewSample && elPassConVeto->at(iel) == 0) continue;
+	if (!isData && elPassConVeto->at(iel) == 0) continue;
 	nElForVeto += 1;
 
 	if (elTight->at(iel)){
@@ -1980,7 +1975,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       
       if (channel == "el" && (int)elPtRelPt15->size() != 0){
 	if (lepID == "Medium" || (lepID == "Tight" && elTight->at(0))){
-	  if (!isNewSample || elPassConVeto->at(0) == 1){
+	  if (isData || elPassConVeto->at(0) == 1){
 	    h_2DisoPt15->Fill(eldRPt15->at(0),elPtRelPt15->at(0),weight);
 	    h_2DisoPt20->Fill(eldRPt20->at(0),elPtRelPt20->at(0),weight);
 	    h_2DisoPt25->Fill(eldRPt25->at(0),elPtRelPt25->at(0),weight);
@@ -1996,7 +1991,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	for (int ii = 0; ii < 30; ii ++){
 	  for (int jj = 0; jj < (int)elPt->size(); jj++){
 	    if (lepID == "Medium" || (lepID == "Tight" && elTight->at(jj))){
-	      if (!isNewSample || elPassConVeto->at(jj) == 1){
+	      if (isData || elPassConVeto->at(jj) == 1){
 		if (elMiniIso->at(jj) < MiniIsoCuts[ii]) MiniIsoCounts[ii] += weight;
 	      }
 	    }
@@ -2007,7 +2002,7 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	  for (int jj = 0; jj < 4; jj++){
 	    for (int kk = 0; kk < (int)elPtRelPt15->size(); kk++){
 	      if (lepID == "Medium" || (lepID == "Tight" && elTight->at(kk))){
-		if (!isNewSample || elPassConVeto->at(kk) == 1){
+		if (isData || elPassConVeto->at(kk) == 1){
 		  if (elPtRelPt15->at(kk) > PtRelCuts[ii] || eldRPt15->at(kk) > dRCuts[jj]) Count2DIso[0][ii][jj] += weight;
 		  if (elPtRelPt20->at(kk) > PtRelCuts[ii] || eldRPt20->at(kk) > dRCuts[jj]) Count2DIso[1][ii][jj] += weight;
 		  if (elPtRelPt25->at(kk) > PtRelCuts[ii] || eldRPt25->at(kk) > dRCuts[jj]) Count2DIso[2][ii][jj] += weight;
@@ -2363,17 +2358,16 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     float toptagSF = 1.0;
     float toptagSFUp = 1.25; //25% lognormal uncertainty
     float toptagSFDown = 1.0/1.25;
-    //When running on flat 1 +- 0.25 SF, tag nuisance parameter was 0.16 +- 0.33 and mistag nuisance parameter was -0.85 +- 0.31
     if (usePost) {
-      if (sample.Contains("PowhegPythia8") || sample.Contains("SingleTop")){
-	toptagSF = pow(1.25,0.16); 
-	toptagSFUp = pow(1.25,0.16+0.33);
-	toptagSFDown = pow(0.75,-0.16+0.33);
+      if (sample.Contains("PowhegPythia8") || sample.Contains("tW")){
+	toptagSF     = pow(1.25,0.18); 
+	toptagSFUp   = pow(1.25,0.18+0.45);
+	toptagSFDown = pow(1.25,0.18-0.45);
       }
       else {
-	toptagSF = pow(0.75,0.85); 
-	toptagSFUp = pow(0.75,0.85-0.31);
-	toptagSFDown = pow(0.75,0.85+0.31);
+	toptagSF     = pow(1.25,-1.06); 
+	toptagSFUp   = pow(1.25,-1.06+0.55);
+	toptagSFDown = pow(1.25,-1.06-0.55);
       }
     }
     if (ak8jetSDmass->at(itopJetCand) > lowmasscut && ak8jetSDmass->at(itopJetCand) < highmasscut){
