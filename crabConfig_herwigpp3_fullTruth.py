@@ -2,7 +2,7 @@ from WMCore.Configuration import Configuration
 config = Configuration()
 
 config.section_("General")
-config.General.requestName = 'PowhegPythia8_herwigpp_ext2_PL'
+config.General.requestName = 'PowhegPythia8_herwigpp_ext3_PL'
 config.General.workArea = 'test'
 config.General.transferLogs = True
 
@@ -14,7 +14,7 @@ config.JobType.outputFiles = ['test_iheartNY.root']
 config.JobType.scriptExe = 'execute_iheartNY_ttbar_fullTruth.sh'
 
 config.section_("Data")
-config.Data.inputDataset = '/TT_TuneEE5C_13TeV-powheg-herwigpp/skinnari-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1_B2GAnaFW_80X_V2p4_PLnew-48a12acb49e25253e64c84f63409955b/USER'
+config.Data.inputDataset = '/TT_TuneEE5C_13TeV-powheg-herwigpp/skinnari-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext3-v1_B2GAnaFW_80X_V2p4_PLnew-48a12acb49e25253e64c84f63409955b/USER'
 config.Data.inputDBS = 'phys03'
 config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 10

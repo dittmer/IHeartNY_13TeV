@@ -2098,9 +2098,9 @@ for event in events :
             unc = UncertJetAK4.getUncertainty(True)
             
             # JER
-            jetP4_JERnom  = ROOT.TLorentzVector
-            jetP4_JERup   = ROOT.TLorentzVector
-            jetP4_JERdown = ROOT.TLorentzVector
+            jetP4_JERnom  = ROOT.TLorentzVector()
+            jetP4_JERup   = ROOT.TLorentzVector()
+            jetP4_JERdown = ROOT.TLorentzVector()
 
             metv += jetP4 #Now correct MET for JER
             
@@ -2111,9 +2111,12 @@ for event in events :
                     genJetP4 = ROOT.TLorentzVector()
                     genJetP4.SetPtEtaPhiE(ak4MatchedGenJetPts[ijet],ak4MatchedGenJetEtas[ijet],ak4MatchedGenJetPhis[ijet],ak4MatchedGenJetEnergys[ijet])
                     if jetP4.DeltaR(genJetP4) < 0.2 and abs(jetP4.Perp() - genJetP4.Perp()) < (3 * ak4JERs[ijet] * jetP4.Perp()) : # Do matching requirement
-                        jetP4_JERnom  = genJetP4 + ak4JERSFnoms[ijet] *(jetP4 - genJetP4)
-                        jetP4_JERup   = genJetP4 + ak4JERSFups[ijet]  *(jetP4 - genJetP4)
-                        jetP4_JERdown = genJetP4 + ak4JERSFdowns[ijet]*(jetP4 - genJetP4)
+                        #jetP4_JERnom  = genJetP4 + ak4JERSFnoms[ijet] *(jetP4 - genJetP4)
+                        #jetP4_JERup   = genJetP4 + ak4JERSFups[ijet]  *(jetP4 - genJetP4)
+                        #jetP4_JERdown = genJetP4 + ak4JERSFdowns[ijet]*(jetP4 - genJetP4)
+                        jetP4_JERnom  = genJetP4 * (1.0 - ak4JERSFnoms[ijet]) + jetP4 * ak4JERSFnoms[ijet]
+                        jetP4_JERup   = genJetP4 * (1.0 - ak4JERSFups[ijet]) + jetP4 * ak4JERSFups[ijet]
+                        jetP4_JERdown = genJetP4 * (1.0 - ak4JERSFdowns[ijet]) + jetP4 * ak4JERSFdowns[ijet]
                     else:
                         jetP4_JERnom  = jetP4 * (1.0 + smearfacAK4*math.sqrt(max(0.0,ak4JERSFnoms[ijet] *ak4JERSFnoms[ijet] -1)))
                         jetP4_JERup   = jetP4 * (1.0 + smearfacAK4*math.sqrt(max(0.0,ak4JERSFups[ijet]  *ak4JERSFups[ijet]  -1)))
@@ -2428,9 +2431,9 @@ for event in events :
             unc = UncertJetAK8.getUncertainty(True)
 
             # JER
-            AK8jetP4_JERnom  = ROOT.TLorentzVector
-            AK8jetP4_JERup   = ROOT.TLorentzVector
-            AK8jetP4_JERdown = ROOT.TLorentzVector
+            AK8jetP4_JERnom  = ROOT.TLorentzVector()
+            AK8jetP4_JERup   = ROOT.TLorentzVector()
+            AK8jetP4_JERdown = ROOT.TLorentzVector()
 
             metv += AK8jetP4 #Now correct MET for JER
             
@@ -2441,9 +2444,12 @@ for event in events :
                     AK8genJetP4 = ROOT.TLorentzVector()
                     AK8genJetP4.SetPtEtaPhiE(ak8MatchedGenJetPts[ijet],ak8MatchedGenJetEtas[ijet],ak8MatchedGenJetPhis[ijet],ak8MatchedGenJetEnergys[ijet])
                     if AK8jetP4.DeltaR(AK8genJetP4) < 0.2 and abs(AK8jetP4.Perp() - AK8genJetP4.Perp()) < (3 * ak8JERs[ijet] * AK8jetP4.Perp()) : # Do matching requirement
-                        AK8jetP4_JERnom   = AK8genJetP4 + ak8JERSFnoms[ijet]  * (AK8jetP4 - AK8genJetP4)
-                        AK8jetP4_JERnom   = AK8genJetP4 + ak8JERSFups[ijet]   * (AK8jetP4 - AK8genJetP4)
-                        AK8jetP4_JERnom   = AK8genJetP4 + ak8JERSFdowns[ijet] * (AK8jetP4 - AK8genJetP4)
+                        #AK8jetP4_JERnom   = AK8genJetP4 + ak8JERSFnoms[ijet]  * (AK8jetP4 - AK8genJetP4)
+                        #AK8jetP4_JERup    = AK8genJetP4 + ak8JERSFups[ijet]   * (AK8jetP4 - AK8genJetP4)
+                        #AK8jetP4_JERdown   = AK8genJetP4 + ak8JERSFdowns[ijet] * (AK8jetP4 - AK8genJetP4)
+                        AK8jetP4_JERnom   = AK8genJetP4 * (1.0 - ak8JERSFnoms[ijet]) + AK8jetP4 * ak8JERSFnoms[ijet]
+                        AK8jetP4_JERup    = AK8genJetP4 * (1.0 - ak8JERSFups[ijet]) + AK8jetP4 * ak8JERSFups[ijet]
+                        AK8jetP4_JERdown  = AK8genJetP4 * (1.0 - ak8JERSFdowns[ijet]) + AK8jetP4 * ak8JERSFdowns[ijet]
                     else:
                         AK8jetP4_JERnom  = AK8jetP4 * (1.0 + smearfacAK8*math.sqrt(max(0.0,ak8JERSFnoms[ijet] *ak8JERSFnoms[ijet] -1)))
                         AK8jetP4_JERup   = AK8jetP4 * (1.0 + smearfacAK8*math.sqrt(max(0.0,ak8JERSFups[ijet]  *ak8JERSFups[ijet]  -1)))
