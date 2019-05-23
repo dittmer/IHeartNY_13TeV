@@ -214,63 +214,65 @@ allsysnames = sysnames+thsysnames
 longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
 variants = ["Up","Down"]
 
+DIR = "histfiles_full2016_latest"
+
 #Louise version
-name_TTbarNom = "PLnew"
-name_TTbarNom_p2 = "v2_PLnew"
-name_TTbar_m700to1000 = "m700to1000_PLnew"
-name_TTbar_m1000toInf = "m1000toInf_PLnew"
+#name_TTbarNom = "PLnew"
+#name_TTbarNom_p2 = "v2_PLnew"
+#name_TTbar_m700to1000 = "m700to1000_PLnew"
+#name_TTbar_m1000toInf = "m1000toInf_PLnew"
 #Susan version
-#name_TTbarNom = "fullTruth_PLnew"
-#name_TTbarNom_p2 = "fullTruth_PLnew_p2"
-#name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew"
-#name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew"
+name_TTbarNom = "fullTruth"
+name_TTbarNom_p2 = "fullTruth_p2"
+name_TTbar_m700to1000 = "fullTruth_m700to1000"
+name_TTbar_m1000toInf = "fullTruth_m1000toInf"
+name_TTbarVar = "fullTruth_PLnew"
 
 for channel in channels:
-    f_data = TFile("histfiles_full2016/hists_Data_"+channel+".root")
-    f_QCD  = TFile("histfiles_full2016/hists_Data_"+channel+"_qcd.root")
+    f_data = TFile(DIR+"/hists_Data_"+channel+".root")
+    f_QCD  = TFile(DIR+"/hists_Data_"+channel+"_qcd.root")
 
-    f_ttbar_m0to700_p1 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_post.root")
-    f_ttbar_m0to700_p2 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_nom_post.root")
-    f_ttbar_m700to1000 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_nom_post.root")
-    f_ttbar_m1000toInf = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_nom_post.root")
+    f_ttbar_m0to700_p1 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_post.root")
+    f_ttbar_m0to700_p2 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_nom_post.root")
+    f_ttbar_m700to1000 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_nom_post.root")
+    f_ttbar_m1000toInf = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_nom_post.root")
     
-    f_ttbar_nonsemilep   = TFile("histfiles_full2016/hists_PowhegPythia8_nonsemilep_"+channel+"_nom_post.root")
-    f_T_t                = TFile("histfiles_full2016/hists_SingleTop_t_t_"+channel+"_nom_post.root")
-    f_Tbar_t             = TFile("histfiles_full2016/hists_SingleTop_tbar_t_"+channel+"_nom_post.root")
-    f_T_tW               = TFile("histfiles_full2016/hists_SingleTop_t_tW_"+channel+"_nom_post.root")
-    f_Tbar_tW            = TFile("histfiles_full2016/hists_SingleTop_tbar_tW_"+channel+"_nom_post.root")
-    f_T_s                = TFile("histfiles_full2016/hists_SingleTop_s_"+channel+"_nom_post.root")    
-    f_WJets_HT100to200   = TFile("histfiles_full2016/hists_WJets_HT100to200_"+channel+"_nom_post.root")
-    f_WJets_HT200to400   = TFile("histfiles_full2016/hists_WJets_HT200to400_"+channel+"_nom_post.root")
-    f_WJets_HT400to600   = TFile("histfiles_full2016/hists_WJets_HT400to600_"+channel+"_nom_post.root")
-    f_WJets_HT600to800   = TFile("histfiles_full2016/hists_WJets_HT600to800_"+channel+"_nom_post.root")
-    f_WJets_HT800to1200  = TFile("histfiles_full2016/hists_WJets_HT800to1200_"+channel+"_nom_post.root")
-    f_WJets_HT1200to2500 = TFile("histfiles_full2016/hists_WJets_HT1200to2500_"+channel+"_nom_post.root")
-    f_WJets_HT2500toInf  = TFile("histfiles_full2016/hists_WJets_HT2500toInf_"+channel+"_nom_post.root")
-    f_ZJets              = TFile("histfiles_full2016/hists_ZJets_"+channel+"_nom_post.root")
-    f_WW                 = TFile("histfiles_full2016/hists_WW_"+channel+"_nom_post.root")
-    f_WZ                 = TFile("histfiles_full2016/hists_WZ_"+channel+"_nom_post.root")
-    f_ZZ                 = TFile("histfiles_full2016/hists_ZZ_"+channel+"_nom_post.root")
+    f_ttbar_nonsemilep   = TFile(DIR+"/hists_PowhegPythia8_nonsemilep_"+channel+"_nom_post.root")
+    f_T_t                = TFile(DIR+"/hists_SingleTop_t_t_"+channel+"_nom_post.root")
+    f_Tbar_t             = TFile(DIR+"/hists_SingleTop_tbar_t_"+channel+"_nom_post.root")
+    f_T_tW               = TFile(DIR+"/hists_SingleTop_t_tW_"+channel+"_nom_post.root")
+    f_Tbar_tW            = TFile(DIR+"/hists_SingleTop_tbar_tW_"+channel+"_nom_post.root")
+    f_T_s                = TFile(DIR+"/hists_SingleTop_s_"+channel+"_nom_post.root")    
+    f_WJets_HT100to200   = TFile(DIR+"/hists_WJets_HT100to200_"+channel+"_nom_post.root")
+    f_WJets_HT200to400   = TFile(DIR+"/hists_WJets_HT200to400_"+channel+"_nom_post.root")
+    f_WJets_HT400to600   = TFile(DIR+"/hists_WJets_HT400to600_"+channel+"_nom_post.root")
+    f_WJets_HT600to800   = TFile(DIR+"/hists_WJets_HT600to800_"+channel+"_nom_post.root")
+    f_WJets_HT800to1200  = TFile(DIR+"/hists_WJets_HT800to1200_"+channel+"_nom_post.root")
+    f_WJets_HT1200to2500 = TFile(DIR+"/hists_WJets_HT1200to2500_"+channel+"_nom_post.root")
+    f_WJets_HT2500toInf  = TFile(DIR+"/hists_WJets_HT2500toInf_"+channel+"_nom_post.root")
+    f_ZJets              = TFile(DIR+"/hists_ZJets_"+channel+"_nom_post.root")
+    f_WW                 = TFile(DIR+"/hists_WW_"+channel+"_nom_post.root")
+    f_WZ                 = TFile(DIR+"/hists_WZ_"+channel+"_nom_post.root")
+    f_ZZ                 = TFile(DIR+"/hists_ZZ_"+channel+"_nom_post.root")
     
-    f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_qcd_post.root")
-    #f_qcd_ttbar              = TFile("histfiles_full2016/hists_PowhegPythia8_fullTruth_"+channel+"_nom_qcd_post.root")
-    f_qcd_ttbar_nonsemilep   = TFile("histfiles_full2016/hists_PowhegPythia8_nonsemilep_"+channel+"_nom_qcd_post.root")
-    f_qcd_T_t                = TFile("histfiles_full2016/hists_SingleTop_t_t_"+channel+"_nom_qcd_post.root")
-    f_qcd_Tbar_t             = TFile("histfiles_full2016/hists_SingleTop_tbar_t_"+channel+"_nom_qcd_post.root")
-    f_qcd_T_tW               = TFile("histfiles_full2016/hists_SingleTop_t_tW_"+channel+"_nom_qcd_post.root")
-    f_qcd_Tbar_tW            = TFile("histfiles_full2016/hists_SingleTop_tbar_tW_"+channel+"_nom_qcd_post.root")
-    f_qcd_T_s                = TFile("histfiles_full2016/hists_SingleTop_s_"+channel+"_nom_qcd_post.root")
-    f_qcd_WJets_HT100to200   = TFile("histfiles_full2016/hists_WJets_HT100to200_"+channel+"_nom_qcd_post.root")
-    f_qcd_WJets_HT200to400   = TFile("histfiles_full2016/hists_WJets_HT200to400_"+channel+"_nom_qcd_post.root")
-    f_qcd_WJets_HT400to600   = TFile("histfiles_full2016/hists_WJets_HT400to600_"+channel+"_nom_qcd_post.root")
-    f_qcd_WJets_HT600to800   = TFile("histfiles_full2016/hists_WJets_HT600to800_"+channel+"_nom_qcd_post.root")
-    f_qcd_WJets_HT800to1200  = TFile("histfiles_full2016/hists_WJets_HT800to1200_"+channel+"_nom_qcd_post.root")
-    f_qcd_WJets_HT1200to2500 = TFile("histfiles_full2016/hists_WJets_HT1200to2500_"+channel+"_nom_qcd_post.root")
-    f_qcd_WJets_HT2500toInf  = TFile("histfiles_full2016/hists_WJets_HT2500toInf_"+channel+"_nom_qcd_post.root")
-    f_qcd_ZJets              = TFile("histfiles_full2016/hists_ZJets_"+channel+"_nom_qcd_post.root")
-    f_qcd_WW                 = TFile("histfiles_full2016/hists_WW_"+channel+"_nom_qcd_post.root")
-    f_qcd_WZ                 = TFile("histfiles_full2016/hists_WZ_"+channel+"_nom_qcd_post.root")
-    f_qcd_ZZ                 = TFile("histfiles_full2016/hists_ZZ_"+channel+"_nom_qcd_post.root")
+    f_qcd_ttbar              = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_qcd_post.root")
+    f_qcd_ttbar_nonsemilep   = TFile(DIR+"/hists_PowhegPythia8_nonsemilep_"+channel+"_nom_qcd_post.root")
+    f_qcd_T_t                = TFile(DIR+"/hists_SingleTop_t_t_"+channel+"_nom_qcd_post.root")
+    f_qcd_Tbar_t             = TFile(DIR+"/hists_SingleTop_tbar_t_"+channel+"_nom_qcd_post.root")
+    f_qcd_T_tW               = TFile(DIR+"/hists_SingleTop_t_tW_"+channel+"_nom_qcd_post.root")
+    f_qcd_Tbar_tW            = TFile(DIR+"/hists_SingleTop_tbar_tW_"+channel+"_nom_qcd_post.root")
+    f_qcd_T_s                = TFile(DIR+"/hists_SingleTop_s_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT100to200   = TFile(DIR+"/hists_WJets_HT100to200_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT200to400   = TFile(DIR+"/hists_WJets_HT200to400_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT400to600   = TFile(DIR+"/hists_WJets_HT400to600_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT600to800   = TFile(DIR+"/hists_WJets_HT600to800_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT800to1200  = TFile(DIR+"/hists_WJets_HT800to1200_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT1200to2500 = TFile(DIR+"/hists_WJets_HT1200to2500_"+channel+"_nom_qcd_post.root")
+    f_qcd_WJets_HT2500toInf  = TFile(DIR+"/hists_WJets_HT2500toInf_"+channel+"_nom_qcd_post.root")
+    f_qcd_ZJets              = TFile(DIR+"/hists_ZJets_"+channel+"_nom_qcd_post.root")
+    f_qcd_WW                 = TFile(DIR+"/hists_WW_"+channel+"_nom_qcd_post.root")
+    f_qcd_WZ                 = TFile(DIR+"/hists_WZ_"+channel+"_nom_qcd_post.root")
+    f_qcd_ZZ                 = TFile(DIR+"/hists_ZZ_"+channel+"_nom_qcd_post.root")
     
     # -------------------------------------------------------------------------------------
     # Get response matrix
@@ -292,19 +294,15 @@ for channel in channels:
     response[channel].Add(response_m700to1000)
     response[channel].Add(response_m1000toInf)
 
-    #if options.toUnfold == "y":
-    #  response[channel].RebinX(2)
-    #  response[channel].RebinY(2)
-
     # -------------------------------------------------------------------------------------
     # Get systematic variations
     # -------------------------------------------------------------------------------------
     for sysname in sysnames:
         for var in variants:
-            f_ttbar_sys_m0to700_p1 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_"+sysname+var+"_post.root")
-            f_ttbar_sys_m0to700_p2 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_"+sysname+var+"_post.root")
-            f_ttbar_sys_m700to1000 = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_"+sysname+var+"_post.root")
-            f_ttbar_sys_m1000toInf = TFile("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_"+sysname+var+"_post.root")    
+            f_ttbar_sys_m0to700_p1 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_"+sysname+var+"_post.root")
+            f_ttbar_sys_m0to700_p2 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_"+sysname+var+"_post.root")
+            f_ttbar_sys_m700to1000 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_"+sysname+var+"_post.root")
+            f_ttbar_sys_m1000toInf = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_"+sysname+var+"_post.root")    
 
             response_sys_m0to700_p1 = f_ttbar_sys_m0to700_p1.Get(response_name)
             response_sys_m0to700_p2 = f_ttbar_sys_m0to700_p2.Get(response_name)
@@ -346,15 +344,11 @@ for channel in channels:
                 response_sys.SetBinContent(ibin,0,0)
                 response_sys.SetBinError(ibin,0,0)
 
-            #if options.toUnfold == "y":
-            #    response_sys.RebinX(2)
-            #    response_sys.RebinY(2)
-                
             Hres_sys[sysname+var+"_"+channel] = response_sys
             
     for thsysname in thsysnames:
         if thsysname is "ErdOn" or thsysname is "Herwig":
-            f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+"_"+name_TTbarNom+"_"+channel+"_"+thsysname+"_post.root")
+            f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_"+name_TTbarVar+"_"+channel+"_"+thsysname+"_post.root")
             response_sys = f_ttbar_sys.Get(response_name)
             response_sys.Sumw2()
             true_sys = f_ttbar_sys.Get(hTrue_name)
@@ -365,15 +359,11 @@ for channel in channels:
                 response_sys.SetBinContent(ibin,0,0)
                 response_sys.SetBinContent(ibin,0,0)
 
-            #if options.toUnfold == "y":
-            #    response_sys.RebinX(2)
-            #    response_sys.RebinY(2)
-
             Hres_sys[thsysname+"_"+channel] = response_sys
 
         else :
             for var in variants:
-                f_ttbar_sys = TFile("histfiles_full2016/hists_PowhegPythia8_"+thsysname+var+"_"+name_TTbarNom+"_"+channel+"_"+thsysname+var+"_post.root")
+                f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_"+name_TTbarVar+"_"+channel+"_"+thsysname+var+"_post.root")
                 response_sys = f_ttbar_sys.Get(response_name)
                 response_sys.Sumw2()
                 true_sys = f_ttbar_sys.Get(hTrue_name)
@@ -383,10 +373,6 @@ for channel in channels:
                 for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
                     response_sys.SetBinContent(ibin,0,0)
                     response_sys.SetBinContent(ibin,0,0)
-
-                #if options.toUnfold == "y":
-                #  response_sys.RebinX(2)
-                #  response_sys.RebinY(2)
 
                 Hres_sys[thsysname+var+"_"+channel] = response_sys
 
@@ -432,11 +418,6 @@ for channel in channels:
     thisExpect[channel].Add(thisExpect_m700to1000)
     thisExpect[channel].Add(thisExpect_m1000toInf)    
 
-    #if options.toUnfold == "y":
-    #  thisMeas[channel].Rebin(2)
-    #  thisTrue[channel].Rebin(2)
-    #  thisExpect[channel].Rebin(2)
-    
     noNegBins(thisMeas[channel])
     noNegBins(thisTrue[channel])
     noNegBins(thisExpect[channel])
@@ -522,32 +503,6 @@ for channel in channels:
     hMeas_WZ.Scale(WZ_norm)
     hMeas_ZZ.Scale(ZZ_norm)
 
-    #if options.toUnfold == "y":
-    #  hMeas_tt_nonsemi         .Rebin(2)
-    #  hMeas_T_t                .Rebin(2)
-    #  hMeas_Tbar_t             .Rebin(2)
-    #  hMeas_T_tW               .Rebin(2)
-    #  hMeas_Tbar_tW            .Rebin(2)
-    #  hMeas_T_s                .Rebin(2)
-    #  hMeas_WJets_HT100to200   .Rebin(2)
-    #  hMeas_WJets_HT200to400   .Rebin(2)
-    #  hMeas_WJets_HT400to600   .Rebin(2)
-    #  hMeas_WJets_HT600to800   .Rebin(2)
-    #  hMeas_WJets_HT800to1200  .Rebin(2)
-    #  hMeas_WJets_HT1200to2500 .Rebin(2)
-    #  hMeas_WJets_HT2500toInf  .Rebin(2)
-    #  hMeas_WJetsL_HT100to200  .Rebin(2)
-    #  hMeas_WJetsL_HT200to400  .Rebin(2)
-    #  hMeas_WJetsL_HT400to600  .Rebin(2)
-    #  hMeas_WJetsL_HT600to800  .Rebin(2)
-    #  hMeas_WJetsL_HT800to1200 .Rebin(2)
-    #  hMeas_WJetsL_HT1200to2500.Rebin(2)
-    #  hMeas_WJetsL_HT2500toInf .Rebin(2)
-    #  hMeas_ZJets              .Rebin(2)
-    #  hMeas_WW                 .Rebin(2)
-    #  hMeas_WZ                 .Rebin(2)
-    #  hMeas_ZZ                 .Rebin(2)
-    
     hMeas_qcd                    = f_QCD.Get(hMeas_name)
     hMeas_qcd_tt                 = f_qcd_ttbar.Get(hMeas_name)
     hMeas_qcd_tt_nonsemi         = f_qcd_ttbar_nonsemilep.Get(hMeas_name)
@@ -606,17 +561,17 @@ for channel in channels:
     hMeas_qcd_ZZ.Scale(ZZ_norm)
 
     backgrounds[channel] = []
-    bkg_TT_nonsemi = Background("t#bar{t} other",0.80,0.08,632-7)
+    bkg_TT_nonsemi = Background("t#bar{t} other",0.81,0.09,632-7)
     bkg_TT_nonsemi.addHist(hMeas_tt_nonsemi)
     backgrounds[channel].append(bkg_TT_nonsemi)
     
-    bkg_SingleTop = Background("Single t",1.32,0.57,6)
+    bkg_SingleTop = Background("Single t",1.16,0.37,6)
     for hist in [hMeas_T_t,hMeas_Tbar_t, hMeas_T_tW, hMeas_Tbar_tW, hMeas_T_s] :
         bkg_SingleTop.addHist(hist)
     backgrounds[channel].append(bkg_SingleTop)
 
-    bkg_WJetsL = Background("W+jets LF",0.78,0.18,416)
-    bkg_WJetsHF = Background("W+jets HF",1.05,0.30,416-3)
+    bkg_WJetsL = Background("W+jets LF",0.77,0.21,416)
+    bkg_WJetsHF = Background("W+jets HF",0.98,0.32,416-3)
     for hist in [hMeas_WJets_HT100to200,hMeas_WJets_HT200to400,hMeas_WJets_HT400to600,hMeas_WJets_HT600to800,hMeas_WJets_HT800to1200,hMeas_WJets_HT1200to2500,hMeas_WJets_HT2500toInf] :
         bkg_WJetsHF.addHist( hist )
     for hist in [hMeas_WJetsL_HT100to200,hMeas_WJetsL_HT200to400,hMeas_WJetsL_HT400to600,hMeas_WJetsL_HT600to800,hMeas_WJetsL_HT800to1200,hMeas_WJetsL_HT1200to2500,hMeas_WJetsL_HT2500toInf] :
@@ -626,11 +581,11 @@ for channel in channels:
     backgrounds[channel].append(bkg_WJetsL)
     backgrounds[channel].append(bkg_WJetsHF)
 
-    bkg_ZJets = Background("Z+jets",0.67,0.24,860-9)
+    bkg_ZJets = Background("Z+jets",0.94,0.30,860-9)
     bkg_ZJets.addHist(hMeas_ZJets)
     backgrounds[channel].append(bkg_ZJets)
 
-    bkg_Diboson = Background("Diboson",0.99,0.31,880-6)
+    bkg_Diboson = Background("Diboson",1.01,0.30,880-6)
     for hist in [hMeas_WW, hMeas_WZ, hMeas_ZZ]:
         bkg_Diboson.addHist(hist)
     backgrounds[channel].append(bkg_Diboson)
@@ -639,18 +594,16 @@ for channel in channels:
     for hist in [hMeas_qcd_tt, hMeas_qcd_tt_nonsemi, hMeas_qcd_T_t,hMeas_qcd_Tbar_t,hMeas_qcd_T_tW,hMeas_qcd_Tbar_tW, hMeas_qcd_T_s, hMeas_qcd_WJets_HT100to200,hMeas_qcd_WJets_HT200to400,hMeas_qcd_WJets_HT400to600, hMeas_qcd_WJets_HT600to800,hMeas_qcd_WJets_HT800to1200,hMeas_qcd_WJets_HT1200to2500,hMeas_qcd_WJets_HT2500toInf, hMeas_qcd_ZJets, hMeas_qcd_WW, hMeas_qcd_WZ, hMeas_qcd_ZZ] :
         hMeas_QCD.Add(hist,-1.0)
     noNegBins(hMeas_QCD)
-    #if options.toUnfold == "y":
-    #  hMeas_QCD.Rebin(2)
     
     # -------------------------------
     # Normalize QCD to MC prediction
     # -------------------------------
     
-    f_QCD_HT500to700   = TFile("histfiles_full2016/hists_QCD_HT500to700_"+channel+"_nom_post.root")
-    f_QCD_HT700to1000  = TFile("histfiles_full2016/hists_QCD_HT700to1000_"+channel+"_nom_post.root")
-    f_QCD_HT1000to1500 = TFile("histfiles_full2016/hists_QCD_HT1000to1500_"+channel+"_nom_post.root")
-    f_QCD_HT1500to2000 = TFile("histfiles_full2016/hists_QCD_HT1500to2000_"+channel+"_nom_post.root")
-    f_QCD_HT2000toInf  = TFile("histfiles_full2016/hists_QCD_HT2000toInf_"+channel+"_nom_post.root")
+    f_QCD_HT500to700   = TFile(DIR+"/hists_QCD_HT500to700_"+channel+"_nom_post.root")
+    f_QCD_HT700to1000  = TFile(DIR+"/hists_QCD_HT700to1000_"+channel+"_nom_post.root")
+    f_QCD_HT1000to1500 = TFile(DIR+"/hists_QCD_HT1000to1500_"+channel+"_nom_post.root")
+    f_QCD_HT1500to2000 = TFile(DIR+"/hists_QCD_HT1500to2000_"+channel+"_nom_post.root")
+    f_QCD_HT2000toInf  = TFile(DIR+"/hists_QCD_HT2000toInf_"+channel+"_nom_post.root")
     
     hNorm_QCD_HT500to700   = f_QCD_HT500to700.Get(hMeas_name)
     hNorm_QCD_HT700to1000  = f_QCD_HT700to1000.Get(hMeas_name)
@@ -675,11 +628,11 @@ for channel in channels:
         QCD_norm += hist.Integral()
     
     hMeas_QCD.Scale(QCD_norm / hMeas_QCD.Integral())
-    
+
     if channel is "mu":
-        bkg_QCD = Background("muQCD",0.71,0.75,400)
+        bkg_QCD = Background("muQCD",1.02,1.23,400)
     else:
-        bkg_QCD = Background("elQCD",0.90,0.65,400)
+        bkg_QCD = Background("elQCD",1.32,0.85,400)
     bkg_QCD.addHist(hMeas_QCD)
     backgrounds[channel].append(bkg_QCD)
 

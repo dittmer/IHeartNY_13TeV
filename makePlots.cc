@@ -235,22 +235,22 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
 
   if (usePost && !(var.Contains("Raw"))){
     if (channel == "comb") {
-      h_qcd->Scale(0.71);
-      h_qcd2->Scale(0.91);
+      h_qcd->Scale(1.02);
+      h_qcd2->Scale(1.32);
     }
-    else if (channel == "mu") h_qcd->Scale(0.71);
-    else h_qcd->Scale(0.91);                 
-    h_diboson->Scale(0.99);
-    h_zjets->Scale(0.67);
-    h_singletop->Scale(1.32);
-    h_ttbar->Scale(0.80);
-    h_ttbar_nonSemiLep->Scale(0.80);
+    else if (channel == "mu") h_qcd->Scale(1.02);
+    else h_qcd->Scale(1.32);                 
+    h_diboson->Scale(1.01);
+    h_zjets->Scale(0.94);
+    h_singletop->Scale(1.16);
+    h_ttbar->Scale(0.81);
+    h_ttbar_nonSemiLep->Scale(0.81);
     if (channel=="comb") {
-      h_diboson2->Scale(0.99);
-      h_zjets2->Scale(0.67);
-      h_singletop2->Scale(1.32);
-      h_ttbar2->Scale(0.80);
-      h_ttbar_nonSemiLep2->Scale(0.80);
+      h_diboson2->Scale(1.01);
+      h_zjets2->Scale(0.94);
+      h_singletop2->Scale(1.16);
+      h_ttbar2->Scale(0.81);
+      h_ttbar_nonSemiLep2->Scale(0.81);
     }
 
     if (var == "ak8jetPt" && region == "1t1b") {
@@ -258,29 +258,29 @@ void makePlots(TString DIR, TString DIRqcd, TString channel, TString var, TStrin
 	SummedHist* wjetsL = getWJets( DIR, var, region, "mu", false, "nom", usePost, "l");
 	TH1F* h_wjetsL = (TH1F*) wjetsL->hist();
 	h_wjets->Add(h_wjetsL,-1.0);
-	h_wjets->Scale(1.05);
-	h_wjetsL->Scale(0.78);
+	h_wjets->Scale(0.98);
+	h_wjetsL->Scale(0.77);
 	h_wjets->Add(h_wjetsL);
 
 	SummedHist* wjetsL2 = getWJets( DIR, var, region, "el", false, "nom", usePost, "l");
 	TH1F* h_wjetsL2 = (TH1F*) wjetsL2->hist();
 	h_wjets2->Add(h_wjetsL2,-1.0);
-	h_wjets2->Scale(1.05);
-	h_wjetsL2->Scale(0.78);
+	h_wjets2->Scale(0.98);
+	h_wjetsL2->Scale(0.77);
 	h_wjets2->Add(h_wjetsL2);
       }
       else {
 	SummedHist* wjetsL = getWJets( DIR, var, region, channel, false, "nom", usePost, "l");
 	TH1F* h_wjetsL = (TH1F*) wjetsL->hist();
 	h_wjets->Add(h_wjetsL,-1.0);
-	h_wjets->Scale(1.05);
-	h_wjetsL->Scale(0.78);
+	h_wjets->Scale(0.98);
+	h_wjetsL->Scale(0.77);
 	h_wjets->Add(h_wjetsL);
       }
     }
     else {
-      h_wjets->Scale(0.97);
-      if (channel=="comb") h_wjets2->Scale(0.97);
+      h_wjets->Scale(0.84); //WJets is 1/3 HF, 2/3 LF --> combine above scale factors
+      if (channel=="comb") h_wjets2->Scale(0.84);
     }
   }
 
@@ -1585,10 +1585,7 @@ void combineResults(TString channel, TString fit) {
 
   const int nhist = 3;
   TString what[nhist] = {"ak4jetEta0t","ak4jetEta1t0b","ak8jetSDmass1t1b"};
-  //TString what[nhist] = {"ak4jetEta0t_barrel","ak4jetEta0t_endcap","ak4jetEta1t0b_barrel","ak4jetEta1t0b_endcap","ak8jetSDmass1t1b_barrel","ak8jetSDmass1t1b_endcap"};
-  //TString what[nhist] = {"ak4jetCSV0t","ak4jetEta1t0b","ak8jetSDmass1t1b"};
   //TString what[nhist] = {"ak4jetAbsEta0t","ak4jetAbsEta1t0b","ak8jetSDmass1t1b"};
-  //TString what[nhist] = {"ak4jetAbsEta0t_barrel","ak4jetAbsEta0t_endcap","ak4jetAbsEta1t0b_barrel","ak4jetAbsEta1t0b_endcap","ak8jetSDmass1t1b_barrel","ak8jetSDmass1t1b_endcap"};
   //TString what[nhist] = {"lepEta0t","lepEta1t0b","ak8jetSDmass1t1b"};
   //TString what[nhist] = {"lepEta0t_barrel","lepEta0t_endcap","lepEta1t0b_barrel","lepEta1t0b_endcap","ak8jetSDmass1t1b_barrel","ak8jetSDmass1t1b_endcap"};
   //TString what[nhist] = {"lepAbsEta0t","lepAbsEta1t0b","ak8jetSDmass1t1b"};
@@ -1599,8 +1596,8 @@ void combineResults(TString channel, TString fit) {
   const int ncats = 7;
   TString cats[ncats] = {"TTbar","SingleTop","WJets","ZJets","Diboson","QCD","total"};
   bool mergewjets = true;
-  bool mergeST = false;
-  TString whichQCD = "MC";
+  bool mergeST = true;
+  TString whichQCD = "data";
 
   // counts and errors for cutflow
   float counts[2][nhist][ncats] = {0};
@@ -1745,7 +1742,7 @@ void combineResults(TString channel, TString fit) {
       // -------------------------------------------------------------------------------------
       // plotting!
 
-      TCanvas* c = new TCanvas("c_"+what[ih]+"_"+channel,"c_"+what[ih]+"_"+channel,900,800);
+      TCanvas* c = new TCanvas("c","c",900,800);
       TPad* p1 = new TPad("datamcp1_"+what[ih]+"_"+channel,"datamcp1_"+what[ih]+"_"+channel,0,0.28,1,1);
       p1->SetTopMargin(0.1);
       p1->SetBottomMargin(0.02);
@@ -1846,7 +1843,8 @@ void combineResults(TString channel, TString fit) {
       if (ff == 1) preorpost = "post";
       TString outname = "Plots/"+channel+"_"+what[ih]+"_"+fit+"_"+preorpost+".pdf";
       c->SaveAs(outname);
-
+      c->Close();
+      
     } // End pre / post plotting loop
   } // End histogram loop
 
@@ -1868,7 +1866,6 @@ void combineResults(TString channel, TString fit) {
     for (int ibiny = 1; ibiny < h_mcorr_raw->GetNbinsY()+1; ibiny++){
       TString binlabely = h_mcorr_raw->GetYaxis()->GetBinLabel(ibiny);
       if (binlabely.Contains("bin")) continue;
-      std::cout << "Correlation between " << binlabelx << " and " << binlabely << " is " << h_mcorr_raw->GetBinContent(ibinx,ibiny) << ", filling new bin (" << mybinx+1 << "," << mybiny+1 << ")" << std::endl;
       h_mcorr->SetBinContent(mybinx+1,mybiny+1,h_mcorr_raw->GetBinContent(ibinx,ibiny));
       mybiny++;
     }
@@ -1890,7 +1887,8 @@ void combineResults(TString channel, TString fit) {
   gPad->Modified();
   gPad->Update();
   c2->SaveAs("Plots/correlation_"+fit+".pdf");
-
+  c2->Close();
+  
   // Finally make tables
   for (int ff = 0; ff < 2; ff++){
     cout << endl << "--------------------------------------------------" << endl;

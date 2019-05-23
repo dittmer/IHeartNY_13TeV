@@ -82,21 +82,20 @@ void runMakePlots(TString toPlot = "final"){
   }
 
   if (toPlot=="louise") {
-    makePlots("histfiles_full2016/","histfiles_full2016/","comb","ak8jetPt","0t",false,true,true);
-    makePlots("histfiles_full2016/","histfiles_full2016/","comb","ak8jetPt","1t0b",false,true,true);
-    makePlots("histfiles_full2016/","histfiles_full2016/","comb","ak8jetPt","1t1b",false,true,true);
-    makePlots("histfiles_full2016/","histfiles_full2016/","comb","ak8jetY","0t",false,true,true);
-    makePlots("histfiles_full2016/","histfiles_full2016/","comb","ak8jetY","1t0b",false,true,true);
-    makePlots("histfiles_full2016/","histfiles_full2016/","comb","ak8jetY","1t1b",false,true,true);
-    makePlots("histfiles_full2016/","histfiles_full2016/","comb","ak8jetY","1t1b",false,true,true);
-    combineResults("mu","comb26");
-    combineResults("el","comb26");
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetPt","0t",false,true,true);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetPt","1t0b",false,true,true);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetPt","1t1b",false,true,true);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetY","0t",false,true,true);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetY","1t0b",false,true,true);
+    makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetY","1t1b",false,true,true);
+    //combineResults("mu","comb26");
+    //combineResults("el","comb26");
   }
 
   if (toPlot == "all" || toPlot == "final"){
 
     bool unBlind = true;
-    
+
     for (int ii = 0; ii < 2; ii++){
       for (int jj = 0; jj < nregion; jj++){
 	for (int kk = 0; kk < nhist; kk++){
@@ -136,7 +135,7 @@ void runMakePlots(TString toPlot = "final"){
     
     cout << endl << "Finished with regular plots!" << endl << endl;
 
-    /*    for (int ii = 0; ii < 2; ii++){
+    for (int ii = 0; ii < 2; ii++){
       for (int jj = 0; jj < nhist; jj++){
 	makeQCDComp("histfiles_full2016/","histfiles_full2016/",channels[ii],hists[jj]);
       }
@@ -145,7 +144,7 @@ void runMakePlots(TString toPlot = "final"){
       makeQCDComp("histfiles_full2016/","histfiles_full2016/",channels[ii],"nAK8jet");
       makeQCDComp("histfiles_full2016/","histfiles_full2016/",channels[ii],"nTjet");
     }
-    */
+
     //for (int ii = 0; ii < nhist; ii++){
     //  compLepQCD("histfiles_full2016/",hists[ii],true);
     //  compLepQCD("histfiles_full2016/",hists[ii],false);
@@ -162,7 +161,7 @@ void runMakePlots(TString toPlot = "final"){
     }
     */
     //cout << endl << "Finished making shape comparisons!" << endl << endl;
-    
+
     makeCombineInputs("histfiles_full2016_latest/","histfiles_full2016_latest/","MC");
     makeCombineInputs("histfiles_full2016_latest/","histfiles_full2016_latest/","data");
     
@@ -221,11 +220,10 @@ void runMakePlots(TString toPlot = "final"){
   }
 
   if (toPlot == "combine"){
-    //makeCombineInputs("histfiles_full2016/","histfiles_full2016/");
-    combineResults("mu","mu26");
-    combineResults("el","el26");
-    combineResults("mu","comb26");
-    combineResults("el","comb26");
+    combineResults("mu","mu1");
+    combineResults("el","el1");
+    combineResults("mu","comb1");
+    combineResults("el","comb1");
   }
 
   if (toPlot == "troubleshoot"){
@@ -253,18 +251,5 @@ void runMakePlots(TString toPlot = "final"){
       plot2D("qcd","elEtaVs"+vars[ii]+"Nm1");
     }
     checkElID();
-  }
-
-  if (toPlot == "test"){
-    //makeCombineInputs("histfiles_full2016_latest/","histfiles_full2016_latest/","MC");
-    //makeCombineInputs("histfiles_full2016_latest/","histfiles_full2016_latest/","data");
-    combineResults("mu","mu26");
-    combineResults("el","el26");
-    combineResults("mu","comb26");
-    combineResults("el","comb26");
-    //combineResults("mu","mu1");
-    //combineResults("el","el1");
-    //combineResults("mu","comb1");
-    //combineResults("el","comb1");
   }
 }

@@ -189,19 +189,19 @@ if options.doSys:
 #  read histogram files
 # -------------------------------------------------------------------------------------
 
-DIR="histfiles_full2016"
-PL="_PL"
+DIR="histfiles_full2016_latest"
 
 #Louise version
-name_TTbarNom = "PLnew"
-name_TTbarNom_p2 = "v2_PLnew"
-name_TTbar_m700to1000 = "m700to1000_PLnew"
-name_TTbar_m1000toInf = "m1000toInf_PLnew"
+#name_TTbarNom = "PLnew"
+#name_TTbarNom_p2 = "v2_PLnew"
+#name_TTbar_m700to1000 = "m700to1000_PLnew"
+#name_TTbar_m1000toInf = "m1000toInf_PLnew"
 #Susan version
-#name_TTbarNom = "fullTruth_PLnew"
-#name_TTbarNom_p2 = "fullTruth_PLnew_p2"
-#name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew"
-#name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew"
+name_TTbarNom = "fullTruth"
+name_TTbarNom_p2 = "fullTruth_p2"
+name_TTbar_m700to1000 = "fullTruth_m700to1000"
+name_TTbar_m1000toInf = "fullTruth_m1000toInf"
+name_TTbarVar = "fullTruth_PLnew"
 
 muOrEl = "mu"
 if options.lepType=="ele":
@@ -331,8 +331,7 @@ if options.doSys:
 
     for thsysname in thsysnames:
         if thsysname is "ErdOn" or thsysname is "Herwig":
-            #f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_fullTruth_"+muOrEl+"_"+thsysname+"_post.root")
-            f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_"+name_TTbarNom+"_"+muOrEl+"_"+thsysname+"_post.root")
+            f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_"+name_TTbarVar+"_"+muOrEl+"_"+thsysname+"_post.root")
             response_sys = f_ttbar_sys.Get(response_name)
             response_sys.Sumw2()
             true_sys = f_ttbar_sys.Get(hTrue_name)
@@ -350,8 +349,7 @@ if options.doSys:
 
         else :
             for var in variants:
-                #f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_fullTruth_"+muOrEl+"_"+thsysname+var+"_post.root")
-                f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_"+name_TTbarNom+"_"+muOrEl+"_"+thsysname+var+"_post.root")
+                f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_"+name_TTbarVar+"_"+muOrEl+"_"+thsysname+var+"_post.root")
                 response_sys = f_ttbar_sys.Get(response_name)
                 response_sys.Sumw2()
                 true_sys = f_ttbar_sys.Get(hTrue_name)
@@ -418,7 +416,7 @@ if options.type == "half":
     thisTrue.Scale(2.0)
     
 #Rescale to data statistics
-f_data = TFile("histfiles_full2016/hists_Data_"+muOrEl+".root")
+f_data = TFile(DIR+"/hists_Data_"+muOrEl+".root")
 measData = f_data.Get(hMeas_name).Clone()
 measData.Sumw2()
 for ii in xrange(1,measData.GetNbinsX()+1):
@@ -533,39 +531,37 @@ for itoy in xrange(0,ntoys) :
         unfold_tmp.DoUnfold(0)
 
     hReco_tmp = unfold_tmp.GetOutput("tmp_output")
-    hReco_tmp.Add(thisTrue,-1.0)
-    hBias.Add(hReco_tmp)
-    hReco_tmp.Multiply(hReco_tmp)
-    hBias2.Add(hReco_tmp)
+    hBias_tmp = hReco_tmp.Clone()
+    hBias_tmp.Add(thisTrue,-1.0)
+    hBias_tmp.Divide(thisTrue)
+    hBias.Add(hBias_tmp)
+    hBias_tmp.Multiply(hBias_tmp)
+    hBias2.Add(hBias_tmp)
 
     hErrInput_tmp = unfold_tmp.GetEmatrixInput("mErrInput")
     hErrStat_tmp = unfold_tmp.GetEmatrixSysUncorr("mErrStat")
+    hErrTot_tmp = unfold_tmp.GetEmatrixTotal("mErrTotalTmp")    
 
-    if options.doSys :
-        hErrTot_tmp = unfold_tmp.GetEmatrixTotal("mErrTotalTmp")    
-        for ibin in xrange(0,nbinsTrue):
-            hErr_stat.SetBinContent(ibin+1,hErr_stat.GetBinContent(ibin+1)+math.sqrt(hErrInput_tmp.GetBinContent(ibin+1,ibin+1)+hErrStat_tmp.GetBinContent(ibin+1,ibin+1)))
-            hErr_stat2.SetBinContent(ibin+1,hErr_stat2.GetBinContent(ibin+1)+hErrInput_tmp.GetBinContent(ibin+1,ibin+1)+hErrStat_tmp.GetBinContent(ibin+1,ibin+1))
-            hErr_tot.SetBinContent(ibin+1,hErr_tot.GetBinContent(ibin+1)+math.sqrt(hErrTot_tmp.GetBinContent(ibin+1,ibin+1)))
-            hErr_tot2.SetBinContent(ibin+1,hErr_tot2.GetBinContent(ibin+1)+hErrTot_tmp.GetBinContent(ibin+1,ibin+1))
-    else : #If not including systematic uncertainties, look at input stat. unc. vs matrix stat. unc. instead
-        for ibin in xrange(0,nbinsTrue):
-            hErr_stat.SetBinContent(ibin+1,hErr_stat.GetBinContent(ibin+1)+math.sqrt(hErrInput_tmp.GetBinContent(ibin+1,ibin+1)))
-            hErr_stat2.SetBinContent(ibin+1,hErr_stat2.GetBinContent(ibin+1)+hErrInput_tmp.GetBinContent(ibin+1,ibin+1))
-            hErr_tot.SetBinContent(ibin+1,hErr_tot.GetBinContent(ibin+1)+math.sqrt(hErrStat_tmp.GetBinContent(ibin+1,ibin+1)))
-            hErr_tot2.SetBinContent(ibin+1,hErr_tot2.GetBinContent(ibin+1)+hErrStat_tmp.GetBinContent(ibin+1,ibin+1))
+    for ibin in xrange(0,nbinsTrue):
+        if options.doSys :
+            hErr_stat .AddBinContent(ibin+1,math.sqrt(hErrInput_tmp.GetBinContent(ibin+1,ibin+1)+hErrStat_tmp.GetBinContent(ibin+1,ibin+1))/hReco_tmp.GetBinContent(ibin+1))
+            hErr_stat2.AddBinContent(ibin+1,(hErrInput_tmp.GetBinContent(ibin+1,ibin+1)+hErrStat_tmp.GetBinContent(ibin+1,ibin+1))/pow(hReco_tmp.GetBinContent(ibin+1),2))
+            hErr_tot  .AddBinContent(ibin+1,math.sqrt(hErrTot_tmp.GetBinContent(ibin+1,ibin+1))/hReco_tmp.GetBinContent(ibin+1))
+            hErr_tot2 .AddBinContent(ibin+1,hErrTot_tmp.GetBinContent(ibin+1,ibin+1)/pow(hReco_tmp.GetBinContent(ibin+1),2))
+        else : #If not including systematic uncertainties, look at input stat. unc. vs matrix stat. unc. instead
+            hErr_stat .AddBinContent(ibin+1,math.sqrt(hErrInput_tmp.GetBinContent(ibin+1,ibin+1))/    hReco_tmp.GetBinContent(ibin+1))
+            hErr_stat2.AddBinContent(ibin+1,          hErrInput_tmp.GetBinContent(ibin+1,ibin+1) /pow(hReco_tmp.GetBinContent(ibin+1),2))
+            hErr_tot  .AddBinContent(ibin+1,math.sqrt(hErrStat_tmp.GetBinContent(ibin+1,ibin+1)) /    hReco_tmp.GetBinContent(ibin+1))
+            hErr_tot2 .AddBinContent(ibin+1,          hErrStat_tmp.GetBinContent(ibin+1,ibin+1)  /pow(hReco_tmp.GetBinContent(ibin+1),2))
             
 hBias.Scale(1.0/ntoys)
 hErr_stat.Scale(1.0/ntoys)
 hErr_tot.Scale(1.0/ntoys)
     
 for ibin in xrange(0,nbinsTrue):
-    hBias.SetBinError(ibin+1,math.sqrt(max(hBias2.GetBinContent(ibin+1)/ntoys - pow(hBias.GetBinContent(ibin+1),2),0.0000001))/thisTrue.GetBinContent(ibin+1))
-    hErr_stat.SetBinError(ibin+1,math.sqrt(max(hErr_stat2.GetBinContent(ibin+1)/ntoys - pow(hErr_stat.GetBinContent(ibin+1),2),0.0000001))/thisTrue.GetBinContent(ibin+1))
-    hErr_tot.SetBinError(ibin+1,math.sqrt(max(hErr_tot2.GetBinContent(ibin+1)/ntoys - pow(hErr_tot.GetBinContent(ibin+1),2),0.0000001))/thisTrue.GetBinContent(ibin+1))
-    hBias.SetBinContent(ibin+1,hBias.GetBinContent(ibin+1)/thisTrue.GetBinContent(ibin+1))
-    hErr_stat.SetBinContent(ibin+1,hErr_stat.GetBinContent(ibin+1)/thisTrue.GetBinContent(ibin+1))
-    hErr_tot.SetBinContent(ibin+1,hErr_tot.GetBinContent(ibin+1)/thisTrue.GetBinContent(ibin+1))
+    hBias    .SetBinError(ibin+1,math.sqrt(max(hBias2.GetBinContent(ibin+1)    /ntoys - pow(hBias.GetBinContent(ibin+1),2)    ,0.0000001)))
+    hErr_stat.SetBinError(ibin+1,math.sqrt(max(hErr_stat2.GetBinContent(ibin+1)/ntoys - pow(hErr_stat.GetBinContent(ibin+1),2),0.0000001)))
+    hErr_tot .SetBinError(ibin+1,math.sqrt(max(hErr_tot2.GetBinContent(ibin+1) /ntoys - pow(hErr_tot.GetBinContent(ibin+1),2) ,0.0000001)))
 
 ccc = TCanvas()
 gPad.SetGridy()

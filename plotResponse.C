@@ -73,22 +73,22 @@ void plotResponse(TString which="pt") {
   TString matrices[2] = {"response_"+which+"_split_TH2","response_"+which+"_split_TH2_PL"};
 
   // Louise version
-  TString name_TTbarNom = "PLnew";
-  TString name_TTbarNom_p2 = "v2_PLnew";
-  TString name_TTbar_m700to1000 = "m700to1000_PLnew";
-  TString name_TTbar_m1000toInf = "m1000toInf_PLnew";
+  //TString name_TTbarNom = "PLnew";
+  //TString name_TTbarNom_p2 = "v2_PLnew";
+  //TString name_TTbar_m700to1000 = "m700to1000_PLnew";
+  //TString name_TTbar_m1000toInf = "m1000toInf_PLnew";
   // Susan version
-  //TString name_TTbarNom = "fullTruth_PLnew";
-  //TString name_TTbarNom_p2 = "fullTruth_PLnew_p2";
-  //TString name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew";
-  //TString name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew";
-
+  TString name_TTbarNom = "fullTruth";
+  TString name_TTbarNom_p2 = "fullTruth_p2";
+  TString name_TTbar_m700to1000 = "fullTruth_m700to1000";
+  TString name_TTbar_m1000toInf = "fullTruth_m1000toInf";
+  TString DIR = "histfiles_full2016_latest";
 
   for (int ich = 0; ich < 2; ich++){
-    TFile* f_m0to700_p1 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channels[ich]+"_nom_post.root");
-    TFile* f_m0to700_p2 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channels[ich]+"_nom_post.root");
-    TFile* f_m700to1000 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channels[ich]+"_nom_post.root");
-    TFile* f_m1000toInf = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channels[ich]+"_nom_post.root");
+    TFile* f_m0to700_p1 = TFile::Open(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+channels[ich]+"_nom_post.root");
+    TFile* f_m0to700_p2 = TFile::Open(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channels[ich]+"_nom_post.root");
+    TFile* f_m700to1000 = TFile::Open(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channels[ich]+"_nom_post.root");
+    TFile* f_m1000toInf = TFile::Open(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channels[ich]+"_nom_post.root");
 
     for (int im = 0; im < 2; im++){
       TH2F* h_m0to700_p1 = (TH2F*) f_m0to700_p1->Get(matrices[im]);

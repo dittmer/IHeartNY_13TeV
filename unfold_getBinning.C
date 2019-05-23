@@ -95,21 +95,21 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   TString append = (doPL) ? "_PL" : ""; // particle level response matrix 
 
   // Louise version
-  TString name_TTbarNom = "PLnew";
-  TString name_TTbarNom_p2 = "v2_PLnew";
-  TString name_TTbar_m700to1000 = "m700to1000_PLnew";
-  TString name_TTbar_m1000toInf = "m1000toInf_PLnew";
+  //TString name_TTbarNom = "PLnew";
+  //TString name_TTbarNom_p2 = "v2_PLnew";
+  //TString name_TTbar_m700to1000 = "m700to1000_PLnew";
+  //TString name_TTbar_m1000toInf = "m1000toInf_PLnew";
   // Susan version
-  //TString name_TTbarNom = "fullTruth_PLnew";
-  //TString name_TTbarNom_p2 = "fullTruth_PLnew_p2";
-  //TString name_TTbar_m700to1000 = "fullTruth_m700to1000_PLnew";
-  //TString name_TTbar_m1000toInf = "fullTruth_m1000toInf_PLnew";
+  TString name_TTbarNom = "fullTruth";
+  TString name_TTbarNom_p2 = "fullTruth_p2";
+  TString name_TTbar_m700to1000 = "fullTruth_m700to1000";
+  TString name_TTbar_m1000toInf = "fullTruth_m1000toInf";
+  TString DIR = "histfiles_full2016_latest";
 
-
-  TFile* f_ttbar_m0to700_p1 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_post.root");
-  TFile* f_ttbar_m0to700_p2 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_nom_post.root");
-  TFile* f_ttbar_m700to1000 = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_nom_post.root");
-  TFile* f_ttbar_m1000toInf = TFile::Open("histfiles_full2016/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_nom_post.root");   	
+  TFile* f_ttbar_m0to700_p1 = TFile::Open(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_post.root");
+  TFile* f_ttbar_m0to700_p2 = TFile::Open(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_nom_post.root");
+  TFile* f_ttbar_m700to1000 = TFile::Open(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_nom_post.root");
+  TFile* f_ttbar_m1000toInf = TFile::Open(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_nom_post.root");   	
 
   TH2D* h_response_m0to700_p1 = (TH2D*) f_ttbar_m0to700_p1->Get("response_fine_"+which+"_TH2"+append);
   TH2D* h_response_m0to700_p2 = (TH2D*) f_ttbar_m0to700_p2->Get("response_fine_"+which+"_TH2"+append);
