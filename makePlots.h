@@ -182,7 +182,8 @@ SummedHist * getWJets( TString DIR, TString histname, TString region, TString ch
     0.03216 * 1.21 * LUM[ich] / 2384260.,
   };
 
-  int plotcolor = kGreen-3;
+  //int plotcolor = kGreen-3;
+  int plotcolor = kGreen-10;
   if (split == "bb") plotcolor = kRed+1;
   if (split == "b") plotcolor = kRed-7;
   if (split == "cc") plotcolor = 6;
@@ -228,7 +229,7 @@ SummedHist * getDiboson( TString DIR, TString histname, TString region, TString 
     15.4 * LUM[ich] / 990064.,
   };
 
-  int plotcolor = kViolet-6;
+  int plotcolor = kYellow;
   
   SummedHist* diboson = new SummedHist( histname, plotcolor );
   
@@ -257,8 +258,9 @@ SummedHist * getZJets( TString DIR, TString histname, TString region, TString ch
   
   double zjets_norm = 5765 * LUM[ich] / 42923575.; //Nevents from Louise, xsec from AN-17-003
 
-  int plotcolor = kAzure-9;
-  
+  //int plotcolor = kAzure-9;
+  int plotcolor = kGreen-8;
+
   SummedHist* zjets = new SummedHist( histname, plotcolor );
   TString iname = DIR + "hists_ZJets_" + channel + "_" + syst + append + ".root";
   TH1* hist = (TH1*) getHist(iname,histname,region,split);
@@ -299,7 +301,8 @@ SummedHist * getSingleTop( TString DIR, TString histname, TString region, TStrin
     10.32 * 0.322 * LUM[ich] / 9651642. // BR is needed because s-channel sample is leptonic final state only
   };
   
-  SummedHist* singletop = new SummedHist( histname, 6 );
+  //SummedHist* singletop = new SummedHist( histname, 6 );
+  SummedHist* singletop = new SummedHist( histname, kOrange-1 );
   
   for (int i=0; i<nsingletop; i++) {
     TString iname = DIR + "hists_" + singletop_names[i] + "_" + channel + "_" + syst + append + ".root";
@@ -389,10 +392,12 @@ SummedHist * getTTbar( TString DIR, TString histname, TString region, TString ch
   int ich = 0;
   if (channel == "el") ich = 1;
 
-  TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_fullTruth_mInc" : "PowhegPythia8_fullTruth";
+  //TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_fullTruth_mInc" : "PowhegPythia8_fullTruth";
+  TString ttbar_name = (usePost && !isQCD) ? "PowhegPythia8_PLnew_mInc" : "PowhegPythia8_PLnew";
   double ttbar_norm = 831.76 * LUM[ich] / 77229341.;
   
-  SummedHist* ttbar = new SummedHist( histname, kRed+1);
+  //SummedHist* ttbar = new SummedHist( histname, kRed+1);
+  SummedHist* ttbar = new SummedHist( histname, kRed-10);
   TString iname = DIR + "hists_" + ttbar_name + "_" + channel + "_" + syst + append + ".root";
   TH1* hist = (TH1*) getHist(iname,histname,region,split);
   ttbar->push_back( hist, ttbar_norm );
@@ -500,7 +505,8 @@ TH1 * getQCDData(TString sigDIR, TString sideDIR, TString histname, TString regi
     float n_qcd = 0.0;
     n_qcd = h_qcd_mc->GetSum();
     if (h_qcd->Integral() > 0.0) h_qcd->Scale(n_qcd / h_qcd->Integral());
-    h_qcd->SetFillColor(kYellow);
+    //h_qcd->SetFillColor(kYellow);
+    h_qcd->SetFillColor(kBlue-10);
     
     //wjets->Delete();
     //singletop->Delete();

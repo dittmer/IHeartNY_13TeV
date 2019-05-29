@@ -69,6 +69,9 @@ void drawCombineMatrix() {
   
   TH1::AddDirectory(kFALSE);
   gStyle->SetOptStat(0);
+  gStyle->SetPaintTextFormat("1.2f");
+  gStyle->SetTextFont(42);
+  gStyle->SetPalette(kLightTemperature);
 
   
   TString var[2] = {"pt","y"};
@@ -76,6 +79,7 @@ void drawCombineMatrix() {
   
   TCanvas c;
 
+  /*
   double length[2] {0.00, 1.00};
   //double red[2] = {0.99, 0.32};
   //double green[2] = {0.99, 0.42};
@@ -87,7 +91,7 @@ void drawCombineMatrix() {
   gStyle->SetNumberContours(256);
   gStyle->SetPadRightMargin(0.12);
   gStyle->SetPaintTextFormat(".1f");
-
+  */
 
   for (int iv=0; iv<2; iv++) {
     for (int il=0; il<2; il++) {
@@ -106,7 +110,8 @@ void drawCombineMatrix() {
       for (int ir = 1; ir < nbins+1; ir++){
 	double rowsum = h0->Integral(1,nbins,ir,ir);
 	for (int ic = 1; ic < nbins+1; ic++){
-	  double normval = rowsum > 0.0 ? h0->GetBinContent(ic,ir) / rowsum * 100.0 : 0.0;
+	  //double normval = rowsum > 0.0 ? h0->GetBinContent(ic,ir) / rowsum * 100.0 : 0.0;
+	  double normval = rowsum > 0.0 ? h0->GetBinContent(ic,ir) / rowsum : 0.0;
 	  h0->SetBinContent(ic,ir,normval);
 	}
       }
@@ -138,7 +143,9 @@ void drawCombineMatrix() {
       h0->GetXaxis()->SetTitleOffset(1.2);
       h0->GetYaxis()->SetTitleOffset(1.3);
 
-      h0->Draw("colz");
+      h0->SetAxisRange(0.01,1,"Z");
+
+      h0->Draw("text colz");
       //h0->Draw("text,same");
 
       drawCMS(0.10,0.92, false);

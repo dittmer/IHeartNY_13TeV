@@ -1695,7 +1695,10 @@ void combineResults(TString channel, TString fit) {
     TString histtitle = h_data->GetXaxis()->GetTitle();
 
     // Now we've gotten all the counts and errors, move on to plotting
-    int colors[ncats-1] = {kRed+1,6,kGreen-3,kYellow,kAzure-9,kViolet-6};
+    //int colors[ncats-1] = {kRed+1,6,kGreen-3,kYellow,kAzure-9,kViolet-6};
+    //TString cats[ncats] = {"TTbar","SingleTop","WJets","ZJets","Diboson","QCD","total"};
+    int colors[ncats-1] = {kRed-10,kOrange-1,kGreen-10,kGreen-8,kYellow,kBlue-10};
+
     for (int ff = 0; ff < 2; ff++){
       THStack* h_stack = new THStack();
       for (int ic = 0; ic < ncats-1; ic++){
