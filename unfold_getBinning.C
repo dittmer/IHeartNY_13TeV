@@ -95,15 +95,15 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   TString append = (doPL) ? "_PL" : ""; // particle level response matrix 
 
   // Louise version
-  //TString name_TTbarNom = "PLnew";
-  //TString name_TTbarNom_p2 = "v2_PLnew";
-  //TString name_TTbar_m700to1000 = "m700to1000_PLnew";
-  //TString name_TTbar_m1000toInf = "m1000toInf_PLnew";
+  TString name_TTbarNom = "PLnew";
+  TString name_TTbarNom_p2 = "v2_PLnew";
+  TString name_TTbar_m700to1000 = "m700to1000_PLnew";
+  TString name_TTbar_m1000toInf = "m1000toInf_PLnew";
   // Susan version
-  TString name_TTbarNom = "fullTruth";
-  TString name_TTbarNom_p2 = "fullTruth_p2";
-  TString name_TTbar_m700to1000 = "fullTruth_m700to1000";
-  TString name_TTbar_m1000toInf = "fullTruth_m1000toInf";
+  //TString name_TTbarNom = "fullTruth";
+  //TString name_TTbarNom_p2 = "fullTruth_p2";
+  //TString name_TTbar_m700to1000 = "fullTruth_m700to1000";
+  //TString name_TTbar_m1000toInf = "fullTruth_m1000toInf";
   TString DIR = "histfiles_full2016_latest";
 
   TFile* f_ttbar_m0to700_p1 = TFile::Open(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_nom_post.root");
@@ -287,13 +287,13 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
   leg2->AddEntry(h_res_rms, "Resolution (RMS)", "l");
   leg2->AddEntry(h_stat_unc, "Stat. Unc.", "l");
   leg2->Draw();
-
+  
   if (doPL) mySmallText(0.2,0.8,1,0.04,"Particle level");
   else mySmallText(0.2,0.8,1,0.04,"Parton level");
-
+  
   c2.SaveAs("UnfoldingPlots/resolution_"+channel+"_"+which+append+".pdf");
-
-
+  
+  
   // -------------------------------------------------------------------------------------
   // plot response matrices 
   // -------------------------------------------------------------------------------------
@@ -350,6 +350,11 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
     cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_full_"+which+"_"+channel+"_nom"+append+".pdf");
   }
 
+  // save to file
+  TFile* matrices = new TFile("response_"+which+"_"+channel+append+".root","recreate");
+  h_response_final->Write();
+  matrices->Close();
+
   // normalize so that for each bin of true top quark pt(eta), the bins in measured top pt(eta) add up to 100%
   for (int ir = 1; ir < nbins_final+1; ir++){
     double rowsum = h_response_final->Integral(1,nbins_final,ir,ir);
@@ -361,12 +366,32 @@ void unfold_getBinning(TString channel, TString which, bool doPL = false) {
 
 
   if (which == "pt"){
+
+    if (doPL) {
+      h_response_final->GetXaxis()->SetTitle("Detector-level top jet p_{T} [GeV]");
+      h_response_final->GetYaxis()->SetTitle("Particle-level top jet p_{T} [GeV]");
+    }
+    else {
+      h_response_final->GetXaxis()->SetTitle("Detector-level top jet p_{T} [GeV]");
+      h_response_final->GetYaxis()->SetTitle("Parton-level top quark p_{T} [GeV]");
+    }
+
     h_response_final->SetAxisRange(401.0,1199.0,"X");
     h_response_final->SetAxisRange(401.0,1199.0,"Y");
     h_response_final->Draw("colz");
     cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_zoom_"+which+"_"+channel+"_nom"+append+".pdf");
   }
   else {
+
+    if (doPL) {
+      h_response_final->GetXaxis()->SetTitle("Detector-level top jet rapidity");
+      h_response_final->GetYaxis()->SetTitle("Particle-level top jet rapidity");
+    }
+    else {
+      h_response_final->GetXaxis()->SetTitle("Detector-level top jet rapidity");
+      h_response_final->GetYaxis()->SetTitle("Parton-level top quark rapidity");
+    }
+
     h_response_final->Draw("colz");
     cr.SaveAs("UnfoldingPlots/unfold_responseMatrix_"+which+"_"+channel+"_nom"+append+".pdf");
   }
