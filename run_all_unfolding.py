@@ -127,7 +127,8 @@ if options.closureTests :
 
 else :
     path = [
-        "python unfoldTopPt.py --toUnfold="+options.toUnfold+" --level="+options.level
+        "python unfoldTopPt.py --toUnfold="+options.toUnfold+" --level="+options.level,
+        "python unfoldTopPt.py --toUnfold="+options.toUnfold+" --level="+options.level+" --norm",
     ]
 
 ## run actual unfolding
