@@ -932,10 +932,8 @@ for channel in channels:
           
     else :
       for hist in hSingleSource:
-        #hist.Divide(thisReco)
         for ibin in xrange(hist.GetNbinsX()):
           hist.SetBinContent(ibin+1,hist.GetBinContent(ibin+1)/thisReco.GetBinContent(ibin+1))
-          #hist.SetBinError(ibin+1,0)
           
     for ibin in xrange(1,nbinsTrue+1):
       h_STAT.SetBinContent(ibin,math.sqrt(pow(h_INPUT.GetBinContent(ibin),2)+pow(h_MATRIX.GetBinContent(ibin),2)))
@@ -969,27 +967,33 @@ for channel in channels:
         h_TOT.SetBinContent(ibin,math.sqrt(tot_exp+tot_th+pow(h_STAT.GetBinContent(ibin),2)+0.025*0.025))
         h_LUMI.SetBinContent(ibin,0.025)                        
 
-    # WHAT TO DO ABOUT COVARIANCE MATRICES FOR NORM?
-    #
-    # Probably best to construct new
-    # This is straightforward for systematic uncertainties, but how to deal with statistical ones?
-    if not options.norm:
+    # TODO -- proper treatment of statistical covariance for normalized
+    if options.norm:
+      hErrTot = unfold["Up"].GetEmatrixTotal("mErrTotalUp").Clone()
+      hErrTot.Reset()
+      for ibinx in xrange(1,nbinsTrue+1):
+        hErrTot.AddBinContent(hErrTot.GetBin(ibinx,ibinx),pow(h_STAT.GetBinContent(ibinx),2)+pow(h_BSTAT.GetBinContent(ibinx),2))
+        for ibiny in xrange(1,nbinsTrue+1):
+          for background in backgrounds[channel]:
+            hErrTot.AddBinContent(hErrTot.GetBin(ibinx,ibiny),hErrBkgScale[background.name].GetBinContent(ibinx)*hErrBkgScale[background.name].GetBinContent(ibiny))
+          for sysname in allsysnames:
+            hErrTot.AddBinContent(hErrTot.GetBin(ibinx,ibiny),(hErrSys["Up"][sysname].GetBinContent(ibinx)*hErrSys["Up"][sysname].GetBinContent(ibiny)+hErrSys["Down"][sysname].GetBinContent(ibinx)*hErrSys["Down"][sysname].GetBinContent(ibiny))/2.0)
+      
+    else:
       hErrTotUp = unfold["Up"].GetEmatrixTotal("mErrTotalUp")
       hErrTotDn = unfold["Down"].GetEmatrixTotal("mErrTotalDown")
       hErrTot = hErrTotUp.Clone()
       hErrTot.Add(hErrTotDn)
       hErrTot.Scale(0.5)
 
-      hCovSysFSR = hErrInput.Clone()
+      # Correct FSR -- FSR uncertainty in unfolding is too large by factor sqrt(2), so contribution to covariance is 2x too large
+      hCovSysFSR = hErrTot.Clone()
       hCovSysFSR.Reset()
       for ibinx in xrange(1,nbinsTrue+1):
         for ibiny in xrange(1,nbinsTrue+1):
           hCovSysFSR.SetBinContent(ibinx,ibiny,(hErrSys["Up"]["FSR"].GetBinContent(ibinx)*hErrSys["Up"]["FSR"].GetBinContent(ibiny)+hErrSys["Down"]["FSR"].GetBinContent(ibinx)*hErrSys["Down"]["FSR"].GetBinContent(ibiny))/2.0)
-      
-      # Correct FSR
-      if "FSR" in allsysnames:
-        hErrTot.Add(hCovSysFSR,-0.5) #Contribution from FSR to total covariance decreases by 0.5       
-            
+      hErrTot.Add(hCovSysFSR,-1.0)
+
     # Plot error breakdown
     c6 = TCanvas("c6", "", 800, 600)
     c6.SetTopMargin(0.08)
@@ -1310,38 +1314,37 @@ for channel in channels:
     # -------------------------------------------------------------------------------------
     # Plot covariance matrix
     # -------------------------------------------------------------------------------------
-    if not options.norm:
-      gStyle.SetPadRightMargin(0.12)
-      gStyle.SetPadLeftMargin(0.15)
-      gStyle.SetPadTopMargin(0.07)
-      gStyle.SetPadBottomMargin(0.15)
+    gStyle.SetPadRightMargin(0.12)
+    gStyle.SetPadLeftMargin(0.15)
+    gStyle.SetPadTopMargin(0.07)
+    gStyle.SetPadBottomMargin(0.15)
 
-      diags = []
-      for ibin in xrange(0,nbinsTrue):
-        tmp = math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) if (math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) is not 0) else 1.0
-        diags.append(tmp)
-      for ibinx in xrange(1,nbinsTrue+1):
-        for ibiny in xrange(1,nbinsTrue+1):
-          tmp = hErrTot.GetBinContent(ibinx,ibiny) / diags[ibinx-1] / diags[ibiny-1]
-          hErrTot.SetBinContent(ibinx,ibiny,tmp)
+    diags = []
+    for ibin in xrange(0,nbinsTrue):
+      tmp = math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) if (math.sqrt(hErrTot.GetBinContent(ibin+1,ibin+1)) is not 0) else 1.0
+      diags.append(tmp)
+    for ibinx in xrange(1,nbinsTrue+1):
+      for ibiny in xrange(1,nbinsTrue+1):
+        tmp = hErrTot.GetBinContent(ibinx,ibiny) / diags[ibinx-1] / diags[ibiny-1]
+        hErrTot.SetBinContent(ibinx,ibiny,tmp)
 
-      c4 = TCanvas()
-      if options.toUnfold == "pt":
-        hErrTot.GetXaxis().SetRangeUser(400.,1199.)
-        hErrTot.GetYaxis().SetRangeUser(400.,1199.)
-      hErrTot.GetZaxis().SetRangeUser(-1.0,1.0)
-      hErrTot.SetTitle(";unfolded top "+labelstring1+" "+labelstring2+";unfolded top "+labelstring1+" "+labelstring2)
+    c4 = TCanvas()
+    if options.toUnfold == "pt":
+      hErrTot.GetXaxis().SetRangeUser(400.,1199.)
+      hErrTot.GetYaxis().SetRangeUser(400.,1199.)
+    hErrTot.GetZaxis().SetRangeUser(-1.0,1.0)
+    hErrTot.SetTitle(";unfolded top "+labelstring1+" "+labelstring2+";unfolded top "+labelstring1+" "+labelstring2)
 
-      hErrTot.Draw("colz")
-      
-      drawCMS(0.16,0.945)
-
-      c4.SaveAs("UnfoldingPlots/covariance_"+options.toUnfold+"_"+options.level+"_"+channel+"_data.pdf")
-
-      gStyle.SetPadTopMargin(0.07)
-      gStyle.SetPadRightMargin(0.05)
-      gStyle.SetPadBottomMargin(0.16)
-      gStyle.SetPadLeftMargin(0.18)
+    hErrTot.Draw("colz")
+    
+    drawCMS(0.16,0.945)
+    
+    c4.SaveAs("UnfoldingPlots/covariance_"+options.toUnfold+"_"+options.level+"_"+channel+normname+"_data.pdf")
+    
+    gStyle.SetPadTopMargin(0.07)
+    gStyle.SetPadRightMargin(0.05)
+    gStyle.SetPadBottomMargin(0.16)
+    gStyle.SetPadLeftMargin(0.18)
     
     # -------------------------------------------------------------------------------------
     # Translate to cross section (not events) in bins of pt N/L/BR)
