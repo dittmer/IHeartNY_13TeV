@@ -217,7 +217,9 @@ Hres_sys = {}
 backgrounds = {}
 
 trueHerwig = {}
-trueMCNLO = {}
+plotmcnlo=False # need to rerun to account for negative weights... i (=louise) forgot about that...
+if plotmcnlo:
+    trueMCNLO = {}
 
 channels = ["mu","el"]
 sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
@@ -395,6 +397,13 @@ for channel in channels:
                     response_sys.SetBinContent(ibin,0,0)
 
                 Hres_sys[thsysname+var+"_"+channel] = response_sys
+
+    ## additional theory comparison 
+    if plotmcnlo:
+        f_mcnlo = TFile(DIR+"/hists_TTJets_amcatnloFXFX_"+name_TTbarVar+"_"+channel+"_nom_post.root")
+        trueMCNLO[channel] = f_mcnlo.Get(hTrue_name)
+        trueMCNLO[channel].Sumw2()
+        trueMCNLO[channel].Scale(831.76 * 35867.0 / 44350533) #Number events in miniAOD datasets
 
 
     # -------------------------------------------------------------------------------------
@@ -800,6 +809,10 @@ thisExpect["comb"].Add(thisExpect["el"])
 trueHerwig["comb"] = trueHerwig["mu"].Clone()
 trueHerwig["comb"].Add(trueHerwig["el"])
 
+if plotmcnlo:
+    trueMCNLO["comb"] = trueMCNLO["mu"].Clone()
+    trueMCNLO["comb"].Add(trueMCNLO["el"])
+
 backgrounds["comb"] = []
 for ibkg in xrange(0,len(backgrounds["mu"])-1):
     bkg_comb = Background(backgrounds["mu"][ibkg].name, backgrounds["mu"][ibkg].norm, backgrounds["mu"][ibkg].err, backgrounds["mu"][ibkg].color)
@@ -922,6 +935,8 @@ for channel in channels:
       thisMeas[channel]  .Scale(1.0/thisMeas[channel]  .Integral(1,nbinsTrue+1))
       thisReco           .Scale(1.0/thisReco           .Integral(1,nbinsTrue+1))
       trueHerwig[channel].Scale(1.0/trueHerwig[channel].Integral(1,nbinsTrue+1))
+      if plotmcnlo:
+          trueMCNLO[channel] .Scale(1.0/trueMCNLO[channel].Integral(1,nbinsTrue+1))
 
       for hist in hSingleSource:
         hist.Add(thisReco,-1.0)
@@ -1359,6 +1374,8 @@ for channel in channels:
         thisReco.Scale(1.0/(lum*BR)) # unfolded to parton level
 
         trueHerwig[channel].Scale(1.0/(lum*BR)) # true @ parton level
+        if plotmcnlo:
+            trueMCNLO[channel].Scale(1.0/(lum*BR)) # true @ parton level
 
         
     # -------------------------------------------------------------------------------------
@@ -1377,7 +1394,11 @@ for channel in channels:
 
         trueHerwig[channel].SetBinContent(ibin, trueHerwig[channel].GetBinContent(ibin) / width )
         trueHerwig[channel].SetBinError(ibin, trueHerwig[channel].GetBinError(ibin) / width )
-        
+
+        if plotmcnlo:
+            trueMCNLO[channel].SetBinContent(ibin, trueMCNLO[channel].GetBinContent(ibin) / width )
+            trueMCNLO[channel].SetBinError(ibin, trueMCNLO[channel].GetBinError(ibin) / width )
+
     for ibin in range(1, nbinsMeas+1) :
         
         width = thisMeas[channel].GetBinWidth(ibin)
@@ -1411,6 +1432,13 @@ for channel in channels:
     hFracHerwig.SetName("hFracHerwig")
     hFracHerwig.SetTitle(";Top "+labelstring1+" "+labelstring2+";Theory/Data")
     hFracHerwig.Divide(dataNoUnc)
+
+    ## and MC@NLO
+    if plotmcnlo:
+        hFracMCNLO = trueMCNLO[channel].Clone()
+        hFracMCNLO.SetName("hFracMCNLO")
+        hFracMCNLO.SetTitle(";Top "+labelstring1+" "+labelstring2+";Theory/Data")
+        hFracMCNLO.Divide(dataNoUnc)
 
     if channel == "comb":
         hRelUncMinus = h_TOT.Clone("RelUncMinus")
@@ -1449,6 +1477,8 @@ for channel in channels:
         thisMeas[channel].GetXaxis().SetRangeUser(400.,1199.)
 
         trueHerwig[channel].GetXaxis().SetRangeUser(400.,1199.)
+        if plotmcnlo:
+            trueMCNLO[channel].GetXaxis().SetRangeUser(400.,1199.)
         
     if options.norm: 
         if options.toUnfold == "pt":
@@ -1608,6 +1638,8 @@ for channel in channels:
             hFrac.SetBinContent(ibin, hFrac.GetBinContent(ibin)-1)
             h_STAT.SetBinContent(ibin, h_STAT.GetBinContent(ibin)-1)
             hFracHerwig.SetBinContent(ibin, hFracHerwig.GetBinContent(ibin)-1)
+            if plotmcnlo:
+                hFracMCNLO.SetBinContent(ibin, hFracMCNLO.GetBinContent(ibin)-1)
                     
         if options.norm: 
             thisReco.SetName("NormCrossSection_"+LEVEL+"_Nominal")
@@ -1618,6 +1650,9 @@ for channel in channels:
             hFrac.SetName("NormRatioOverData_PowhegPythia8")
             trueHerwig[channel].SetName("NormCrossSection_PowhegHerwigpp")
             hFracHerwig.SetName("NormRatioOverData_PowhegHerwigpp")
+            if plotmcnlo:
+                trueMCNLO[channel].SetName("NormCrossSection_amcatnloPythia8")
+                hFracMCNLO.SetName("NormRatioOverData_amcatnloPythia8")
         else:
             thisReco.SetName("CrossSection_"+LEVEL+"_Nominal")
             h_STAT.SetName("CrossSectionRatio")
@@ -1625,6 +1660,9 @@ for channel in channels:
             hFrac.SetName("RatioOverData_PowhegPythia8")
             trueHerwig[channel].SetName("CrossSection_PowhegHerwigpp")
             hFracHerwig.SetName("RatioOverData_PowhegHerwigpp")
+            if plotmcnlo:
+                trueMCNLO[channel].SetName("CrossSection_amcatnloPythia8")
+                hFracMCNLO.SetName("RatioOverData_amcatnloPythia8")
         thisReco.Write()
         h_STAT.Write()
         hRelUncMinus.Write()
@@ -1633,6 +1671,9 @@ for channel in channels:
         hFrac.Write()
         trueHerwig[channel].Write()
         hFracHerwig.Write()
+        if plotmcnlo:
+            trueMCNLO[channel].Write()
+            hFracMCNLO.Write()
 
         fout.Close()
     

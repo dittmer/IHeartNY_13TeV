@@ -30,7 +30,7 @@ python unfoldTopPt.py --toUnfold="y"
 hadd CrossSection_Parton_y.root CrossSection_Parton_y_TMP.root CrossSection_Parton_y_norm_TMP.root 
 rm CrossSection_Parton_y_TMP.root CrossSection_Parton_y_norm_TMP.root 
 
-root -b -q 'DrawCrossSection.C("Parton","y","y^{t} [GeV]","d#sigma/dy^{t} [pb]","1/#sigma d#sigma/dy^{t} []",0, 10, -2, 2, 0, 1, -2, 2, false)' 
+root -b -q 'DrawCrossSection.C("Parton","y","|y^{t}|","d#sigma/dy^{t} [pb]","1/#sigma d#sigma/dy^{t}",0, 10, -2, 2, 0, 1, -2, 2, false)' 
 
 
 ## PARTICLE RAPIDITY
@@ -42,6 +42,6 @@ python unfoldTopPt.py --level="part" --toUnfold="y"
 hadd CrossSection_Particle_y.root CrossSection_Particle_y_TMP.root CrossSection_Particle_y_norm_TMP.root 
 rm CrossSection_Particle_y_TMP.root CrossSection_Particle_y_norm_TMP.root 
 
-root -b -q 'DrawCrossSection.C("Particle","y","y^{t} [GeV]","d#sigma/dy^{t} [pb]","1/#sigma d#sigma/dy^{t} []",0, 5, -2, 2, 0, 1, -2, 2, false)' 
+root -b -q 'DrawCrossSection.C("Particle","y","|y^{t}|","d#sigma/dy^{t} [pb]","1/#sigma d#sigma/dy^{t}",0, 5, -2, 2, 0, 1, -2, 2, false)' 
 
 

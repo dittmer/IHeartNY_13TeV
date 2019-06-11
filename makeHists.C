@@ -998,6 +998,10 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       tree->SetBranchAddress("eventWeight_alphaUp"    , &eventWeight_alphaUp   , &b_eventWeight_alphaUp   );
       tree->SetBranchAddress("eventWeight_alphaDown"  , &eventWeight_alphaDown , &b_eventWeight_alphaDown );
     }
+    else if (sample.Contains("amcatnloFXFX") && isSignal) {
+      tree->SetBranchAddress("truthChannel"           , &truthChannel        , &b_truthChannel        );     
+    }
+    
   }
   
   // parton level

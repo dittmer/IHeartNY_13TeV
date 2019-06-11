@@ -7,21 +7,24 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
 
   gROOT->ForceStyle();
   
-  const int NTHEORY = 2;
-  
   /*
+  const int NTHEORY = 3;
+  
   TString THEORY_ALIAS[NTHEORY] = {"PowhegPythia8","amcatnloPythia8","PowhegHerwigpp"};
   int THEORY_COLOR[NTHEORY]  = {kRed,kBlue,kGreen+2};
   int THEORY_MSTYLE[NTHEORY] = {20,25,26};
   int THEORY_LSTYLE[NTHEORY] = {1,1,1};
   int THEORY_FSTYLE[NTHEORY] = {3004,3003,3005};
   */
+
+  const int NTHEORY = 2;
+  
   TString THEORY_ALIAS[NTHEORY] = {"PowhegPythia8","PowhegHerwigpp"};
   int THEORY_COLOR[NTHEORY]  = {kRed,kGreen+2};
   int THEORY_MSTYLE[NTHEORY] = {20,26};
   int THEORY_LSTYLE[NTHEORY] = {1,1};
   int THEORY_FSTYLE[NTHEORY] = {3004,3005};
-  
+
   TFile *inf;
   TH1F *hTheory[NTHEORY],*hTheoryNorm[NTHEORY],*hTheoryHIST[NTHEORY],*hTheoryNormHIST[NTHEORY];
   TH1F *hTheoryRatio[NTHEORY],*hTheoryRatioNorm[NTHEORY],*hTheoryRatioHIST[NTHEORY],*hTheoryRatioNormHIST[NTHEORY];
@@ -176,7 +179,8 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   leg->AddEntry(hTotalRelUncMinus,"Total unc.","F");
   leg->AddEntry(hTheory[0],"Powheg+Pythia8","F");
   //leg->AddEntry(hTheory[1],"aMC@NLO+Pythia8","F");
-  leg->AddEntry(hTheory[1],"Powheg+Herwigpp","F");
+  //leg->AddEntry(hTheory[2],"Powheg+Herwig++","F");
+  leg->AddEntry(hTheory[1],"Powheg+Herwig++","F");
   leg->SetFillColor(0);
   leg->SetTextFont(42);
   leg->SetTextSize(0.035);
@@ -197,12 +201,13 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
     gPad->SetLogy();
     //gPad->SetLogx();
   }
-  
   can->cd(1)->SetBottomMargin(0.35);
-  
+  can->cd(1)->SetRightMargin(0.05);
+
   hSignal->GetXaxis()->SetTitleSize(0);
   hSignal->GetXaxis()->SetLabelSize(0);
   
+  hSignal->GetYaxis()->SetLabelSize(0.045);
   hSignal->GetYaxis()->SetTitle(YTITLE);
   hSignal->GetYaxis()->SetRangeUser(YMIN,YMAX);
 
@@ -226,6 +231,7 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
 
   TPad *pad = new TPad("pad","pad",0.,0.,1.,1.);
   pad->SetTopMargin(0.67);
+  pad->SetRightMargin(0.05);
   pad->SetFillColor(0);
   pad->SetFillStyle(0);
   pad->Draw();
@@ -239,10 +245,14 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   hSignalRatio->SetMarkerStyle(20);
   hSignalRatio->SetMarkerSize(1.2);
 
+  hTotalRelUncMinus->GetXaxis()->SetLabelSize(0.045);
+
   hTotalRelUncMinus->GetYaxis()->SetRangeUser(RMIN,RMAX);
   hTotalRelUncMinus->GetXaxis()->SetTitle(XTITLE);
-  hTotalRelUncMinus->GetYaxis()->SetTitleSize(0.04);
-  hTotalRelUncMinus->GetYaxis()->SetLabelSize(0.03);
+  //hTotalRelUncMinus->GetYaxis()->SetTitleSize(0.04);
+  hTotalRelUncMinus->GetYaxis()->SetTitleSize(0.045);
+  //hTotalRelUncMinus->GetYaxis()->SetLabelSize(0.03);
+  hTotalRelUncMinus->GetYaxis()->SetLabelSize(0.04);
   hTotalRelUncMinus->GetYaxis()->SetNdivisions(505);
   hTotalRelUncMinus->GetYaxis()->SetTitle("The./data-1");
   hTotalRelUncMinus->Draw("hist");
@@ -266,11 +276,14 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
 
   TCanvas *canNorm = new TCanvas(CAN_TITLE+"_Norm",CAN_TITLE+"_Norm",800,704);
   canNorm->cd(1)->SetBottomMargin(0.35);
+  canNorm->cd(1)->SetRightMargin(0.05);
+
   if (LOGY) {
     gPad->SetLogy();
     //gPad->SetLogx();
   }
   
+  hSignalNorm->GetYaxis()->SetLabelSize(0.045);
   hSignalNorm->GetXaxis()->SetTitleSize(0);
   hSignalNorm->GetXaxis()->SetLabelSize(0);
   hSignalNorm->GetYaxis()->SetRangeUser(YMIN_NORM,YMAX_NORM);
@@ -296,6 +309,7 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
 
   TPad *padNorm = new TPad("padNorm","padNorm",0.,0.,1.,1.);
   padNorm->SetTopMargin(0.67);
+  padNorm->SetRightMargin(0.05);
   padNorm->SetFillColor(0);
   padNorm->SetFillStyle(0);
   padNorm->Draw();
@@ -310,10 +324,14 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   hSignalRatioNorm->SetMarkerStyle(20);
   hSignalRatioNorm->SetMarkerSize(1.2);
   
+  hTotalRelUncMinusNorm->GetXaxis()->SetLabelSize(0.045);
+
   hTotalRelUncMinusNorm->GetYaxis()->SetRangeUser(RMIN_NORM,RMAX_NORM);
   hTotalRelUncMinusNorm->GetXaxis()->SetTitle(XTITLE);
-  hTotalRelUncMinusNorm->GetYaxis()->SetTitleSize(0.04);
+  //hTotalRelUncMinusNorm->GetYaxis()->SetTitleSize(0.04);
+  hTotalRelUncMinusNorm->GetYaxis()->SetTitleSize(0.045);
   hTotalRelUncMinusNorm->GetYaxis()->SetLabelSize(0.03);
+  hTotalRelUncMinusNorm->GetYaxis()->SetLabelSize(0.04);
   hTotalRelUncMinusNorm->GetYaxis()->SetNdivisions(505);
   hTotalRelUncMinusNorm->GetYaxis()->SetTitle("The./data-1");
   hTotalRelUncMinusNorm->Draw("hist");

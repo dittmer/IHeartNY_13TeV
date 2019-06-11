@@ -34,8 +34,10 @@ void mySmallText(Double_t x,Double_t y,Color_t color,Double_t tsize, char *text)
 
 void drawCMS(Double_t x,Double_t y, bool prel) {
 
-  float cmsTextSize = 0.07;
-  float extraOverCmsTextSize = 0.68;
+  //float cmsTextSize = 0.07;
+  float cmsTextSize = 0.058;
+  //float extraOverCmsTextSize = 0.68;
+  float extraOverCmsTextSize = 0.7;
   float extraTextSize = extraOverCmsTextSize*cmsTextSize;
 
   TLatex l;
@@ -60,7 +62,8 @@ void drawCMS(Double_t x,Double_t y, bool prel) {
   ll.SetTextAngle(0);
   ll.SetNDC();
   ll.SetTextColor(1);
-  ll.DrawLatex(0.68,y,"35.9 fb^{-1} (13 TeV)");
+  //ll.DrawLatex(0.68,y,"35.9 fb^{-1} (13 TeV)");
+  ll.DrawLatex(0.78,y,"13 TeV");
 
 }
 
@@ -77,7 +80,13 @@ void drawCombineMatrix() {
   TString var[2] = {"pt","y"};
   TString level[2] = {"","_PL"};
   
-  TCanvas c;
+  //TCanvas c;
+
+  TCanvas *c = new TCanvas("c","c",800,704);
+  c->SetRightMargin(0.12);
+
+  c->SetLeftMargin(0.14);
+  c->SetBottomMargin(0.12);
 
   /*
   double length[2] {0.00, 1.00};
@@ -116,42 +125,96 @@ void drawCombineMatrix() {
 	}
       }
 
+      // rows => columns, columns => rows (match Kostas) 
+      TH2D* h0new = (TH2D*) h0->Clone("h0new");
+      h0new->Reset();
+
+      for (int ir = 1; ir < nbins+1; ir++){
+	for (int ic = 1; ic < nbins+1; ic++){
+	  double val = h0->GetBinContent(ic,ir);
+	  h0new->SetBinContent(ir,ic,val);
+	}
+      }
+
+
+
       if (var[iv] == "pt") {
 	if (level[il] != "") {
 	  h0->GetXaxis()->SetTitle("Detector-level top jet p_{T} [GeV]");
 	  h0->GetYaxis()->SetTitle("Particle-level top jet p_{T} [GeV]");
+
+	  h0new->GetXaxis()->SetTitle("Particle-level top jet p_{T} [GeV]");
+	  h0new->GetYaxis()->SetTitle("Detector-level top jet p_{T} [GeV]");
 	}
 	else {
 	  h0->GetXaxis()->SetTitle("Detector-level top jet p_{T} [GeV]");
 	  h0->GetYaxis()->SetTitle("Parton-level top quark p_{T} [GeV]");
+
+	  h0new->GetXaxis()->SetTitle("Parton-level top quark p_{T} [GeV]");
+	  h0new->GetYaxis()->SetTitle("Detector-level top jet p_{T} [GeV]");
 	}
 	
 	h0->SetAxisRange(401.0,1199.0,"X");
 	h0->SetAxisRange(401.0,1199.0,"Y");
+
+	h0new->SetAxisRange(401.0,1199.0,"X");
+	h0new->SetAxisRange(401.0,1199.0,"Y");
       }
       else {
 	if (level[il] != "") {
 	  h0->GetXaxis()->SetTitle("Detector-level top jet rapidity");
 	  h0->GetYaxis()->SetTitle("Particle-level top jet rapidity");
+
+	  h0new->GetXaxis()->SetTitle("Particle-level top jet rapidity");
+	  h0new->GetYaxis()->SetTitle("Detector-level top jet rapidity");
 	}
 	else {
 	  h0->GetXaxis()->SetTitle("Detector-level top jet rapidity");
 	  h0->GetYaxis()->SetTitle("Parton-level top quark rapidity");
+
+	  h0new->GetXaxis()->SetTitle("Parton-level top quark rapidity");
+	  h0new->GetYaxis()->SetTitle("Detector-level top jet rapidity");
 	}
       }
-
+      
+      /*
       h0->GetXaxis()->SetTitleOffset(1.2);
       h0->GetYaxis()->SetTitleOffset(1.3);
 
       h0->SetAxisRange(0.01,1,"Z");
-
       h0->Draw("text colz");
-      //h0->Draw("text,same");
+      h0->Draw("axis,same");
 
       drawCMS(0.10,0.92, false);
-      mySmallText(0.15,0.82,1,0.035,"l+jets events");
+      mySmallText(0.15,0.82,1,0.04,"l+jets events");
 
-      c.SaveAs("UnfoldingPlots/combined_responseMatrix_"+var[iv]+level[il]+".pdf");
+      c->SaveAs("UnfoldingPlots/combined_responseMatrix_"+var[iv]+level[il]+".pdf");
+      */
+
+
+      gPad->SetTicks(1,1);
+
+      h0new->GetXaxis()->SetTitleSize(0.05);
+      h0new->GetYaxis()->SetTitleSize(0.05);
+      h0new->GetZaxis()->SetLabelSize(0.04);
+
+      h0new->GetXaxis()->SetTitleOffset(1.0);
+      h0new->GetYaxis()->SetTitleOffset(1.3);
+
+      h0new->GetXaxis()->SetLabelSize(0.04);
+      h0new->GetYaxis()->SetLabelSize(0.04);
+
+      h0new->SetAxisRange(0.01,1,"Z");
+
+      h0new->Draw("text colz");
+      h0new->Draw("axis,same");
+
+      //drawCMS(0.10,0.92, false);
+      drawCMS(0.14,0.92, false);
+      //mySmallText(0.15,0.82,1,0.04,"l+jets events");
+      mySmallText(0.20,0.82,1,0.04,"l+jets events");
+
+      c->SaveAs("UnfoldingPlots/combined_responseMatrix_"+var[iv]+level[il]+".pdf");
 
       file0->TFile::Close();
       file1->TFile::Close();
