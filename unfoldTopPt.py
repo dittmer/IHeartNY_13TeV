@@ -40,6 +40,14 @@ def myText(x, y, color, text) :
   l.SetTextColor(color)
   l.DrawLatex(x,y,text)
 
+def mySmallText(x, y, color, text) :
+  l = TLatex()
+  l.SetTextSize(0.035) 
+  l.SetTextFont(42)
+  l.SetNDC()
+  l.SetTextColor(color)
+  l.DrawLatex(x,y,text)
+
 # -------------------------------------------------------------------------------------
 # Script for doing RooUnfold on the ttbar differential cross secion
 # -------------------------------------------------------------------------------------
@@ -143,7 +151,7 @@ def drawCMS( x1, y1, size = 0.056, status = "Work In Progress") :
     l2.SetTextAngle(0)
     l2.SetNDC()
     l2.SetTextColor(1)
-    l2.DrawLatex(0.68,y1,"35.9 fb^{-1} (13 TeV)")
+    l2.DrawLatex(0.63,y1,"(2016) 35.9 fb^{-1} (13 TeV)")
 
 
 class Background :
@@ -217,7 +225,9 @@ Hres_sys = {}
 backgrounds = {}
 
 trueHerwig = {}
-trueMCNLO = {}
+plotmcnlo=False # need to rerun to account for negative weights... i (=louise) forgot about that...
+if plotmcnlo:
+    trueMCNLO = {}
 
 channels = ["mu","el"]
 sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
@@ -395,6 +405,13 @@ for channel in channels:
                     response_sys.SetBinContent(ibin,0,0)
 
                 Hres_sys[thsysname+var+"_"+channel] = response_sys
+
+    ## additional theory comparison 
+    if plotmcnlo:
+        f_mcnlo = TFile(DIR+"/hists_TTJets_amcatnloFXFX_"+name_TTbarVar+"_"+channel+"_nom_post.root")
+        trueMCNLO[channel] = f_mcnlo.Get(hTrue_name)
+        trueMCNLO[channel].Sumw2()
+        trueMCNLO[channel].Scale(831.76 * 35867.0 / 44350533) #Number events in miniAOD datasets
 
 
     # -------------------------------------------------------------------------------------
@@ -800,6 +817,10 @@ thisExpect["comb"].Add(thisExpect["el"])
 trueHerwig["comb"] = trueHerwig["mu"].Clone()
 trueHerwig["comb"].Add(trueHerwig["el"])
 
+if plotmcnlo:
+    trueMCNLO["comb"] = trueMCNLO["mu"].Clone()
+    trueMCNLO["comb"].Add(trueMCNLO["el"])
+
 backgrounds["comb"] = []
 for ibkg in xrange(0,len(backgrounds["mu"])-1):
     bkg_comb = Background(backgrounds["mu"][ibkg].name, backgrounds["mu"][ibkg].norm, backgrounds["mu"][ibkg].err, backgrounds["mu"][ibkg].color)
@@ -922,6 +943,8 @@ for channel in channels:
       thisMeas[channel]  .Scale(1.0/thisMeas[channel]  .Integral(1,nbinsTrue+1))
       thisReco           .Scale(1.0/thisReco           .Integral(1,nbinsTrue+1))
       trueHerwig[channel].Scale(1.0/trueHerwig[channel].Integral(1,nbinsTrue+1))
+      if plotmcnlo:
+          trueMCNLO[channel] .Scale(1.0/trueMCNLO[channel].Integral(1,nbinsTrue+1))
 
       for hist in hSingleSource:
         hist.Add(thisReco,-1.0)
@@ -1085,23 +1108,10 @@ for channel in channels:
     cerr.SetLeftMargin(0.16)
     cerr.cd()
 
-    # h_TOT    => total uncertainty shaded band     
-    # h_STAT   => statistical uncertainty
-    # h_LUMI   => lum 
-    # h_BKG    => backgrounds 
+    # ----------------------------------------------------------
+    # all uncertainties     
+    # ----------------------------------------------------------
 
-    #sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
-    #thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]
-    #longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
-
-    # h_sys_jet     : JEC, JER, BTag
-    # h_sys_toptag  : TopTag 
-    # h_sys_bkg     : h_BKG
-    # ???
-    # h_sys_other   : lep, pu, lumi
-    # h_sys_theory  : PDF, 
-    # leaving creating merged categories for later... 
-    
     sysleg = TLegend(0.2,0.39,0.45,0.88)
     sysleg.AddEntry(h_TOT,"Total syst. uncertainty","f")
     sysleg.AddEntry(h_STAT,"Input stat. unc.","lp")
@@ -1132,6 +1142,128 @@ for channel in channels:
     drawCMS(0.17,0.92,0.065,"")
     
     cerr.SaveAs("UnfoldingPlots/xsec_uncertainties_"+options.toUnfold+"_"+options.level+"_"+channel+normname+".pdf")
+
+
+    # ----------------------------------------------------------
+    # merged categories
+    # ----------------------------------------------------------
+
+    # h_TOT    => total uncertainty shaded band     
+    # h_STAT   => statistical uncertainty
+    # h_LUMI   => lum 
+    # h_BKG    => backgrounds 
+
+    #sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
+    #thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]
+    #longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
+
+    # h_sys_jet     : JEC, JER, BTag
+    # h_sys_toptag  : TopTag 
+    # h_sys_other   : bkg, lep, pu, h_LUMI
+    # h_sys_hardscatter  : PDF, Q2
+    # h_sys_partonshower : ISR, FSR, Tune, Hdamp, EdrOn, Herwig
+
+    h_sys_stat = h_STAT.Clone("sys_stat")
+    h_sys_stat.Scale(100.0)
+    h_sys_toptag = h_SYS["TopTag"].Clone("sys_toptag")
+    h_sys_toptag.Scale(100.0) 
+
+    h_sys_jet = h_SYS["JEC"].Clone("sys_jet")
+    h_sys_jet.Reset()
+    h_sys_other = h_SYS["JEC"].Clone("sys_other")
+    h_sys_other.Reset()
+    h_sys_hardscatter = h_SYS["JEC"].Clone("sys_hardscatter")
+    h_sys_hardscatter.Reset()
+    h_sys_partonshower = h_SYS["JEC"].Clone("sys_partonshower")
+    h_sys_partonshower.Reset()
+    
+    for ibin in xrange(1,nbinsTrue+1):
+        
+        bin_jet = 0;
+        bin_other = 0;
+        bin_hardscatter = 0;
+        bin_partonshower = 0;
+        
+        for sysname in allsysnames:
+        
+            if sysname == "JEC" or sysname == "JER" or sysname == "BTag" :
+                bin_jet += pow(h_SYS[sysname].GetBinContent(ibin),2)
+            if sysname == "lep" or sysname == "pu":
+                bin_other += pow(h_SYS[sysname].GetBinContent(ibin),2)
+            if sysname == "PDF" or sysname == "Q2":
+                bin_hardscatter += pow(h_SYS[sysname].GetBinContent(ibin),2)
+            if sysname == "ISR" or sysname == "FSR" or sysname == "Tune" or sysname == "Hdamp" or sysname == "ErdOn" or sysname == "Herwig":
+                bin_partonshower += pow(h_SYS[sysname].GetBinContent(ibin),2)
+
+        bin_other += pow(h_BKG.GetBinContent(ibin),2) 
+        if not options.norm:
+            bin_other += pow(h_LUMI.GetBinContent(ibin),2) 
+        
+        h_sys_jet.SetBinContent(ibin,math.sqrt(bin_jet)*100.0)
+        h_sys_other.SetBinContent(ibin,math.sqrt(bin_other)*100.0)
+        h_sys_hardscatter.SetBinContent(ibin,math.sqrt(bin_hardscatter)*100.0)
+        h_sys_partonshower.SetBinContent(ibin,math.sqrt(bin_partonshower)*100.0)
+
+
+    msysleg = TLegend(0.2,0.52,0.45,0.8)
+    msysleg.AddEntry(h_sys_stat,"Stat. uncertainty","f")
+    msysleg.AddEntry(h_sys_jet,"JES+JER+b tagging","l")
+    msysleg.AddEntry(h_sys_toptag,"t tagging","l")
+    msysleg.AddEntry(h_sys_other,"Other experimental","l")
+    msysleg.AddEntry(h_sys_partonshower,"Parton shower","l")
+    msysleg.AddEntry(h_sys_hardscatter,"Hard scattering","l")
+        
+    msysleg.SetFillStyle(0)
+    msysleg.SetBorderSize(0)
+    msysleg.SetTextSize(0.03)
+    msysleg.SetTextFont(42)
+    
+    h_sys_stat.SetFillColor(920)
+    h_sys_stat.SetFillStyle(1001)
+    h_sys_stat.SetLineWidth(0)
+
+    h_sys_stat.GetXaxis().SetTitle("Top "+labelstring1+" "+labelstring2)
+    h_sys_stat.GetYaxis().SetTitle("Relative uncertainty [%]")
+
+    h_sys_jet.SetLineColor(2)
+    h_sys_toptag.SetLineColor(4)
+    h_sys_other.SetLineColor(6)
+    h_sys_partonshower.SetLineColor(416)
+    h_sys_hardscatter.SetLineColor(800)
+
+    h_sys_jet.SetLineWidth(3)
+    h_sys_toptag.SetLineWidth(3)
+    h_sys_other.SetLineWidth(3)
+    h_sys_partonshower.SetLineWidth(3)
+    h_sys_hardscatter.SetLineWidth(3)
+
+    
+    h_sys_stat.GetXaxis().SetTitleOffset(1.0)
+    h_sys_stat.GetYaxis().SetTitleOffset(1.1)
+    h_sys_stat.GetYaxis().SetRangeUser(0.0,100.0)
+    h_sys_stat.Draw("hist")
+
+    h_sys_jet.Draw("hist same")
+    h_sys_toptag.Draw("hist same")
+    h_sys_other.Draw("hist same")
+    h_sys_partonshower.Draw("hist same")
+    h_sys_hardscatter.Draw("hist same")
+        
+    msysleg.Draw() 
+
+    drawCMS(0.17,0.92,0.065,"")
+    if options.level=="part":
+        mySmallText(0.21,0.84,1,"Particle level (l+jets channel)")
+    else :
+        mySmallText(0.21,0.84,1,"Parton level (l+jets channel)")
+        
+    if options.norm:
+        mySmallText(0.63,0.84,1,"Normalized cross section")
+    else:
+        mySmallText(0.63,0.84,1,"Absolute cross section")
+
+    
+    cerr.SaveAs("UnfoldingPlots/xsec_mergedUncertainties_"+options.toUnfold+"_"+options.level+"_"+channel+normname+".pdf")
 
     
     ##################################################################################################
@@ -1362,6 +1494,8 @@ for channel in channels:
         thisReco.Scale(1.0/(lum*BR)) # unfolded to parton level
 
         trueHerwig[channel].Scale(1.0/(lum*BR)) # true @ parton level
+        if plotmcnlo:
+            trueMCNLO[channel].Scale(1.0/(lum*BR)) # true @ parton level
 
         
     # -------------------------------------------------------------------------------------
@@ -1380,7 +1514,11 @@ for channel in channels:
 
         trueHerwig[channel].SetBinContent(ibin, trueHerwig[channel].GetBinContent(ibin) / width )
         trueHerwig[channel].SetBinError(ibin, trueHerwig[channel].GetBinError(ibin) / width )
-        
+
+        if plotmcnlo:
+            trueMCNLO[channel].SetBinContent(ibin, trueMCNLO[channel].GetBinContent(ibin) / width )
+            trueMCNLO[channel].SetBinError(ibin, trueMCNLO[channel].GetBinError(ibin) / width )
+
     for ibin in range(1, nbinsMeas+1) :
         
         width = thisMeas[channel].GetBinWidth(ibin)
@@ -1414,6 +1552,13 @@ for channel in channels:
     hFracHerwig.SetName("hFracHerwig")
     hFracHerwig.SetTitle(";Top "+labelstring1+" "+labelstring2+";Theory/Data")
     hFracHerwig.Divide(dataNoUnc)
+
+    ## and MC@NLO
+    if plotmcnlo:
+        hFracMCNLO = trueMCNLO[channel].Clone()
+        hFracMCNLO.SetName("hFracMCNLO")
+        hFracMCNLO.SetTitle(";Top "+labelstring1+" "+labelstring2+";Theory/Data")
+        hFracMCNLO.Divide(dataNoUnc)
 
     if channel == "comb":
         hRelUncMinus = h_TOT.Clone("RelUncMinus")
@@ -1452,6 +1597,8 @@ for channel in channels:
         thisMeas[channel].GetXaxis().SetRangeUser(400.,1199.)
 
         trueHerwig[channel].GetXaxis().SetRangeUser(400.,1199.)
+        if plotmcnlo:
+            trueMCNLO[channel].GetXaxis().SetRangeUser(400.,1199.)
         
     if options.norm: 
         if options.toUnfold == "pt":
@@ -1611,6 +1758,8 @@ for channel in channels:
             hFrac.SetBinContent(ibin, hFrac.GetBinContent(ibin)-1)
             h_STAT.SetBinContent(ibin, h_STAT.GetBinContent(ibin)-1)
             hFracHerwig.SetBinContent(ibin, hFracHerwig.GetBinContent(ibin)-1)
+            if plotmcnlo:
+                hFracMCNLO.SetBinContent(ibin, hFracMCNLO.GetBinContent(ibin)-1)
                     
         if options.norm: 
             thisReco.SetName("NormCrossSection_"+LEVEL+"_Nominal")
@@ -1621,6 +1770,9 @@ for channel in channels:
             hFrac.SetName("NormRatioOverData_PowhegPythia8")
             trueHerwig[channel].SetName("NormCrossSection_PowhegHerwigpp")
             hFracHerwig.SetName("NormRatioOverData_PowhegHerwigpp")
+            if plotmcnlo:
+                trueMCNLO[channel].SetName("NormCrossSection_amcatnloPythia8")
+                hFracMCNLO.SetName("NormRatioOverData_amcatnloPythia8")
         else:
             thisReco.SetName("CrossSection_"+LEVEL+"_Nominal")
             h_STAT.SetName("CrossSectionRatio")
@@ -1628,6 +1780,9 @@ for channel in channels:
             hFrac.SetName("RatioOverData_PowhegPythia8")
             trueHerwig[channel].SetName("CrossSection_PowhegHerwigpp")
             hFracHerwig.SetName("RatioOverData_PowhegHerwigpp")
+            if plotmcnlo:
+                trueMCNLO[channel].SetName("CrossSection_amcatnloPythia8")
+                hFracMCNLO.SetName("RatioOverData_amcatnloPythia8")
         thisReco.Write()
         h_STAT.Write()
         hRelUncMinus.Write()
@@ -1636,6 +1791,9 @@ for channel in channels:
         hFrac.Write()
         trueHerwig[channel].Write()
         hFracHerwig.Write()
+        if plotmcnlo:
+            trueMCNLO[channel].Write()
+            hFracMCNLO.Write()
 
         fout.Close()
     
