@@ -7,7 +7,6 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
 
   gROOT->ForceStyle();
   
-  /*
   const int NTHEORY = 3;
   
   TString THEORY_ALIAS[NTHEORY] = {"PowhegPythia8","amcatnloPythia8","PowhegHerwigpp"};
@@ -15,15 +14,6 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   int THEORY_MSTYLE[NTHEORY] = {20,25,26};
   int THEORY_LSTYLE[NTHEORY] = {1,1,1};
   int THEORY_FSTYLE[NTHEORY] = {3004,3003,3005};
-  */
-
-  const int NTHEORY = 2;
-  
-  TString THEORY_ALIAS[NTHEORY] = {"PowhegPythia8","PowhegHerwigpp"};
-  int THEORY_COLOR[NTHEORY]  = {kRed,kGreen+2};
-  int THEORY_MSTYLE[NTHEORY] = {20,26};
-  int THEORY_LSTYLE[NTHEORY] = {1,1};
-  int THEORY_FSTYLE[NTHEORY] = {3004,3005};
 
   TFile *inf;
   TH1F *hTheory[NTHEORY],*hTheoryNorm[NTHEORY],*hTheoryHIST[NTHEORY],*hTheoryNormHIST[NTHEORY];
@@ -178,9 +168,8 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   leg->AddEntry(hSignal,"Data","PEL");
   leg->AddEntry(hTotalRelUncMinus,"Total unc.","F");
   leg->AddEntry(hTheory[0],"Powheg+Pythia8","F");
-  //leg->AddEntry(hTheory[1],"aMC@NLO+Pythia8","F");
-  //leg->AddEntry(hTheory[2],"Powheg+Herwig++","F");
-  leg->AddEntry(hTheory[1],"Powheg+Herwig++","F");
+  leg->AddEntry(hTheory[1],"aMC@NLO+Pythia8","F");
+  leg->AddEntry(hTheory[2],"Powheg+Herwig++","F");
   leg->SetFillColor(0);
   leg->SetTextFont(42);
   leg->SetTextSize(0.035);
@@ -219,10 +208,10 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   gSignalWithUnc->Draw("E2 same");
   hTheory[0]->Draw("E2 same");
   hTheory[1]->Draw("E2 same");
-  //hTheory[2]->Draw("E2 same");
+  hTheory[2]->Draw("E2 same");
   hTheoryHIST[0]->Draw("hist same");
   hTheoryHIST[1]->Draw("hist same");
-  //hTheoryHIST[2]->Draw("hist same");
+  hTheoryHIST[2]->Draw("hist same");
   hSignal->Draw("same");
   leg->Draw("same");
   pave->Draw("same");
@@ -262,10 +251,10 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   
   hTheoryRatio[0]->Draw("E2 same");
   hTheoryRatio[1]->Draw("E2 same");
-  //hTheoryRatio[2]->Draw("E2 same");
+  hTheoryRatio[2]->Draw("E2 same");
   hTheoryRatioHIST[0]->Draw("hist same");
   hTheoryRatioHIST[1]->Draw("hist same");
-  //hTheoryRatioHIST[2]->Draw("hist same");
+  hTheoryRatioHIST[2]->Draw("hist same");
   hSignalRatio->Draw("same E");
   
   gPad->RedrawAxis();
@@ -297,10 +286,10 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   gSignalWithUncNorm->Draw("E2 same");
   hTheoryNorm[0]->Draw("E2 same");
   hTheoryNorm[1]->Draw("E2 same");
-  //hTheoryNorm[2]->Draw("E2 same");
+  hTheoryNorm[2]->Draw("E2 same");
   hTheoryNormHIST[0]->Draw("hist same");
   hTheoryNormHIST[1]->Draw("hist same");
-  //hTheoryNormHIST[2]->Draw("hist same");
+  hTheoryNormHIST[2]->Draw("hist same");
   hSignalNorm->Draw("same");
   leg->Draw("same");
   pave->Draw("same");
@@ -341,10 +330,10 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   
   hTheoryRatioNorm[0]->Draw("E2 same");
   hTheoryRatioNorm[1]->Draw("E2 same");
-  //hTheoryRatioNorm[2]->Draw("E2 same");
+  hTheoryRatioNorm[2]->Draw("E2 same");
   hTheoryRatioNormHIST[0]->Draw("hist same");
   hTheoryRatioNormHIST[1]->Draw("hist same");
-  //hTheoryRatioNormHIST[2]->Draw("hist same");
+  hTheoryRatioNormHIST[2]->Draw("hist same");
   hSignalRatioNorm->Draw("same E");
   gPad->RedrawAxis();
 

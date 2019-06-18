@@ -225,32 +225,34 @@ Hres_sys = {}
 backgrounds = {}
 
 trueHerwig = {}
-plotmcnlo=False # need to rerun to account for negative weights... i (=louise) forgot about that...
+plotmcnlo=True
 if plotmcnlo:
     trueMCNLO = {}
 
 channels = ["mu","el"]
 sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
+#thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn","Herwig","mtop1715","mtop1735"]
 thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]
 allsysnames = sysnames+thsysnames
 
+#longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower","mtop 171.5","mtop 173.5"]
 longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
 variants = ["Up","Down"]
 
 DIR = "histfiles_full2016_latest"
 
 #Louise version
-#name_TTbarNom = "PLnew"
-#name_TTbarNom_p2 = "v2_PLnew"
-#name_TTbar_m700to1000 = "m700to1000_PLnew"
-#name_TTbar_m1000toInf = "m1000toInf_PLnew"
-#name_TTbarVar = "PLnew"
+name_TTbarNom = "PLnew"
+name_TTbarNom_p2 = "v2_PLnew"
+name_TTbar_m700to1000 = "m700to1000_PLnew"
+name_TTbar_m1000toInf = "m1000toInf_PLnew"
+name_TTbarVar = "PLnew"
 #Susan version
-name_TTbarNom = "fullTruth"
-name_TTbarNom_p2 = "fullTruth_p2"
-name_TTbar_m700to1000 = "fullTruth_m700to1000"
-name_TTbar_m1000toInf = "fullTruth_m1000toInf"
-name_TTbarVar = "fullTruth_PLnew"
+#name_TTbarNom = "fullTruth"
+#name_TTbarNom_p2 = "fullTruth_p2"
+#name_TTbar_m700to1000 = "fullTruth_m700to1000"
+#name_TTbar_m1000toInf = "fullTruth_m1000toInf"
+#name_TTbarVar = "fullTruth_PLnew"
 
 for channel in channels:
     f_data = TFile(DIR+"/hists_Data_"+channel+".root")
@@ -391,6 +393,20 @@ for channel in channels:
                 trueHerwig[channel].Sumw2()
                 trueHerwig[channel].Scale(831.76 * 35867.0 / 59174465) #Number events in miniAOD datasets
 
+        elif thsysname is "mtop1715" or thsysname is "mtop1735":
+            f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_"+name_TTbarVar+"_"+channel+"_nom_post.root")
+            response_sys = f_ttbar_sys.Get(response_name)
+            response_sys.Sumw2()
+            true_sys = f_ttbar_sys.Get(hTrue_name)
+
+            antiTagWeight(true_sys,response_sys)
+            convertForTUnfold(response_sys)
+            for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
+                response_sys.SetBinContent(ibin,0,0)
+                response_sys.SetBinContent(ibin,0,0)
+
+            Hres_sys[thsysname+"_"+channel] = response_sys
+
         else :
             for var in variants:
                 f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+var+"_"+name_TTbarVar+"_"+channel+"_"+thsysname+var+"_post.root")
@@ -411,7 +427,7 @@ for channel in channels:
         f_mcnlo = TFile(DIR+"/hists_TTJets_amcatnloFXFX_"+name_TTbarVar+"_"+channel+"_nom_post.root")
         trueMCNLO[channel] = f_mcnlo.Get(hTrue_name)
         trueMCNLO[channel].Sumw2()
-        trueMCNLO[channel].Scale(831.76 * 35867.0 / 44350533) #Number events in miniAOD datasets
+        trueMCNLO[channel].Scale(831.76 * 35867.0 / (44350533*0.345960) ) #Number events in miniAOD datasets
 
 
     # -------------------------------------------------------------------------------------
@@ -834,7 +850,7 @@ response["comb"] = response["mu"].Clone()
 response["comb"].Add(response["el"])
 
 for sysname in allsysnames:
-    if sysname == "ErdOn" or sysname == "Herwig":
+    if sysname == "ErdOn" or sysname == "Herwig" or sysname == "mtop1715" or sysname == "mtop1735":
         Hres_sys[sysname+"_comb"] = Hres_sys[sysname+"_mu"].Clone()
         Hres_sys[sysname+"_comb"].Add(Hres_sys[sysname+"_el"])
     else :
@@ -865,7 +881,7 @@ for channel in channels:
 
         # Add systematic uncertainties
         for sysname in allsysnames:
-            if sysname == "ErdOn" or sysname == "Herwig":
+            if sysname == "ErdOn" or sysname == "Herwig" or sysname == "mtop1715" or sysname == "mtop1735":
                 unfold[var].AddSysError(Hres_sys[sysname+"_"+channel],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
             else :
                 unfold[var].AddSysError(Hres_sys[sysname+var+"_"+channel],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
@@ -975,6 +991,7 @@ for channel in channels:
       tot_exp = 0.0
       tot_th  = 0.0
 
+      #for sysname in ["PDF","Q2","ISR","FSR","Tune","Hdamp","ErdOn","Herwig","mtop1715","mtop1735"]:
       for sysname in ["PDF","Q2","ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]:
         h_SYS[sysname].SetBinContent(ibin,math.sqrt((pow(hErrSys["Up"][sysname].GetBinContent(ibin),2)+pow(hErrSys["Down"][sysname].GetBinContent(ibin),2))/2.0))
         tot_th += (pow(hErrSys["Up"][sysname].GetBinContent(ibin),2)+pow(hErrSys["Down"][sysname].GetBinContent(ibin),2))/2.0
@@ -1050,6 +1067,8 @@ for channel in channels:
     h_LUMI.SetMarkerColor(40)
     h_LUMI.SetMarkerStyle(34)
 
+    #colors = [632,600,617,417,432,4,1,419,600,882,632,600,617,2,5,7]
+    #markers = [20,21,22,23,33,26,24,25,27,32,23,33,26,24,8,8]
     colors = [632,600,617,417,432,4,1,419,600,882,632,600,617,2]
     markers = [20,21,22,23,33,26,24,25,27,32,23,33,26,24]
     for isys in xrange(0,len(allsysnames)):
@@ -1172,6 +1191,10 @@ for channel in channels:
     h_sys_hardscatter.Reset()
     h_sys_partonshower = h_SYS["JEC"].Clone("sys_partonshower")
     h_sys_partonshower.Reset()
+    #h_sys_massup = h_SYS["JEC"].Clone("sys_mass_up")
+    #h_sys_massup.Reset()
+    #h_sys_massdn = h_SYS["JEC"].Clone("sys_mass_dn")
+    #h_sys_massdn.Reset()
     
     for ibin in xrange(1,nbinsTrue+1):
         
@@ -1179,6 +1202,8 @@ for channel in channels:
         bin_other = 0;
         bin_hardscatter = 0;
         bin_partonshower = 0;
+        #bin_massup = 0;
+        #bin_massdn = 0;
         
         for sysname in allsysnames:
         
@@ -1190,6 +1215,10 @@ for channel in channels:
                 bin_hardscatter += pow(h_SYS[sysname].GetBinContent(ibin),2)
             if sysname == "ISR" or sysname == "FSR" or sysname == "Tune" or sysname == "Hdamp" or sysname == "ErdOn" or sysname == "Herwig":
                 bin_partonshower += pow(h_SYS[sysname].GetBinContent(ibin),2)
+            #if sysname == "mtop1735":
+            #    bin_massup += pow(h_SYS[sysname].GetBinContent(ibin),2)
+            #if sysname == "mtop1715":
+            #    bin_massdn += pow(h_SYS[sysname].GetBinContent(ibin),2)
 
         bin_other += pow(h_BKG.GetBinContent(ibin),2) 
         if not options.norm:
@@ -1199,6 +1228,8 @@ for channel in channels:
         h_sys_other.SetBinContent(ibin,math.sqrt(bin_other)*100.0)
         h_sys_hardscatter.SetBinContent(ibin,math.sqrt(bin_hardscatter)*100.0)
         h_sys_partonshower.SetBinContent(ibin,math.sqrt(bin_partonshower)*100.0)
+        #h_sys_massup.SetBinContent(ibin,math.sqrt(bin_massup)*100.0)
+        #h_sys_massdn.SetBinContent(ibin,math.sqrt(bin_massdn)*100.0)
 
 
     msysleg = TLegend(0.2,0.52,0.45,0.8)
@@ -1208,6 +1239,8 @@ for channel in channels:
     msysleg.AddEntry(h_sys_other,"Other experimental","l")
     msysleg.AddEntry(h_sys_partonshower,"Parton shower","l")
     msysleg.AddEntry(h_sys_hardscatter,"Hard scattering","l")
+    #msysleg.AddEntry(h_sys_massup,"mtop 171.5","l")
+    #msysleg.AddEntry(h_sys_massdn,"mtop 173.5","l")
         
     msysleg.SetFillStyle(0)
     msysleg.SetBorderSize(0)
@@ -1226,12 +1259,18 @@ for channel in channels:
     h_sys_other.SetLineColor(6)
     h_sys_partonshower.SetLineColor(416)
     h_sys_hardscatter.SetLineColor(800)
-
+    #h_sys_massdn.SetLineColor(5)
+    #h_sys_massup.SetLineColor(7)
+    
     h_sys_jet.SetLineWidth(3)
     h_sys_toptag.SetLineWidth(3)
     h_sys_other.SetLineWidth(3)
     h_sys_partonshower.SetLineWidth(3)
     h_sys_hardscatter.SetLineWidth(3)
+    #h_sys_massup.SetLineWidth(3)
+    #h_sys_massdn.SetLineWidth(3)
+    #h_sys_massup.SetLineStyle(2)
+    #h_sys_massdn.SetLineStyle(2)
 
     
     h_sys_stat.GetXaxis().SetTitleOffset(1.0)
@@ -1244,6 +1283,8 @@ for channel in channels:
     h_sys_other.Draw("hist same")
     h_sys_partonshower.Draw("hist same")
     h_sys_hardscatter.Draw("hist same")
+    #h_sys_massup.Draw("hist same")
+    #h_sys_massdn.Draw("hist same")
         
     msysleg.Draw() 
 
