@@ -1880,7 +1880,9 @@ void combineResults(TString channel, TString fit) {
   c2->SetRightMargin(0.12);
   c2->SetBottomMargin(0.1);
   h_mcorr->GetZaxis()->SetLabelSize(0.04);
-  h_mcorr->Draw("COLZ");
+  gStyle->SetPaintTextFormat("1.2f");
+  gStyle->SetTextFont(42);
+  h_mcorr->Draw("COLZ TEXT");
   gPad->Update();
   TPaletteAxis *palette = (TPaletteAxis*)h_mcorr->GetListOfFunctions()->FindObject("palette");
   palette->SetX1NDC(0.88);
