@@ -778,8 +778,8 @@ for channel in channels:
 
     h_ratio.SetMarkerStyle(8)
     h_ratio.SetMarkerSize(1)
-    h_ratio.SetMaximum(1.8)
-    h_ratio.SetMinimum(0.2)
+    h_ratio.SetMaximum(2.0)
+    h_ratio.SetMinimum(0.0)
     h_ratio.GetYaxis().SetNdivisions(2,4,0,False)
     h_ratio.GetYaxis().SetTitle("Data / MC")
     h_ratio.GetXaxis().SetTitle(thisMeas[channel].GetXaxis().GetTitle())
@@ -1100,7 +1100,10 @@ for channel in channels:
     leg6.SetTextSize(0.04)
     leg6.SetTextFont(42)
 
-    h_TOT.GetYaxis().SetRangeUser(0.0,1.0)
+    if options.toUnfold=="pt" and (channel=="el" or channel=="mu") :
+        h_TOT.GetYaxis().SetRangeUser(0.0,1.4)
+    else: 
+        h_TOT.GetYaxis().SetRangeUser(0.0,1.0)        
     h_TOT.Draw("hist")
     h_STAT.Draw("ep,same")
     if not options.norm:
@@ -1147,7 +1150,10 @@ for channel in channels:
 
     h_TOT.GetXaxis().SetTitleOffset(1.0)
 
-    h_TOT.GetYaxis().SetRangeUser(0.0,1.0)
+    if options.toUnfold=="pt" and (channel=="el" or channel=="mu") :
+        h_TOT.GetYaxis().SetRangeUser(0.0,1.4)
+    else: 
+        h_TOT.GetYaxis().SetRangeUser(0.0,1.0)        
     h_TOT.Draw("hist")
     h_STAT.Draw("ep,same")
     if not options.norm:
@@ -1694,15 +1700,15 @@ for channel in channels:
     pad2.Draw()
     pad2.cd()
     pad2.SetGridy()
-    hFrac.SetMaximum(1.8)
-    hFrac.SetMinimum(0.2)
+    hFrac.SetMaximum(2.1)
+    hFrac.SetMinimum(-0.1)
     hFrac.UseCurrentStyle()
     hFrac.GetYaxis().SetTitleSize(25)
     hFrac.GetYaxis().SetTitleOffset(2.0)
     hFrac.GetXaxis().SetTitleOffset(4.0)
     hFrac.GetXaxis().SetLabelSize(25)
-    hFrac.GetYaxis().SetNdivisions(4,4,0,False)
-    
+    hFrac.GetYaxis().SetNdivisions(5,1,0,True)
+
     hFrac.Draw("hist")
     h_TOT.Draw("same,e2")
     h_STAT.Draw("same,e2")
@@ -1781,9 +1787,9 @@ for channel in channels:
     hFrac.GetYaxis().SetTitleSize(26)
     hFrac.GetYaxis().SetTitleOffset(1.4)
     hFrac.GetXaxis().SetTitleOffset(3.3)
-    hFrac.SetMaximum(1.9)
-    hFrac.SetMinimum(0.1)
-    hFrac.GetYaxis().SetNdivisions(4,4,0,True)
+    hFrac.SetMaximum(2.1)
+    hFrac.SetMinimum(-0.1)
+    hFrac.GetYaxis().SetNdivisions(5,1,0,True)
 
     hFrac.Draw("hist")
     h_TOT.Draw("same,e2")

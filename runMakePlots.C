@@ -90,6 +90,8 @@ void runMakePlots(TString toPlot = "final"){
     makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetY","1t0b",false,true,true);
     makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetY","1t1b",false,true,true);
     */
+    combineResults("mu","mu1");
+    combineResults("el","el1");
     combineResults("mu","comb1");
     combineResults("el","comb1");
   }
