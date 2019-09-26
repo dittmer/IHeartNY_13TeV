@@ -2369,8 +2369,8 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
     if (usePost) {
       if (sample.Contains("PowhegPythia8") || sample.Contains("tW")){
 	toptagSF     = pow(1.25,0.18); 
-	toptagSFUp   = pow(1.25,0.18+0.45);
-	toptagSFDown = pow(1.25,0.18-0.45);
+	toptagSFUp   = pow(1.25,0.18+0.25); //Fit only uncertainty; full uncertainty is 0.45 w/ variations
+	toptagSFDown = pow(1.25,0.18-0.25); 
 	toptagSF_etaLow  = pow(1.25, 0.27); 
 	toptagSF_etaHigh = pow(1.25,-0.41); 
 	toptagSF_ptLow   = pow(1.25,-0.27); 
@@ -2378,8 +2378,8 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
       }
       else {
 	toptagSF     = pow(1.25,-1.06); 
-	toptagSFUp   = pow(1.25,-1.06+0.55);
-	toptagSFDown = pow(1.25,-1.06-0.55);
+	toptagSFUp   = pow(1.25,-1.06+0.34); //Fit only uncertainty; full uncertainty is 0.55 w/ variations
+	toptagSFDown = pow(1.25,-1.06-0.34);
 	toptagSF_etaLow  = pow(1.25,-1.26); 
 	toptagSF_etaHigh = pow(1.25,-0.07); 
 	toptagSF_ptLow   = pow(1.25,-1.07); 
