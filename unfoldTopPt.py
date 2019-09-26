@@ -42,7 +42,7 @@ def myText(x, y, color, text) :
 
 def mySmallText(x, y, color, text) :
   l = TLatex()
-  l.SetTextSize(0.035) 
+  l.SetTextSize(0.04) 
   l.SetTextFont(42)
   l.SetNDC()
   l.SetTextColor(color)
@@ -207,6 +207,7 @@ if options.level == "part":
 
 labelstring1 = "quark" if (options.level == "gen") else "jet"
 labelstring2 = "p_{T} [GeV]" if (options.toUnfold == "pt") else "rapidity"
+labelstring3 = "p_{T}^{t} [GeV]" if (options.toUnfold == "pt") else "|y^{t}|"
 
 normname = ""
 if options.norm:
@@ -230,13 +231,15 @@ if plotmcnlo:
     trueMCNLO = {}
 
 channels = ["mu","el"]
-sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
+sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2", "TopTagEta","TopTagPt"]
 #thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn","Herwig","mtop1715","mtop1735"]
-thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]
+thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn"]
 allsysnames = sysnames+thsysnames
 
 #longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower","mtop 171.5","mtop 173.5"]
-longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
+longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales",
+             "t tagging eta", "t tagging pt",
+             "ISR","FSR","Tune","ME-PS matching","Color reconnection"]
 variants = ["Up","Down"]
 
 DIR = "histfiles_full2016_latest"
@@ -324,11 +327,11 @@ for channel in channels:
     # Get systematic variations
     # -------------------------------------------------------------------------------------
     for sysname in sysnames:
-        for var in variants:
-            f_ttbar_sys_m0to700_p1 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_"+sysname+var+"_post.root")
-            f_ttbar_sys_m0to700_p2 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_"+sysname+var+"_post.root")
-            f_ttbar_sys_m700to1000 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_"+sysname+var+"_post.root")
-            f_ttbar_sys_m1000toInf = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_"+sysname+var+"_post.root")    
+        if sysname == "TopTagPt" or sysname == "TopTagEta":
+            f_ttbar_sys_m0to700_p1 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_"+sysname+"_post.root")
+            f_ttbar_sys_m0to700_p2 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_"+sysname+"_post.root")
+            f_ttbar_sys_m700to1000 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_"+sysname+"_post.root")
+            f_ttbar_sys_m1000toInf = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_"+sysname+"_post.root")    
 
             response_sys_m0to700_p1 = f_ttbar_sys_m0to700_p1.Get(response_name)
             response_sys_m0to700_p2 = f_ttbar_sys_m0to700_p2.Get(response_name)
@@ -370,7 +373,56 @@ for channel in channels:
                 response_sys.SetBinContent(ibin,0,0)
                 response_sys.SetBinError(ibin,0,0)
 
-            Hres_sys[sysname+var+"_"+channel] = response_sys
+            Hres_sys[sysname+"_"+channel] = response_sys
+        
+        else:     
+            for var in variants:
+                f_ttbar_sys_m0to700_p1 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom+"_"+channel+"_"+sysname+var+"_post.root")
+                f_ttbar_sys_m0to700_p2 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_"+sysname+var+"_post.root")
+                f_ttbar_sys_m700to1000 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_"+sysname+var+"_post.root")
+                f_ttbar_sys_m1000toInf = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_"+sysname+var+"_post.root")    
+                
+                response_sys_m0to700_p1 = f_ttbar_sys_m0to700_p1.Get(response_name)
+                response_sys_m0to700_p2 = f_ttbar_sys_m0to700_p2.Get(response_name)
+                response_sys_m700to1000 = f_ttbar_sys_m700to1000.Get(response_name)
+                response_sys_m1000toInf = f_ttbar_sys_m1000toInf.Get(response_name)
+                response_sys_m0to700_p1.Sumw2()
+                response_sys_m0to700_p2.Sumw2()
+                response_sys_m700to1000.Sumw2()
+                response_sys_m1000toInf.Sumw2()
+                response_sys_m0to700 = response_sys_m0to700_p1.Clone()
+                response_sys_m0to700.Add(response_sys_m0to700_p2)
+                response_sys_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+                response_sys_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+                response_sys_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+                response_sys = response_sys_m0to700.Clone()
+                response_sys.Add(response_sys_m700to1000)
+                response_sys.Add(response_sys_m1000toInf)
+                
+                true_sys_m0to700_p1 = f_ttbar_sys_m0to700_p1.Get(hTrue_name)
+                true_sys_m0to700_p2 = f_ttbar_sys_m0to700_p2.Get(hTrue_name)
+                true_sys_m700to1000 = f_ttbar_sys_m700to1000.Get(hTrue_name)
+                true_sys_m1000toInf = f_ttbar_sys_m1000toInf.Get(hTrue_name)
+                true_sys_m0to700_p1.Sumw2()
+                true_sys_m0to700_p2.Sumw2()
+                true_sys_m700to1000.Sumw2()
+                true_sys_m1000toInf.Sumw2()
+                true_sys_m0to700 = true_sys_m0to700_p1.Clone()
+                true_sys_m0to700.Add(true_sys_m0to700_p2)
+                true_sys_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+                true_sys_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+                true_sys_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+                true_sys = true_sys_m0to700.Clone()
+                true_sys.Add(true_sys_m700to1000)
+                true_sys.Add(true_sys_m1000toInf)
+                
+                antiTagWeight(true_sys,response_sys)
+                convertForTUnfold(response_sys)
+                for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
+                    response_sys.SetBinContent(ibin,0,0)
+                    response_sys.SetBinError(ibin,0,0)
+                    
+                Hres_sys[sysname+var+"_"+channel] = response_sys
 
     for thsysname in thsysnames:
         if thsysname is "ErdOn" or thsysname is "Herwig":
@@ -386,12 +438,6 @@ for channel in channels:
                 response_sys.SetBinContent(ibin,0,0)
 
             Hres_sys[thsysname+"_"+channel] = response_sys
-
-            ## additional theory comparison 
-            if thsysname is "Herwig":
-                trueHerwig[channel] = f_ttbar_sys.Get(hTrue_name)
-                trueHerwig[channel].Sumw2()
-                trueHerwig[channel].Scale(831.76 * 35867.0 / 59174465) #Number events in miniAOD datasets
 
         elif thsysname is "mtop1715" or thsysname is "mtop1735":
             f_ttbar_sys = TFile(DIR+"/hists_PowhegPythia8_"+thsysname+"_"+name_TTbarVar+"_"+channel+"_nom_post.root")
@@ -423,12 +469,18 @@ for channel in channels:
                 Hres_sys[thsysname+var+"_"+channel] = response_sys
 
     ## additional theory comparison 
+    f_herwig = TFile(DIR+"/hists_PowhegPythia8_Herwig_"+name_TTbarVar+"_"+channel+"_Herwig_post.root")
+    trueHerwig[channel] = f_herwig.Get(hTrue_name)
+    trueHerwig[channel].Sumw2()
+    trueHerwig[channel].Scale(831.76 * 35867.0 / 59174465) #Number events in miniAOD datasets
+
     if plotmcnlo:
         f_mcnlo = TFile(DIR+"/hists_TTJets_amcatnloFXFX_"+name_TTbarVar+"_"+channel+"_nom_post.root")
         trueMCNLO[channel] = f_mcnlo.Get(hTrue_name)
         trueMCNLO[channel].Sumw2()
         trueMCNLO[channel].Scale(831.76 * 35867.0 / (44350533*0.345960) ) #Number events in miniAOD datasets
 
+    
 
     # -------------------------------------------------------------------------------------
     # read & normalize histograms
@@ -850,7 +902,7 @@ response["comb"] = response["mu"].Clone()
 response["comb"].Add(response["el"])
 
 for sysname in allsysnames:
-    if sysname == "ErdOn" or sysname == "Herwig" or sysname == "mtop1715" or sysname == "mtop1735":
+    if sysname == "ErdOn" or sysname == "Herwig" or sysname == "mtop1715" or sysname == "mtop1735" or sysname == "TopTagEta" or sysname == "TopTagPt":
         Hres_sys[sysname+"_comb"] = Hres_sys[sysname+"_mu"].Clone()
         Hres_sys[sysname+"_comb"].Add(Hres_sys[sysname+"_el"])
     else :
@@ -881,11 +933,11 @@ for channel in channels:
 
         # Add systematic uncertainties
         for sysname in allsysnames:
-            if sysname == "ErdOn" or sysname == "Herwig" or sysname == "mtop1715" or sysname == "mtop1735":
+            if sysname == "ErdOn" or sysname == "Herwig" or sysname == "mtop1715" or sysname == "mtop1735" or sysname == "TopTagEta" or sysname == "TopTagPt":
                 unfold[var].AddSysError(Hres_sys[sysname+"_"+channel],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
             else :
                 unfold[var].AddSysError(Hres_sys[sysname+var+"_"+channel],sysname,TUnfold.kHistMapOutputVert,TUnfoldDensity.kSysErrModeMatrix)
-
+                
         # Subtract backgrounds with appropriate scale / uncertainty
         for background in backgrounds[channel]:
             unfold[var].SubtractBackground(background.hist,background.name,background.norm,background.err)
@@ -990,10 +1042,10 @@ for channel in channels:
       tot_th  = 0.0
 
       #for sysname in ["PDF","Q2","ISR","FSR","Tune","Hdamp","ErdOn","Herwig","mtop1715","mtop1735"]:
-      for sysname in ["PDF","Q2","ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]:
+      for sysname in ["PDF","Q2","ISR","FSR","Tune","Hdamp","ErdOn"]:
         h_SYS[sysname].SetBinContent(ibin,math.sqrt((pow(hErrSys["Up"][sysname].GetBinContent(ibin),2)+pow(hErrSys["Down"][sysname].GetBinContent(ibin),2))/2.0))
         tot_th += (pow(hErrSys["Up"][sysname].GetBinContent(ibin),2)+pow(hErrSys["Down"][sysname].GetBinContent(ibin),2))/2.0
-      for sysname in ["JEC","JER","BTag","TopTag","lep","pu"]:
+      for sysname in ["JEC","JER","BTag","TopTag","lep","pu","TopTagEta","TopTagPt"]:
         h_SYS[sysname].SetBinContent(ibin,math.sqrt((pow(hErrSys["Up"][sysname].GetBinContent(ibin),2)+pow(hErrSys["Down"][sysname].GetBinContent(ibin),2))/2.0))
         tot_exp += (pow(hErrSys["Up"][sysname].GetBinContent(ibin),2)+pow(hErrSys["Down"][sysname].GetBinContent(ibin),2))/2.0
       tot_exp += tot_bkg_stat
@@ -1073,8 +1125,8 @@ for channel in channels:
 
     #colors = [632,600,617,417,432,4,1,419,600,882,632,600,617,2,5,7]
     #markers = [20,21,22,23,33,26,24,25,27,32,23,33,26,24,8,8]
-    colors = [632,600,617,417,432,4,1,419,600,882,632,600,617,2]
-    markers = [20,21,22,23,33,26,24,25,27,32,23,33,26,24]
+    colors = [632,600,617,417,432,4,1,419,600,882,632,600,617,2,5,7]
+    markers = [20,21,22,23,33,26,24,25,27,32,23,33,26,24,8,8]
     for isys in xrange(0,len(allsysnames)):
         h_SYS[allsysnames[isys]].SetLineColor(colors[isys])
         h_SYS[allsysnames[isys]].SetLineWidth(2)
@@ -1145,7 +1197,7 @@ for channel in channels:
         
     sysleg.SetFillStyle(0)
     sysleg.SetBorderSize(0)
-    sysleg.SetTextSize(0.03)
+    sysleg.SetTextSize(0.04)
     sysleg.SetTextFont(42)
 
     h_TOT.GetXaxis().SetTitleOffset(1.0)
@@ -1158,8 +1210,19 @@ for channel in channels:
     h_STAT.Draw("ep,same")
     if not options.norm:
         h_LUMI.Draw("ep,same")
+
     for sysname in allsysnames:
+        # ----------------- some printouts -----------------
+        if channel=="comb" :
+            print sysname
+            for ibin in xrange(1,nbinsTrue+1):
+                
+                print "   " + str("{:.0f}".format(thisTrue[channel].GetXaxis().GetBinLowEdge(ibin))) + "-" + str("{:.0f}".format(thisTrue[channel].GetXaxis().GetBinUpEdge(ibin))) + ": " + str("{:.4f}".format(h_SYS[sysname].GetBinContent(ibin)))
+            
+        # --------------------------------------------------
+        
         h_SYS[sysname].Draw("ep,same")
+        
     h_BKG.Draw("ep,same")
         
     sysleg.Draw() 
@@ -1179,19 +1242,20 @@ for channel in channels:
     # h_BKG    => backgrounds 
 
     #sysnames = ["JEC","JER","BTag","TopTag","lep","pu","PDF","Q2"]
-    #thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn","Herwig"]
-    #longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection","Parton shower"]
+    #thsysnames = ["ISR","FSR","Tune","Hdamp","ErdOn"]
+    #longnames = ["Jet energy scale","Jet energy resolution","b tagging efficiency","t tagging efficiency","Lepton ID","Pileup","PDF Uncertainty","#mu_{R}, #mu_{F} scales","ISR","FSR","Tune","ME-PS matching","Color reconnection"]
 
     # h_sys_jet     : JEC, JER, BTag
     # h_sys_toptag  : TopTag 
     # h_sys_other   : bkg, lep, pu, h_LUMI
     # h_sys_hardscatter  : PDF, Q2
-    # h_sys_partonshower : ISR, FSR, Tune, Hdamp, EdrOn, Herwig
+    # h_sys_partonshower : ISR, FSR, Tune, Hdamp, EdrOn
 
     h_sys_stat = h_STAT.Clone("sys_stat")
     h_sys_stat.Scale(100.0)
     h_sys_toptag = h_SYS["TopTag"].Clone("sys_toptag")
-    h_sys_toptag.Scale(100.0) 
+    h_sys_toptag.Reset()
+    #h_sys_toptag.Scale(100.0) 
 
     h_sys_jet = h_SYS["JEC"].Clone("sys_jet")
     h_sys_jet.Reset()
@@ -1208,6 +1272,7 @@ for channel in channels:
     
     for ibin in xrange(1,nbinsTrue+1):
         
+        bin_toptag = 0;
         bin_jet = 0;
         bin_other = 0;
         bin_hardscatter = 0;
@@ -1217,6 +1282,8 @@ for channel in channels:
         
         for sysname in allsysnames:
         
+            if sysname == "TopTag" or sysname == "TopTagEta" or sysname == "TopTagPt" :
+                bin_toptag += pow(h_SYS[sysname].GetBinContent(ibin),2)
             if sysname == "JEC" or sysname == "JER" or sysname == "BTag" :
                 bin_jet += pow(h_SYS[sysname].GetBinContent(ibin),2)
             if sysname == "lep" or sysname == "pu":
@@ -1234,6 +1301,7 @@ for channel in channels:
         if not options.norm:
             bin_other += pow(h_LUMI.GetBinContent(ibin),2) 
         
+        h_sys_toptag.SetBinContent(ibin,math.sqrt(bin_toptag)*100.0)
         h_sys_jet.SetBinContent(ibin,math.sqrt(bin_jet)*100.0)
         h_sys_other.SetBinContent(ibin,math.sqrt(bin_other)*100.0)
         h_sys_hardscatter.SetBinContent(ibin,math.sqrt(bin_hardscatter)*100.0)
@@ -1254,14 +1322,15 @@ for channel in channels:
         
     msysleg.SetFillStyle(0)
     msysleg.SetBorderSize(0)
-    msysleg.SetTextSize(0.03)
+    msysleg.SetTextSize(0.04)
     msysleg.SetTextFont(42)
     
     h_sys_stat.SetFillColor(920)
     h_sys_stat.SetFillStyle(1001)
     h_sys_stat.SetLineWidth(0)
 
-    h_sys_stat.GetXaxis().SetTitle("Top "+labelstring1+" "+labelstring2)
+    #h_sys_stat.GetXaxis().SetTitle("Top "+labelstring1+" "+labelstring2)
+    h_sys_stat.GetXaxis().SetTitle(labelstring3)
     h_sys_stat.GetYaxis().SetTitle("Relative uncertainty [%]")
 
     h_sys_jet.SetLineColor(2)

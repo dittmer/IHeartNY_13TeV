@@ -26,7 +26,8 @@ using namespace std;
 void mySmallText(Double_t x,Double_t y,Color_t color,Double_t tsize, char *text) {
   TLatex l;
   l.SetTextSize(tsize); 
-  l.SetTextFont(52); 
+  //l.SetTextFont(52); 
+  l.SetTextFont(42); 
   l.SetNDC();
   l.SetTextColor(color);
   l.DrawLatex(x,y,text);
@@ -209,10 +210,8 @@ void drawCombineMatrix() {
       h0new->Draw("text colz");
       h0new->Draw("axis,same");
 
-      //drawCMS(0.10,0.92, false);
       drawCMS(0.14,0.92, false);
-      //mySmallText(0.15,0.82,1,0.04,"l+jets events");
-      mySmallText(0.20,0.82,1,0.04,"l+jets events");
+      mySmallText(0.63,0.2,1,0.04,"l+jets channel");
 
       c->SaveAs("UnfoldingPlots/combined_responseMatrix_"+var[iv]+level[il]+".pdf");
 

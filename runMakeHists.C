@@ -54,8 +54,9 @@ void runMakeHists(TString toMake = "prefit"){
     "ZJets"
   };
 
-  const int nSYS = 13;
-  TString sysnames[nSYS] = {"nom","puUp","puDown","JECUp","JECDown","JERUp","JERDown","lepUp","lepDown","BTagUp","BTagDown","TopTagUp","TopTagDown"};
+  const int nSYS = 15;
+  const int nSYS = 1;
+  TString sysnames[nSYS] = {"nom","puUp","puDown","JECUp","JECDown","JERUp","JERDown","lepUp","lepDown","BTagUp","BTagDown","TopTagUp","TopTagDown","TopTagEta","TopTagPt"};
   const int nTHSYS = 4;
   TString thsysnames[nTHSYS] = {"PDFUp","PDFDown","Q2Up","Q2Down"};
   const int nSAMPLES = 10;
@@ -280,7 +281,7 @@ void runMakeHists(TString toMake = "prefit"){
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+name_TTbar_m700to1000,"el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],0,postTopTagSF);
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+name_TTbar_m700to1000,"el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],1,postTopTagSF);
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+name_TTbar_m700to1000,"el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],2,postTopTagSF);
-
+      
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+name_TTbar_m1000toInf,"mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],0,postTopTagSF); 
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+name_TTbar_m1000toInf,"mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],1,postTopTagSF); 
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+name_TTbar_m1000toInf,"mu",false,true,"Medium","MiniIso10",true,35.0,false,false,sysnames[ii],2,postTopTagSF); 
@@ -289,6 +290,7 @@ void runMakeHists(TString toMake = "prefit"){
       makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_"+name_TTbar_m1000toInf,"el",false,true,"Tight","MiniIso10",true,50.0,true,false,sysnames[ii],2,postTopTagSF);
     }
 
+    /*
     for (int ii = 0; ii < nTHSYS; ii++){
 
       cout << "theory systematic " << thsysnames[ii] << endl;
@@ -351,6 +353,7 @@ void runMakeHists(TString toMake = "prefit"){
       makeHists("skimTrees_full2016/","histfiles_full2016",bkgMCnames[jj],"mu",false,false,"Medium","MiniIso10",true,35.0,false,true,"nom",0,postTopTagSF); //QCD
       makeHists("skimTrees_full2016/","histfiles_full2016",bkgMCnames[jj],"el",false,false,"Medium","MiniIso10",true,50.0,true,true,"nom",0,postTopTagSF);    
     }
+    */
   }
 
   // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -407,10 +410,12 @@ void runMakeHists(TString toMake = "prefit"){
 
     //makeHists("skimTrees_full2016/","histfiles_full2016_debug","PowhegPythia8_m1000toInf_PLnew","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF); 
     //makeHists("skimTrees_full2016/","histfiles_full2016_debug","PowhegPythia8_m1000toInf_PLnew","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF); 
-    // makeHists("skimTrees_full2016/","histfiles_full2016_debug","PowhegPythia8_PLnew","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF,true); //Signal
+    
+    //makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_PLnew","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF,false);
+    makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_PLnew","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF,false);
 
-    makeHists("skimTrees_full2016/","histfiles_full2016","TTJets_amcatnloFXFX_PLnew","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF);
-    makeHists("skimTrees_full2016/","histfiles_full2016","TTJets_amcatnloFXFX_PLnew","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF);
+    //makeHists("skimTrees_full2016/","histfiles_full2016","TTJets_amcatnloFXFX_PLnew","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF);
+    //makeHists("skimTrees_full2016/","histfiles_full2016","TTJets_amcatnloFXFX_PLnew","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF);
 
     /*
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_mtop1715_PLnew","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF);
