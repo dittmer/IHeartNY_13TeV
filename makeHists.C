@@ -2371,8 +2371,8 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	toptagSF     = pow(1.25,0.18); 
 	toptagSFUp   = pow(1.25,0.18+0.25); //Fit only uncertainty; full uncertainty is 0.45 w/ variations
 	toptagSFDown = pow(1.25,0.18-0.25); 
-	toptagSF_etaLow  = pow(1.25, 0.27); 
-	toptagSF_etaHigh = pow(1.25,-0.41); 
+	toptagSF_etaLow  = pow(1.25, 0.61); 
+	toptagSF_etaHigh = pow(1.25,-1.00); 
 	toptagSF_ptLow   = pow(1.25,-0.27); 
 	toptagSF_ptHigh  = pow(1.25, 0.43); 
       }
@@ -2380,8 +2380,8 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	toptagSF     = pow(1.25,-1.06); 
 	toptagSFUp   = pow(1.25,-1.06+0.34); //Fit only uncertainty; full uncertainty is 0.55 w/ variations
 	toptagSFDown = pow(1.25,-1.06-0.34);
-	toptagSF_etaLow  = pow(1.25,-1.26); 
-	toptagSF_etaHigh = pow(1.25,-0.07); 
+	toptagSF_etaLow  = pow(1.25,-1.28); 
+	toptagSF_etaHigh = pow(1.25,-0.46); 
 	toptagSF_ptLow   = pow(1.25,-1.07); 
 	toptagSF_ptHigh  = pow(1.25,-0.80); 
       }
@@ -2395,14 +2395,14 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	passTopTag = true;
 	if (!isData){
 	  if (systematic == "TopTagUp")                                            toptagSF = toptagSFUp;
-	  if (systematic == "TopTagLowUp"  && ak8jetPt->at(itopJetCand) < 500.0)   toptagSF = toptagSFUp;
-	  if (systematic == "TopTagHighUp" && ak8jetPt->at(itopJetCand) > 500.0)   toptagSF = toptagSFUp;
+	  if (systematic == "TopTagLowUp"  && abs(ak8jetEta->at(itopJetCand)) < 1.0)   toptagSF = toptagSFUp;
+	  if (systematic == "TopTagHighUp" && abs(ak8jetEta->at(itopJetCand)) > 1.0)   toptagSF = toptagSFUp;
 	  if (systematic == "TopTagDown")                                          toptagSF = toptagSFDown;
-	  if (systematic == "TopTagLowDown"  && ak8jetPt->at(itopJetCand) < 500.0) toptagSF = toptagSFDown;
-	  if (systematic == "TopTagHighDown" && ak8jetPt->at(itopJetCand) > 500.0) toptagSF = toptagSFDown;
+	  if (systematic == "TopTagLowDown"  && abs(ak8jetEta->at(itopJetCand)) < 1.0) toptagSF = toptagSFDown;
+	  if (systematic == "TopTagHighDown" && abs(ak8jetEta->at(itopJetCand)) > 1.0) toptagSF = toptagSFDown;
 
-	  if (systematic == "TopTagEta" && ak8jetEta->at(itopJetCand) < 1.0)  toptagSF = toptagSF_etaLow;
-	  if (systematic == "TopTagEta" && ak8jetEta->at(itopJetCand) > 1.0)  toptagSF = toptagSF_etaHigh;
+	  if (systematic == "TopTagEta" && abs(ak8jetEta->at(itopJetCand)) < 1.0)  toptagSF = toptagSF_etaLow;
+	  if (systematic == "TopTagEta" && abs(ak8jetEta->at(itopJetCand)) > 1.0)  toptagSF = toptagSF_etaHigh;
 	  if (systematic == "TopTagPt"  && ak8jetPt->at(itopJetCand) < 500.0) toptagSF = toptagSF_ptLow;
 	  if (systematic == "TopTagPt"  && ak8jetPt->at(itopJetCand) > 500.0) toptagSF = toptagSF_ptHigh;
 	}
