@@ -760,24 +760,25 @@ void troubleshootQCD(TString DIR, TString var, TString channel) {
   leg->Delete();
 }
 
-void compareShapes(TString DIR, TString DIRqcd, TString channel, TString var, TString region) {
+void compareShapes(TString DIR, TString DIRqcd, TString channel, TString var, TString region, TString split="") {
   
   TH1::AddDirectory(kFALSE); 
   setStyle();
 
   TString hist = var+region;
+
+  TString append = (split == "") ? "" : "_"+split;
   
   // get histograms
-  SummedHist* wjets = getWJets( DIR, var, region, channel, false, "nom", false );
-  SummedHist* ttbar = getTTbar( DIR, var, region, channel, false, "nom", false );
-  SummedHist* ttbar_nonSemiLep = getTTbarNonSemiLep( DIR, var, region, channel, false, "nom", false );
+  SummedHist* wjets = getWJets( DIR, var, region, channel, false, "nom", false, split );
+  SummedHist* ttbar = getTTbar( DIR, var, region, channel, false, "nom", false, split );
+  SummedHist* ttbar_nonSemiLep = getTTbarNonSemiLep( DIR, var, region, channel, false, "nom", false, split );
   //SummedHist* singletop = getSingleTop( DIR, var, region, channel, false, "nom", false );
 
   // -------------------------------------------------------------------------------------
   // get the TH1F versions
-  
-  TH1F* h_qcd = (TH1F*) getQCDData( DIR, DIRqcd, var, region, channel, "nom", false); // Currently taking QCD from data sideband with no triangular cut,
-                                                                                      // with normalization from MC in signal region
+  TH1F* h_qcd = (TH1F*) getQCDData( DIR, DIRqcd, var, region, channel, "nom", false, split); // Currently taking QCD from data sideband with no triangular cut,
+                                                                                             // with normalization from MC in signal region
   TH1F* h_wjets = (TH1F*) wjets->hist();
   TH1F* h_ttbar = (TH1F*) ttbar->hist();
   TH1F* h_ttbar_nonSemiLep = (TH1F*) ttbar_nonSemiLep->hist();
@@ -790,21 +791,21 @@ void compareShapes(TString DIR, TString DIRqcd, TString channel, TString var, TS
   TCanvas* c = new TCanvas("c_"+hist,"c_"+hist,900,800);
   
   if (h_qcd){
-    h_qcd->SetLineColor(h_qcd->GetFillColor());
+    h_qcd->SetLineColor(kBlue);
     h_qcd->SetFillColor(0);
     h_qcd->Scale(1./h_qcd->Integral());
   }
-  h_wjets->SetLineColor(h_wjets->GetFillColor());
+  h_wjets->SetLineColor(kGreen);
   h_wjets->SetFillColor(0);
   h_wjets->Scale(1./h_wjets->Integral());
-  h_ttbar->SetLineColor(h_ttbar->GetFillColor());
+  h_ttbar->SetLineColor(kRed);
   h_ttbar->SetFillColor(0);
   h_ttbar->Scale(1./h_ttbar->Integral());
   //h_singletop->SetLineColor(h_singletop->GetFillColor());
   //h_singletop->SetFillColor(0);
   //h_singletop->Scale(1./h_singletop->Integral());
 
-  if (hist.Contains("ak4jetEta") || hist.Contains("ak8jetSDmass") || hist.Contains("ak8jetTau")){
+  if (hist.Contains("ak4jetEta") || hist.Contains("ak8jetSDmass") || hist.Contains("ak8jetTau") || hist.Contains("ak4jetAbsEta")){
     if (h_qcd) h_qcd->Rebin(5);
     h_wjets->Rebin(5);
     h_ttbar->Rebin(5);
@@ -845,7 +846,7 @@ void compareShapes(TString DIR, TString DIRqcd, TString channel, TString var, TS
   leg->Draw();
 
   // save output
-  TString outname = "Plots/compShapes_"+channel+"_"+hist+".pdf";
+  TString outname = "Plots/compShapes_"+channel+"_"+hist+append+".pdf";
   c->SaveAs(outname);
 
   // Cleanup, since we are using gDirectory(kFALSE)
@@ -869,16 +870,16 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 
   const int nchannels = 2;
   TString channels[nchannels] = {"mu","el"};
-  const int nhist = 13;
-  TString histnames[nhist] = {"lepEta","lepEta","ak4jetEta","ak4jetEta","ak8jetTau21","ak8jetTau32","ak8jetSDmass","lepAbsEta","lepAbsEta","ak4jetAbsEta","ak4jetAbsEta","ak4jetCSV","counts"};
-  TString regions[nhist] = {"0t","1t0b","0t","1t0b","0t","1t0b","1t1b","0t","1t0b","0t","1t0b","0t",""};
-  int rebinby[nhist] = {5,5,5,5,5,5,2,5,5,5,5,5,1};
-  float lowbounds[nhist] = {-2.5,-2.5,-2.5,-2.5,0.1,0.2,100.0,0.0,0.0,0.0,0.0,0.0,-0.5};
-  float highbounds[nhist] = {2.5,2.5,2.5,2.5,1.0,0.84,220.0,2.5,2.5,2.5,2.5,1.0,2.5};
-  const int nbins = 3;
-  TString binnames[nbins] = {"","barrel","endcap"};
-  const int nsys = 11;
-  TString sysnames[nsys] = {"nom","lepUp","lepDown","JECUp","JECDown","JERUp","JERDown","BTagUp","BTagDown","TopTagUp","TopTagDown"};
+  const int nhist = 10;
+  TString histnames[nhist] = {"lepEta","lepEta","ak4jetEta","ak4jetEta","ak8jetSDmass","lepAbsEta","lepAbsEta","ak4jetAbsEta","ak4jetAbsEta","counts"};
+  TString regions[nhist] = {"0t","1t0b","0t","1t0b","1t1b","0t","1t0b","0t","1t0b",""};
+  int rebinby[nhist] = {5,5,5,5,2,5,5,5,5,1};
+  float lowbounds[nhist] = {-2.5,-2.5,-2.5,-2.5,100.0,0.0,0.0,0.0,0.0,-0.5};
+  float highbounds[nhist] = {2.5,2.5,2.5,2.5,220.0,2.5,2.5,2.5,2.5,2.5};
+  const int nbins = 5;
+  TString binnames[nbins] = {"","etalow","etahigh","ptlow","pthigh"};
+  const int nsys = 19;
+  TString sysnames[nsys] = {"nom","lepUp","lepDown","JECUp","JECDown","JERUp","JERDown","BTagUp","BTagDown","TopTagUp","TopTagDown","TopTagEtaLowUp","TopTagEtaLowDown","TopTagEtaHighUp","TopTagEtaHighDown","TopTagPtLowUp","TopTagPtLowDown","TopTagPtHighUp","TopTagPtHighDown"};
   
   TH1F* h_qcd[nchannels][nhist][nbins][nsys];
   TH1F* h_diboson[nchannels][nhist][nbins][nsys];
@@ -891,14 +892,16 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
   TH1F* h_singletop_tW[nchannels][nhist][nbins][nsys];
   TH1F* h_singletop_other[nchannels][nhist][nbins][nsys];
   TH1F* h_data[nchannels][nhist][nbins];
+
+  TH1F* h_ratio[nchannels][nhist][nsys-1];
   
   for (int ii = 0; ii < nchannels; ii++){
     for (int jj = 0; jj < nhist; jj++){
       for (int ib = 0; ib < nbins; ib++){
 	for (int kk = 0; kk < nsys; kk++){
-	  TString append = (sysnames[kk] == "nom") ? "" : "_"+(sysnames[kk].Contains("TopTag") ? binnames[ib]+sysnames[kk] : sysnames[kk]);
+	  TString append = (sysnames[kk] == "nom") ? "" : "_"+sysnames[kk];
 	  append.ReplaceAll("lep",channels[ii]+"SF");
-	  
+
 	  // get histograms
 	  SummedHist* diboson = getDiboson( DIR, histnames[jj], regions[jj], channels[ii], false, sysnames[kk], false, binnames[ib]);
 	  SummedHist* zjets = getZJets( DIR, histnames[jj], regions[jj], channels[ii], false, sysnames[kk], false, binnames[ib]);
@@ -997,6 +1000,10 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 	dirs[ii][jj][ib] = fout->mkdir(histnames[jj]+regions[jj]+(binnames[ib] != "" ? "_"+binnames[ib] : "")+"_"+channels[ii]);
 	dirs[ii][jj][ib]->cd();
 	for (int kk = 0; kk < nsys; kk++){
+	  if ((sysnames[kk].Contains("TopTagEtaLow")  && !(binnames[ib] == "" || binnames[ib] == "etalow"))  ||
+	      (sysnames[kk].Contains("TopTagEtaHigh") && !(binnames[ib] == "" || binnames[ib] == "etahigh")) ||
+	      (sysnames[kk].Contains("TopTagPtLow")   && !(binnames[ib] == "" || binnames[ib] == "ptlow"))   ||
+	      (sysnames[kk].Contains("TopTagPtHigh")  && !(binnames[ib] == "" || binnames[ib] == "pthigh"))) continue;
 	  h_qcd[ii][jj][ib][kk]->Write();
 	  h_diboson[ii][jj][ib][kk]->Write();
 	  h_zjets[ii][jj][ib][kk]->Write();
@@ -1015,13 +1022,25 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
   }
   fout->Close();
 
+  std::cout << "Plotting histograms" << std::endl;
+  
   // Make comparison plots
-  int colors[nsys-1] = {2,2,3,3,4,4,5,5,6,6};
-  int styles[nsys-1] = {1,2,1,2,1,2,1,2,1,2};
   for (int ii = 0; ii < nchannels; ii++){
     for (int jj = 0; jj < nhist; jj++){
 
       TCanvas* c = new TCanvas("c_"+histnames[jj]+regions[jj]+"_"+channels[ii],"c_"+histnames[jj]+regions[jj]+"_"+channels[ii],900,800);
+      TPad* p1 = new TPad("p1_"+histnames[jj]+regions[jj]+"_"+channels[ii],"p1_"+histnames[jj]+regions[jj]+"_"+channels[ii],0,0.3,1,1);
+      p1->SetTopMargin(0.08);
+      p1->SetBottomMargin(0.05);
+      p1->SetNumber(1);
+      TPad* p2 = new TPad("p2_"+histnames[jj]+regions[jj]+"_"+channels[ii],"p2_"+histnames[jj]+regions[jj]+"_"+channels[ii],0,0,1,0.3);
+      p2->SetNumber(2);
+      p2->SetTopMargin(0.05);
+      p2->SetBottomMargin(0.35);
+      
+      p1->Draw();
+      p2->Draw();
+      p1->cd();
 
       h_ttbar[ii][jj][0][0]->SetFillColor(0);
       h_ttbar[ii][jj][0][0]->SetMaximum(1.5*h_ttbar[ii][jj][0][0]->GetMaximum());
@@ -1039,13 +1058,22 @@ void makeCombineInputs(TString DIR, TString DIRqcd, TString whichQCD) {
 
       for (int kk = 1; kk < nsys; kk++){
 	h_ttbar[ii][jj][0][kk]->SetFillColor(0);
-	h_ttbar[ii][jj][0][kk]->SetLineColor(colors[kk-1]);
-	h_ttbar[ii][jj][0][kk]->SetLineStyle(styles[kk-1]);
+	h_ttbar[ii][jj][0][kk]->SetLineColor((kk+3)/2);
+	h_ttbar[ii][jj][0][kk]->SetLineStyle((kk+1)%2+1);
 	h_ttbar[ii][jj][0][kk]->Draw("hist,same");
 	if (kk%2 == 1) leg->AddEntry(h_ttbar[ii][jj][0][kk],sysnames[kk],"l");
       }
 
       leg->Draw();
+
+      p2->cd();
+      
+      for (int kk = 1; kk < nsys; kk++){
+	h_ratio[ii][jj][kk-1] = (TH1F*) h_ttbar[ii][jj][0][kk]->Clone();
+	h_ratio[ii][jj][kk-1]->Divide(h_ttbar[ii][jj][0][0]);
+	h_ratio[ii][jj][kk-1]->GetYaxis()->SetRangeUser(0.8,1.2);
+	h_ratio[ii][jj][kk-1]->Draw("hist,same");
+      }
 
       TString outname = "Plots/sysVar_"+channels[ii]+"_"+histnames[jj]+regions[jj]+".pdf";
       c->SaveAs(outname);
@@ -1583,16 +1611,11 @@ void combineResults(TString channel, TString fit) {
   TH1::AddDirectory(kFALSE); 
   setStyle();
 
-  const int nhist = 3;
-  TString what[nhist] = {"ak4jetEta0t","ak4jetEta1t0b","ak8jetSDmass1t1b"};
+  const int nhist = 6;
+  TString what[nhist] = {"ak4jetEta0t_ptlow","ak4jetEta1t0b_ptlow","ak8jetSDmass1t1b_ptlow","ak4jetEta0t_pthigh","ak4jetEta1t0b_pthigh","ak8jetSDmass1t1b_pthigh"};
   //TString what[nhist] = {"ak4jetAbsEta0t","ak4jetAbsEta1t0b","ak8jetSDmass1t1b"};
-  //TString what[nhist] = {"lepEta0t","lepEta1t0b","ak8jetSDmass1t1b"};
-  //TString what[nhist] = {"lepEta0t_barrel","lepEta0t_endcap","lepEta1t0b_barrel","lepEta1t0b_endcap","ak8jetSDmass1t1b_barrel","ak8jetSDmass1t1b_endcap"};
-  //TString what[nhist] = {"lepAbsEta0t","lepAbsEta1t0b","ak8jetSDmass1t1b"};
-  //TString what[nhist] = {"lepAbsEta0t_barrel","lepAbsEta0t_endcap","lepAbsEta1t0b_barrel","lepAbsEta1t0b_endcap","ak8jetSDmass1t1b_barrel","ak8jetSDmass1t1b_endcap"};
-  //TString what[nhist] = {"ak8jetTau210t","ak8jetTau321t0b","ak8jetSDmass1t1b"};
   //TString what[nhist] = {"counts"};
-  //TString what[nhist] = {"counts_barrel","counts_endcap"};
+  //TString what[nhist] = {"counts_ptlow","counts_pthigh"};
   const int ncats = 7;
   TString cats[ncats] = {"TTbar","SingleTop","WJets","ZJets","Diboson","QCD","total"};
   bool mergewjets = true;

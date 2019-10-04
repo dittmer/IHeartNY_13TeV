@@ -54,9 +54,8 @@ void runMakeHists(TString toMake = "prefit"){
     "ZJets"
   };
 
-  const int nSYS = 15;
-  const int nSYS = 1;
-  TString sysnames[nSYS] = {"nom","puUp","puDown","JECUp","JECDown","JERUp","JERDown","lepUp","lepDown","BTagUp","BTagDown","TopTagUp","TopTagDown","TopTagEta","TopTagPt"};
+  const int nSYS = 19;
+  TString sysnames[nSYS] = {"nom","puUp","puDown","JECUp","JECDown","JERUp","JERDown","lepUp","lepDown","BTagUp","BTagDown","TopTagEtaLowUp","TopTagEtaLowDown","TopTagEtaHighUp","TopTagEtaHighDown","TopTagPtLowUp","TopTagPtLowDown","TopTagPtHighUp","TopTagPtHighDown"/*"TopTagEta","TopTagPt"*/};
   const int nTHSYS = 4;
   TString thsysnames[nTHSYS] = {"PDFUp","PDFDown","Q2Up","Q2Down"};
   const int nSAMPLES = 10;
