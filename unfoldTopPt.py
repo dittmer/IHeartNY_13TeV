@@ -257,6 +257,12 @@ name_TTbarVar = "PLnew"
 #name_TTbar_m1000toInf = "fullTruth_m1000toInf"
 #name_TTbarVar = "fullTruth_PLnew"
 
+'''
+reco_nom = {}
+reco_eta = {}
+reco_pt  = {}
+'''
+
 for channel in channels:
     f_data = TFile(DIR+"/hists_Data_"+channel+".root")
     f_QCD  = TFile(DIR+"/hists_Data_"+channel+"_qcd.root")
@@ -332,7 +338,7 @@ for channel in channels:
             f_ttbar_sys_m0to700_p2 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbarNom_p2+"_"+channel+"_"+sysname+"_post.root")
             f_ttbar_sys_m700to1000 = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m700to1000+"_"+channel+"_"+sysname+"_post.root")
             f_ttbar_sys_m1000toInf = TFile(DIR+"/hists_PowhegPythia8_"+name_TTbar_m1000toInf+"_"+channel+"_"+sysname+"_post.root")    
-
+            
             response_sys_m0to700_p1 = f_ttbar_sys_m0to700_p1.Get(response_name)
             response_sys_m0to700_p2 = f_ttbar_sys_m0to700_p2.Get(response_name)
             response_sys_m700to1000 = f_ttbar_sys_m700to1000.Get(response_name)
@@ -367,6 +373,45 @@ for channel in channels:
             true_sys.Add(true_sys_m700to1000)
             true_sys.Add(true_sys_m1000toInf)
 
+            '''
+            if sysname == "TopTagPt" :
+                reco_pt_m0to700_p1 = f_ttbar_sys_m0to700_p1.Get(hMeas_name)
+                reco_pt_m0to700_p2 = f_ttbar_sys_m0to700_p2.Get(hMeas_name)
+                reco_pt_m700to1000 = f_ttbar_sys_m700to1000.Get(hMeas_name)
+                reco_pt_m1000toInf = f_ttbar_sys_m1000toInf.Get(hMeas_name)
+                reco_pt_m0to700_p1.Sumw2()
+                reco_pt_m0to700_p2.Sumw2()
+                reco_pt_m700to1000.Sumw2()
+                reco_pt_m1000toInf.Sumw2()
+                reco_pt_m0to700 = reco_pt_m0to700_p1.Clone()
+                reco_pt_m0to700.Add(reco_pt_m0to700_p2)
+                reco_pt_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+                reco_pt_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+                reco_pt_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+                reco_pt[channel] = reco_pt_m0to700.Clone()
+                reco_pt[channel].Add(reco_pt_m700to1000)
+                reco_pt[channel].Add(reco_pt_m1000toInf)
+                noNegBins(reco_pt[channel])
+            elif sysname == "TopTagEta" :
+                reco_eta_m0to700_p1 = f_ttbar_sys_m0to700_p1.Get(hMeas_name)
+                reco_eta_m0to700_p2 = f_ttbar_sys_m0to700_p2.Get(hMeas_name)
+                reco_eta_m700to1000 = f_ttbar_sys_m700to1000.Get(hMeas_name)
+                reco_eta_m1000toInf = f_ttbar_sys_m1000toInf.Get(hMeas_name)
+                reco_eta_m0to700_p1.Sumw2()
+                reco_eta_m0to700_p2.Sumw2()
+                reco_eta_m700to1000.Sumw2()
+                reco_eta_m1000toInf.Sumw2()
+                reco_eta_m0to700 = reco_eta_m0to700_p1.Clone()
+                reco_eta_m0to700.Add(reco_eta_m0to700_p2)
+                reco_eta_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+                reco_eta_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+                reco_eta_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+                reco_eta[channel] = reco_eta_m0to700.Clone()
+                reco_eta[channel].Add(reco_eta_m700to1000)
+                reco_eta[channel].Add(reco_eta_m1000toInf)
+                noNegBins(reco_eta[channel])
+            '''
+            
             antiTagWeight(true_sys,response_sys)
             convertForTUnfold(response_sys)
             for ibin in xrange(1,response_sys.GetXaxis().GetNbins()+1):
@@ -523,6 +568,26 @@ for channel in channels:
     thisExpect[channel].Add(thisExpect_m700to1000)
     thisExpect[channel].Add(thisExpect_m1000toInf)    
 
+    '''
+    reco_nom_m0to700_p1 = f_ttbar_m0to700_p1.Get(hMeas_name)
+    reco_nom_m0to700_p2 = f_ttbar_m0to700_p2.Get(hMeas_name)
+    reco_nom_m700to1000 = f_ttbar_m700to1000.Get(hMeas_name)
+    reco_nom_m1000toInf = f_ttbar_m1000toInf.Get(hMeas_name)
+    reco_nom_m0to700_p1.Sumw2()
+    reco_nom_m0to700_p2.Sumw2()
+    reco_nom_m700to1000.Sumw2()
+    reco_nom_m1000toInf.Sumw2()
+    reco_nom_m0to700 = reco_nom_m0to700_p1.Clone()
+    reco_nom_m0to700.Add(reco_nom_m0to700_p2)
+    reco_nom_m0to700.Scale(831.76 * 35867.0 / (77229341. + 78006311. * 1191. / 1192.))
+    reco_nom_m700to1000.Scale(831.76 * 35867.0 * 0.0967 / 38578334.0)
+    reco_nom_m1000toInf.Scale(831.76 * 35867.0 * 0.0256 / 24495211.0)
+    reco_nom[channel] = reco_nom_m0to700.Clone()
+    reco_nom[channel].Add(reco_nom_m700to1000)
+    reco_nom[channel].Add(reco_nom_m1000toInf)
+    noNegBins(reco_nom[channel])
+    '''
+    
     noNegBins(thisMeas[channel])
     noNegBins(thisTrue[channel])
     noNegBins(thisExpect[channel])
@@ -879,9 +944,6 @@ thisMeas["comb"].Add(thisMeas["el"])
 thisTrue["comb"] = thisTrue["mu"].Clone()
 thisTrue["comb"].Add(thisTrue["el"])
 
-thisExpect["comb"] = thisExpect["mu"].Clone()
-thisExpect["comb"].Add(thisExpect["el"])
-
 trueHerwig["comb"] = trueHerwig["mu"].Clone()
 trueHerwig["comb"].Add(trueHerwig["el"])
 
@@ -910,6 +972,16 @@ for sysname in allsysnames:
             Hres_sys[sysname+var+"_comb"] = Hres_sys[sysname+var+"_mu"].Clone()
             Hres_sys[sysname+var+"_comb"].Add(Hres_sys[sysname+var+"_el"])
 
+'''
+reco_pt["comb"] = reco_pt["mu"].Clone()
+reco_pt["comb"].Add(reco_pt["el"])
+reco_eta["comb"] = reco_eta["mu"].Clone()
+reco_eta["comb"].Add(reco_eta["el"])
+reco_nom["comb"] = reco_nom["mu"].Clone()
+reco_nom["comb"].Add(reco_nom["el"])
+'''
+
+
 # -------------------------------------------------------------------------------------
 # Do unfolding
 # -------------------------------------------------------------------------------------
@@ -927,6 +999,41 @@ fout.cd()
 
 for channel in channels:
     unfold = {}
+
+    '''
+    gStyle.SetPadTopMargin(0.07)
+    gStyle.SetPadRightMargin(0.05)
+    gStyle.SetPadBottomMargin(0.16)
+    gStyle.SetPadLeftMargin(0.18)
+    cttag = TCanvas("cttag", "", 800, 600)
+    reco_nom[channel].SetAxisRange(0,reco_nom[channel].GetMaximum()*1.15,"Y")
+    reco_nom[channel].Draw()
+    reco_pt[channel].SetLineColor(2)
+    reco_pt[channel].SetMarkerColor(2)
+    reco_pt[channel].SetMarkerStyle(22)
+    reco_pt[channel].Draw("same")
+    reco_eta[channel].SetLineColor(4)
+    reco_eta[channel].SetMarkerColor(4)
+    reco_eta[channel].SetMarkerStyle(24)
+    reco_eta[channel].Draw("same")
+
+    print "channel " + channel
+    for ibin in xrange(1,nbinsTrue+1):
+        print "   ibin: " + str(ibin) + " nom: " + str(reco_nom[channel].GetBinContent(ibin)) + " pt: " + str(reco_pt[channel].GetBinContent(ibin)) + " eta: " + str(reco_eta[channel].GetBinContent(ibin)) 
+    
+    
+    legtt = TLegend(0.6,0.7,0.8,0.88)
+    legtt.AddEntry(reco_nom[channel],"nom","lp")
+    legtt.AddEntry(reco_pt[channel],"pt varied","lp")
+    legtt.AddEntry(reco_eta[channel],"eta varied","lp")
+    legtt.SetFillStyle(0)
+    legtt.SetBorderSize(0)
+    legtt.SetTextSize(0.04)
+    legtt.SetTextFont(42)
+    legtt.Draw()
+    cttag.SaveAs("debug_ttag_"+channel+"_"+options.toUnfold+".pdf")
+    '''
+    
     for var in variants:
         unfold[var] = TUnfoldDensity(response[channel],TUnfold.kHistMapOutputVert, TUnfold.kRegModeCurvature, TUnfold.kEConstraintNone, TUnfoldDensity.kDensityModeBinWidth)
         unfold[var].SetInput(thisMeas[channel])
@@ -986,6 +1093,7 @@ for channel in channels:
         hErrSys[variation][sysname] = unfold[variation].GetDeltaSysSource(sysname,"hErrSys"+variation+sysname)
         if sysname == "FSR" : hErrSys[variation][sysname].Scale(1.0/math.sqrt(2.0))
         
+
     #Combined uncertainties (+lumi)
     h_LUMI   = h_DUMMY.Clone()
     h_STAT   = h_DUMMY.Clone()
