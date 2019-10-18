@@ -54,8 +54,10 @@ void runMakeHists(TString toMake = "prefit"){
     "ZJets"
   };
 
-  const int nSYS = 19;
-  TString sysnames[nSYS] = {"nom","puUp","puDown","JECUp","JECDown","JERUp","JERDown","lepUp","lepDown","BTagUp","BTagDown","TopTagEtaLowUp","TopTagEtaLowDown","TopTagEtaHighUp","TopTagEtaHighDown","TopTagPtLowUp","TopTagPtLowDown","TopTagPtHighUp","TopTagPtHighDown"/*"TopTagEta","TopTagPt"*/};
+  //const int nSYS = 19;
+  const int nSYS = 2;
+  //TString sysnames[nSYS] = {"nom","puUp","puDown","JECUp","JECDown","JERUp","JERDown","lepUp","lepDown","BTagUp","BTagDown","TopTagEtaLowUp","TopTagEtaLowDown","TopTagEtaHighUp","TopTagEtaHighDown","TopTagPtLowUp","TopTagPtLowDown","TopTagPtHighUp","TopTagPtHighDown"/*"TopTagEta","TopTagPt"*/};
+  TString sysnames[nSYS] = {"TopTagEta","TopTagPt"};
   const int nTHSYS = 4;
   TString thsysnames[nTHSYS] = {"PDFUp","PDFDown","Q2Up","Q2Down"};
   const int nSAMPLES = 10;
@@ -252,9 +254,11 @@ void runMakeHists(TString toMake = "prefit"){
 
     bool postTopTagSF = true;
 
+    /*
     // non-stiched sample for plots    
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_PLnew","mu",false,true,"Medium","MiniIso10",true,35.0,false,false,"nom",0,postTopTagSF,false);
     makeHists("skimTrees_full2016/","histfiles_full2016","PowhegPythia8_PLnew","el",false,true,"Tight","MiniIso10",true,50.0,true,false,"nom",0,postTopTagSF,false);
+    */
 
     for (int ii = 0; ii < nSYS; ii++){
 

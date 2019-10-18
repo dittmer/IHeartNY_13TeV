@@ -2399,19 +2399,19 @@ void makeHists(TString INDIR, TString OUTDIR, TString sample, TString channel, b
 	toptagSF     = pow(1.25,0.18); 
 	toptagSFUp   = pow(1.25,0.18+0.25); //Fit only uncertainty; full uncertainty is 0.45 w/ variations
 	toptagSFDown = pow(1.25,0.18-0.25); 
-	toptagSF_etaLow  = pow(1.25, 0.61); 
-	toptagSF_etaHigh = pow(1.25,-1.00); 
-	toptagSF_ptLow   = pow(1.25,-0.27); 
-	toptagSF_ptHigh  = pow(1.25, 0.43); 
+	toptagSF_etaLow  = pow(1.25, 0.20); 
+	toptagSF_etaHigh = pow(1.25, 0.06); 
+	toptagSF_ptLow   = pow(1.25, 0.09); 
+	toptagSF_ptHigh  = pow(1.25,-0.14); 
       }
       else {
 	toptagSF     = pow(1.25,-1.06); 
 	toptagSFUp   = pow(1.25,-1.06+0.34); //Fit only uncertainty; full uncertainty is 0.55 w/ variations
 	toptagSFDown = pow(1.25,-1.06-0.34);
-	toptagSF_etaLow  = pow(1.25,-1.28); 
-	toptagSF_etaHigh = pow(1.25,-0.46); 
-	toptagSF_ptLow   = pow(1.25,-1.07); 
-	toptagSF_ptHigh  = pow(1.25,-0.80); 
+	toptagSF_etaLow  = pow(1.25,-1.21); 
+	toptagSF_etaHigh = pow(1.25,-0.94); 
+	toptagSF_ptLow   = pow(1.25,-1.00); 
+	toptagSF_ptHigh  = pow(1.25,-0.53); 
       }
     }
     if (ak8jetSDmass->at(itopJetCand) > lowmasscut && ak8jetSDmass->at(itopJetCand) < highmasscut){
