@@ -1853,8 +1853,8 @@ void combineResults(TString channel, TString fit) {
       h_ratio->Draw("le0p");
       h_ratio2->Draw("same,e2");
       h_ratio->Draw("le0p,same");
-      h_ratio->SetMaximum(1.75);
-      h_ratio->SetMinimum(0.25);
+      h_ratio->SetMaximum(1.3);
+      h_ratio->SetMinimum(0.7);
       h_ratio->GetYaxis()->SetNdivisions(4,4,0,true);
       h_ratio->GetYaxis()->SetTitle("Data / MC");
       h_ratio->GetXaxis()->SetLabelSize(28);
