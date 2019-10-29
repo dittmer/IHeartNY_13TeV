@@ -175,7 +175,7 @@ void DrawCrossSection(TString LEVEL,TString VAR,TString XTITLE,TString YTITLE,TS
   leg->SetTextSize(0.035);
 
   //TPaveText *pave = new TPaveText(0.2,0.85,0.4,0.87,"NDC");
-  TPaveText *pave = new TPaveText(0.2,0.88,0.4,0.90,"NDC");
+  TPaveText *pave = new TPaveText(0.3,0.88,0.4,0.90,"NDC");
   //pave->AddText("Hadronic channel");
   pave->AddText("l+jets channel");
   pave->SetBorderSize(0);

@@ -1611,9 +1611,10 @@ void combineResults(TString channel, TString fit) {
   TH1::AddDirectory(kFALSE); 
   setStyle();
 
-  const int nhist = 6;
-  TString what[nhist] = {"ak4jetEta0t_ptlow","ak4jetEta1t0b_ptlow","ak8jetSDmass1t1b_ptlow","ak4jetEta0t_pthigh","ak4jetEta1t0b_pthigh","ak8jetSDmass1t1b_pthigh"};
+  const int nhist = 3;
+  //TString what[nhist] = {"ak4jetEta0t_ptlow","ak4jetEta1t0b_ptlow","ak8jetSDmass1t1b_ptlow","ak4jetEta0t_pthigh","ak4jetEta1t0b_pthigh","ak8jetSDmass1t1b_pthigh"};
   //TString what[nhist] = {"ak4jetAbsEta0t","ak4jetAbsEta1t0b","ak8jetSDmass1t1b"};
+  TString what[nhist] = {"ak4jetEta0t","ak4jetEta1t0b","ak8jetSDmass1t1b"};
   //TString what[nhist] = {"counts"};
   //TString what[nhist] = {"counts_ptlow","counts_pthigh"};
   const int ncats = 7;
@@ -1873,6 +1874,7 @@ void combineResults(TString channel, TString fit) {
       
     } // End pre / post plotting loop
   } // End histogram loop
+
 
   // Now plot correlation matrix
   TH2F* h_mcorr_raw = (TH2F*) f_postfit->Get("covariance_fit_s"); //Note that this has the per-bin stat uncertainties if autoMCStats is on
