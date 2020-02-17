@@ -81,16 +81,15 @@ void runMakePlots(TString toPlot = "final"){
     */
   }
 
-  if (toPlot=="louise") {
+  if (toPlot=="paper") {
 
-    /*
     makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetPt","0t",false,true,true);
     makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetPt","1t0b",false,true,true);
     makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetPt","1t1b",false,true,true);
     makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetY","0t",false,true,true);
     makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetY","1t0b",false,true,true);
     makePlots("histfiles_full2016_latest/","histfiles_full2016_latest/","comb","ak8jetY","1t1b",false,true,true);
-    */
+    
     /*
     combineResults("mu","mu1");
     combineResults("el","el1");

@@ -115,7 +115,7 @@ void drawCMS(Double_t x,Double_t y, bool prel) {
   ll.SetTextAngle(0);
   ll.SetNDC();
   ll.SetTextColor(1);
-  ll.DrawLatex(0.71,y,"35.9 fb^{-1} (13 TeV)");
+  ll.DrawLatex(0.61,y,"(2016) 35.9 fb^{-1} (13 TeV)");
 
 }
 
