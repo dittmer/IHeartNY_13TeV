@@ -1398,7 +1398,7 @@ for channel in channels:
                 bin_other += pow(h_SYS[sysname].GetBinContent(ibin),2)
             if sysname == "PDF" or sysname == "Q2":
                 bin_hardscatter += pow(h_SYS[sysname].GetBinContent(ibin),2)
-            if sysname == "ISR" or sysname == "FSR" or sysname == "Tune" or sysname == "Hdamp" or sysname == "ErdOn" or sysname == "Herwig":
+            if sysname == "ISR" or sysname == "FSR" or sysname == "Tune" or sysname == "Hdamp" or sysname == "ErdOn":
                 bin_partonshower += pow(h_SYS[sysname].GetBinContent(ibin),2)
             #if sysname == "mtop1735":
             #    bin_massup += pow(h_SYS[sysname].GetBinContent(ibin),2)
